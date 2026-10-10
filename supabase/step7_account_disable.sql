@@ -1,0 +1,4 @@
+-- Applied to the live database as migration "account_disable_not_delete".
+-- Adds profiles.disabled_at/disabled_reason, makes user-linked foreign keys ON DELETE RESTRICT,
+-- has_full_access() requires disabled_at is null, adds close_my_account() and admin_set_account_disabled(),
+-- and revokes TRUNCATE/REFERENCES/TRIGGER from anon and authenticated. See the live database for the exact text.

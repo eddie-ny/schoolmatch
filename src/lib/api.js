@@ -359,6 +359,30 @@ export async function checkEligibility({ programName, scope, mode, grades, elect
   return data
 }
 
+// ---------- Payments (Paystack, through the server function) ----------
+export async function listPlans() {
+  const { data, error } = await supabase.from('plans').select('id, label, months, price_minor, currency').order('sort')
+  fail(error, 'Could not load plans.')
+  return data
+}
+
+// The server looks up the price itself. The browser only says which plan.
+export async function startCheckout(plan) {
+  const { data, error } = await supabase.functions.invoke('paystack/init', { body: { plan } })
+  if (error) {
+    let msg = ''
+    try { msg = (await error.context.json()).error } catch { /* not JSON */ }
+    throw new Error(msg || 'Could not start the payment. Please try again.')
+  }
+  return data // { url, reference }
+}
+
+export async function verifyPayment(reference) {
+  const { data, error } = await supabase.functions.invoke('paystack/verify', { body: { reference } })
+  if (error) throw new Error('Could not confirm the payment yet. If you were charged, it will appear shortly.')
+  return data.status // activated | already_activated | not_paid | rejected
+}
+
 // ---------- Admin ----------
 // Row-level security lets only admins read every profile and subscription.
 export async function listUsers() {

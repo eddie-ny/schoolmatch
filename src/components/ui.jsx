@@ -88,11 +88,11 @@ export function RequireAuth({ children, needProfile }) {
     return (
       <div className="space-y-4 max-w-xl">
         <div className="card space-y-3">
-          <h2 className="text-xl font-bold">See where your results can take you</h2>
+          <h1 className="text-xl font-bold">See where your results can take you</h1>
           <p className="text-neutral-600">Enter your grades, pick what you want to study and we show every school that offers it, ranked by your chances.</p>
           <div className="flex flex-wrap gap-2">
             {['Strong match', 'Good chance', 'Worth a try'].map((l) => (
-              <span key={l} className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-neutral-100 text-neutral-400">
+              <span key={l} className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-neutral-100 text-neutral-600">
                 {l}
               </span>
             ))}

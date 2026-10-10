@@ -31,14 +31,14 @@ export default function Layout() {
       <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:bg-white focus:p-3 focus:m-2 focus:rounded-lg focus:font-semibold">Skip to content</a>
       <header className="border-b border-neutral-200/70 bg-white/90 backdrop-blur sticky top-0 z-20">
         <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
-          <Link to="/" className="font-heading font-bold text-xl">
+          <Link to="/" className="font-heading font-bold text-xl inline-flex items-center min-h-11">
             <span className="text-brand-orange">School</span>
             <span className="text-brand-green">Match</span>
           </Link>
 
           <nav className="hidden lg:flex items-center gap-5 text-sm font-medium whitespace-nowrap">
             {links.map((l) => (
-              <NavLink key={l.to} to={l.to} className={({ isActive }) => (isActive ? 'text-brand-orange' : 'hover:text-brand-green')}>
+              <NavLink key={l.to} to={l.to} className={({ isActive }) => `inline-flex items-center min-h-11 ${isActive ? 'text-brand-orange' : 'hover:text-brand-green'}`}>
                 {l.label}
               </NavLink>
             ))}
@@ -47,8 +47,8 @@ export default function Layout() {
           <div className="hidden lg:flex items-center gap-3 whitespace-nowrap">
             {user ? (
               <>
-                <Link to="/profile" className="text-sm font-medium whitespace-nowrap">{user.fullName.split(' ')[0]}</Link>
-                <Link to="/settings" className="text-sm font-medium whitespace-nowrap">Settings</Link>
+                <Link to="/profile" className="text-sm font-medium whitespace-nowrap inline-flex items-center min-h-11">{user.fullName.split(' ')[0]}</Link>
+                <Link to="/settings" className="text-sm font-medium whitespace-nowrap inline-flex items-center min-h-11">Settings</Link>
                 <button onClick={() => setConfirmOut(true)} className="btn btn-outline !min-h-10">Sign out</button>
               </>
             ) : (
@@ -120,12 +120,12 @@ export default function Layout() {
         <div className="max-w-5xl mx-auto px-4 py-6 flex flex-col gap-2">
           <p>{APP_NAME} is a placeholder name. Starter data is unverified. Results are guidance, not a guarantee of admission.</p>
           <div className="flex flex-wrap gap-x-4 gap-y-1">
-            <Link to="/pricing" className="underline">Plans</Link>
-            <Link to="/privacy" className="underline">Privacy</Link>
-            <Link to="/terms" className="underline">Terms</Link>
-            <Link to="/refunds" className="underline">Refunds</Link>
-            <Link to="/cookies" className="underline">Cookies</Link>
-            {user?.role === 'admin' && <Link to="/admin" className="underline">Admin</Link>}
+            <Link to="/pricing" className="underline inline-flex items-center min-h-11">Plans</Link>
+            <Link to="/privacy" className="underline inline-flex items-center min-h-11">Privacy</Link>
+            <Link to="/terms" className="underline inline-flex items-center min-h-11">Terms</Link>
+            <Link to="/refunds" className="underline inline-flex items-center min-h-11">Refunds</Link>
+            <Link to="/cookies" className="underline inline-flex items-center min-h-11">Cookies</Link>
+            {user?.role === 'admin' && <Link to="/admin" className="underline inline-flex items-center min-h-11">Admin</Link>}
           </div>
         </div>
       </footer>

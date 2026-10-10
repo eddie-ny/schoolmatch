@@ -9,6 +9,7 @@ export default function Privacy() {
       </div>
       <p>We collect your name, contact details, date of birth, school details and exam results to match you with schools and scholarships.</p>
       <p>If you are under 18, a parent or guardian must confirm your account before it is fully active.</p>
+      <p>Account closure disables your account and blocks sign-in. We keep account and payment records and do not erase them on request, because we may be legally required to produce them. Whether this is allowed alongside your data rights under Ghana law must be confirmed by a lawyer.</p>
       <p>Final wording, retention periods and how to withdraw consent will be added here.</p>
     </div>
   )

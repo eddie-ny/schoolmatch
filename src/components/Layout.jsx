@@ -28,6 +28,7 @@ export default function Layout() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:bg-white focus:p-3 focus:m-2 focus:rounded-lg focus:font-semibold">Skip to content</a>
       <header className="border-b border-neutral-200/70 bg-white/90 backdrop-blur sticky top-0 z-20">
         <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
           <Link to="/" className="font-heading font-bold text-xl">
@@ -46,7 +47,8 @@ export default function Layout() {
           <div className="hidden lg:flex items-center gap-3 whitespace-nowrap">
             {user ? (
               <>
-                <Link to="/profile" className="text-sm font-medium">{user.fullName.split(' ')[0]}</Link>
+                <Link to="/profile" className="text-sm font-medium whitespace-nowrap">{user.fullName.split(' ')[0]}</Link>
+                <Link to="/settings" className="text-sm font-medium whitespace-nowrap">Settings</Link>
                 <button onClick={() => setConfirmOut(true)} className="btn btn-outline !min-h-10">Sign out</button>
               </>
             ) : (
@@ -70,6 +72,7 @@ export default function Layout() {
             {user ? (
               <>
                 <Link to="/profile" className="py-3 font-medium">My profile</Link>
+                <Link to="/settings" className="py-3 font-medium">Settings</Link>
                 {user.role === 'admin' && <Link to="/admin" className="py-3 font-medium">Admin</Link>}
                 <button onClick={() => setConfirmOut(true)} className="py-3 text-left font-medium">Sign out</button>
               </>
@@ -109,16 +112,19 @@ export default function Layout() {
         onCancel={() => setConfirmOut(false)}
       />
 
-      <main className="flex-1 max-w-5xl w-full mx-auto px-4 py-6">
+      <main id="main" tabIndex={-1} className="flex-1 outline-none max-w-5xl w-full mx-auto px-4 py-6">
         <Outlet />
       </main>
 
       <footer className="border-t border-neutral-200 text-sm text-neutral-600">
         <div className="max-w-5xl mx-auto px-4 py-6 flex flex-col gap-2">
           <p>{APP_NAME} is a placeholder name. Starter data is unverified. Results are guidance, not a guarantee of admission.</p>
-          <div className="flex gap-4">
+          <div className="flex flex-wrap gap-x-4 gap-y-1">
             <Link to="/pricing" className="underline">Plans</Link>
             <Link to="/privacy" className="underline">Privacy</Link>
+            <Link to="/terms" className="underline">Terms</Link>
+            <Link to="/refunds" className="underline">Refunds</Link>
+            <Link to="/cookies" className="underline">Cookies</Link>
             {user?.role === 'admin' && <Link to="/admin" className="underline">Admin</Link>}
           </div>
         </div>

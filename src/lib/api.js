@@ -6,6 +6,10 @@
 import { supabase } from './supabase'
 import { CORE_SUBJECTS } from './constants'
 
+export const PASSWORD_RULE = 'Use at least 8 characters with upper case, lower case and numbers.'
+export const passwordProblem = (pw) =>
+  pw.length >= 8 && /[a-z]/.test(pw) && /[A-Z]/.test(pw) && /[0-9]/.test(pw) ? '' : PASSWORD_RULE
+
 const fail = (error, fallback) => {
   if (error) throw new Error(friendly(error) || fallback)
 }
@@ -15,7 +19,10 @@ function friendly(error) {
   if (m.includes('invalid login')) return 'Wrong email or password.'
   if (m.includes('email not confirmed')) return 'Please confirm your email first. Check your inbox for the link.'
   if (m.includes('rate limit') || m.includes('too many')) return 'Too many attempts. Please wait a few minutes and try again.'
-  if (m.includes('password') && m.includes('characters')) return 'Password is too short.'
+  if (m.includes('banned')) return 'This account is closed or disabled. Contact support if you think this is a mistake.'
+  if (m.includes('at least one character of each')) return PASSWORD_RULE
+  if (m.includes('password') && m.includes('characters')) return 'Password is too short. ' + PASSWORD_RULE
+  if (m.includes('should be different')) return 'Your new password must be different from the old one.'
   return error.message
 }
 
@@ -46,7 +53,7 @@ export async function signUp(form) {
   const { data, error } = await supabase.auth.signUp({
     email: form.email,
     password: form.password,
-    options: { data: meta, emailRedirectTo: window.location.origin },
+    options: { data: meta, emailRedirectTo: `${window.location.origin}/login` },
   })
   fail(error, 'Could not create your account.')
   return { needsConfirm: !data.session }
@@ -111,6 +118,7 @@ export async function getCurrentUser() {
     phone: p.phone,
     dateOfBirth: p.date_of_birth,
     isMinor: p.is_minor,
+    disabled: !!p.disabled_at,
     role: adm.data ? 'admin' : 'student',
     createdAt: p.created_at,
     trialEndsAt: p.trial_ends_at,
@@ -139,6 +147,22 @@ export async function saveProfile(userId, profile) {
     })
     .eq('id', userId)
   fail(error, 'Could not save your profile.')
+}
+
+export async function saveAccount(userId, { fullName, phone }) {
+  const { error } = await supabase.from('profiles').update({ full_name: fullName, phone }).eq('id', userId)
+  fail(error, 'Could not save your details.')
+}
+
+// Accounts are never deleted. This disables the account and keeps the records.
+export async function closeMyAccount() {
+  const { error } = await supabase.rpc('close_my_account')
+  fail(error, 'Could not close your account.')
+}
+
+export async function setAccountDisabled(userId, disabled, reason) {
+  const { error } = await supabase.rpc('admin_set_account_disabled', { p_user: userId, p_disabled: disabled, p_reason: reason || null })
+  fail(error, 'Could not update the account.')
 }
 
 // ---------- Results ----------
@@ -387,7 +411,7 @@ export async function verifyPayment(reference) {
 // Row-level security lets only admins read every profile and subscription.
 export async function listUsers() {
   const [p, s] = await Promise.all([
-    supabase.from('profiles').select('id, full_name, email, phone, is_minor, trial_ends_at, created_at, profile_complete').order('created_at', { ascending: false }),
+    supabase.from('profiles').select('id, full_name, email, phone, is_minor, trial_ends_at, created_at, profile_complete, disabled_at').order('created_at', { ascending: false }),
     supabase.from('subscriptions').select('user_id, plan, status, expires_at'),
   ])
   fail(p.error, 'Could not load users.')
@@ -402,6 +426,7 @@ export async function listUsers() {
     createdAt: u.created_at,
     trialEndsAt: u.trial_ends_at,
     profileComplete: u.profile_complete,
+    disabled: !!u.disabled_at,
     subscription: subs[u.id] ? { plan: subs[u.id].plan, status: subs[u.id].status, expiresAt: subs[u.id].expires_at } : null,
   }))
 }

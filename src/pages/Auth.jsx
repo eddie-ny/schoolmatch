@@ -1,7 +1,12 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { isMinorFromDob } from '../lib/api'
+import { isMinorFromDob, passwordProblem, PASSWORD_RULE } from '../lib/api'
+import { supabase } from '../lib/supabase'
+
+// Read before Supabase clears the address: did the person just arrive from the email confirmation link?
+const ARRIVED_CONFIRMED = /type=signup|type=email/.test(window.location.hash)
+const CONFIRM_LINK_BAD = /error_code=otp_expired|error=access_denied/.test(window.location.hash)
 import { DobPicker, Field, PageTitle } from '../components/ui'
 
 export function Login() {
@@ -12,7 +17,14 @@ export function Login() {
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
 
-  useEffect(() => { if (user) nav('/') }, [user, nav])
+  const [confirmed] = useState(ARRIVED_CONFIRMED)
+
+  // The confirmation link signs the person in by itself. We end that session so they sign in on purpose.
+  useEffect(() => {
+    if (!confirmed) return
+    supabase.auth.getSession().then(() => supabase.auth.signOut({ scope: 'local' }))
+  }, [confirmed])
+  useEffect(() => { if (user && !confirmed) nav('/') }, [user, nav, confirmed])
 
   const submit = async (e) => {
     e.preventDefault()
@@ -20,6 +32,7 @@ export function Login() {
     setBusy(true)
     try {
       await signIn(email, password)
+      if (confirmed) nav('/')
     } catch (err) {
       setError(err.message)
     } finally {
@@ -30,6 +43,8 @@ export function Login() {
   return (
     <div className="max-w-md mx-auto">
       <PageTitle title="Sign in" />
+      {confirmed && <p role="status" className="rounded-xl bg-brand-green/25 p-4 mb-4 font-semibold">Email confirmed. Please sign in.</p>}
+      {CONFIRM_LINK_BAD && <p role="alert" className="rounded-xl bg-brand-orange/25 p-4 mb-4 text-sm">That confirmation link has expired or was already used. If you already confirmed, sign in below. Otherwise sign up again.</p>}
       <form onSubmit={submit} className="card space-y-4">
         <Field label="Email"><input className="input" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} /></Field>
         <Field label="Password"><input className="input" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} /></Field>
@@ -61,7 +76,7 @@ export function Signup() {
     e.preventDefault()
     setError('')
     if (!f.dateOfBirth) return setError('Please choose your full date of birth (day, month and year).')
-    if (f.password.length < 8) return setError('Password must be at least 8 characters.')
+    if (passwordProblem(f.password)) return setError(PASSWORD_RULE)
     if (!f.consent) return setError('Please accept the privacy notice to continue.')
     if (minor && (!f.parentName || !f.parentPhone || !f.parentEmail)) return setError('A parent or guardian name, phone and email are required for under 18s.')
     setBusy(true)
@@ -93,7 +108,7 @@ export function Signup() {
         <Field label="Full name"><input className="input" required value={f.fullName} onChange={set('fullName')} /></Field>
         <Field label="Phone"><input className="input" type="tel" required value={f.phone} onChange={set('phone')} placeholder="024 000 0000" /></Field>
         <Field label="Email"><input className="input" type="email" required value={f.email} onChange={set('email')} /></Field>
-        <Field label="Password" hint="At least 8 characters."><input className="input" type="password" required value={f.password} onChange={set('password')} /></Field>
+        <Field label="Password" hint="At least 8 characters, with upper case, lower case and numbers."><input className="input" type="password" required value={f.password} onChange={set('password')} /></Field>
         <Field label="Date of birth"><DobPicker value={f.dateOfBirth} onChange={(v) => { setF((cur) => ({ ...cur, dateOfBirth: v })); setError('') }} /></Field>
 
         {minor && (
@@ -186,7 +201,7 @@ export function ResetPassword() {
   const submit = async (e) => {
     e.preventDefault()
     setError('')
-    if (pw.length < 8) return setError('Password must be at least 8 characters.')
+    if (passwordProblem(pw)) return setError(PASSWORD_RULE)
     setBusy(true)
     try {
       await setNewPassword(pw)
@@ -213,7 +228,7 @@ export function ResetPassword() {
       <PageTitle title="Choose a new password" />
       {done ? <p className="card">Password updated. Taking you home...</p> : (
         <form onSubmit={submit} className="card space-y-4">
-          <Field label="New password" hint="At least 8 characters."><input className="input" type="password" required value={pw} onChange={(e) => setPw(e.target.value)} /></Field>
+          <Field label="New password" hint="At least 8 characters, with upper case, lower case and numbers."><input className="input" type="password" required value={pw} onChange={(e) => setPw(e.target.value)} /></Field>
           {error && <p className="text-red-700 text-sm">{error}</p>}
           <button className="btn btn-orange w-full" disabled={busy}>{busy ? 'Saving...' : 'Save password'}</button>
         </form>

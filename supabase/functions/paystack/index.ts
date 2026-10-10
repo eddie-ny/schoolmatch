@@ -80,6 +80,8 @@ Deno.serve(async (req) => {
       if (!plan) return json({ error: 'Unknown plan.' }, 400)
       if (!plan.price_minor) return json({ error: 'This plan has no price yet.' }, 400)
       if (!user.email) return json({ error: 'Your account has no email.' }, 400)
+      const { data: prof } = await admin.from('profiles').select('disabled_at').eq('id', user.id).maybeSingle()
+      if (!prof || prof.disabled_at) return json({ error: 'This account cannot make payments.' }, 403)
 
       let origin = ''
       try { const u = new URL(req.headers.get('origin') ?? ''); if (/^https?:$/.test(u.protocol)) origin = u.origin } catch { /* no origin */ }

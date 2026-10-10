@@ -10,6 +10,9 @@ import Profile from './pages/Profile'
 import Pricing from './pages/Pricing'
 import Admin from './pages/Admin'
 import Privacy from './pages/Privacy'
+import Settings from './pages/Settings'
+import Legal from './pages/Legal'
+import NotFound from './pages/NotFound'
 
 export default function App() {
   return (
@@ -26,10 +29,14 @@ export default function App() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/profile" element={<Profile />} />
+        <Route path="/settings" element={<Settings />} />
         <Route path="/pricing" element={<Pricing />} />
         <Route path="/admin" element={<Admin />} />
         <Route path="/privacy" element={<Privacy />} />
-        <Route path="*" element={<p>Page not found.</p>} />
+        <Route path="/terms" element={<Legal page="terms" />} />
+        <Route path="/refunds" element={<Legal page="refunds" />} />
+        <Route path="/cookies" element={<Legal page="cookies" />} />
+        <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>
   )

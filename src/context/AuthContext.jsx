@@ -16,6 +16,13 @@ export function AuthProvider({ children }) {
     const gen = generation.current
     try {
       const u = await api.getCurrentUser()
+      if (u?.disabled) {
+        // A disabled account is signed out straight away.
+        generation.current += 1
+        setUser(null)
+        api.signOut().catch(() => {})
+        return
+      }
       if (gen === generation.current) setUser(u)
     } catch (e) {
       console.error(e)
@@ -38,6 +45,18 @@ export function AuthProvider({ children }) {
     })
     return () => data.subscription.unsubscribe()
   }, [refresh])
+
+  // Sign out after 30 minutes with no activity. This runs in the browser only (the server-side
+  // inactivity timeout is a paid Supabase feature), so it protects shared computers, not stolen tokens.
+  useEffect(() => {
+    if (!user) return
+    let t
+    const reset = () => { clearTimeout(t); t = setTimeout(() => { generation.current += 1; setUser(null); api.signOut().catch(() => {}) }, 30 * 60 * 1000) }
+    const evts = ['pointerdown', 'keydown', 'scroll', 'touchstart']
+    evts.forEach((e) => window.addEventListener(e, reset, { passive: true }))
+    reset()
+    return () => { clearTimeout(t); evts.forEach((e) => window.removeEventListener(e, reset)) }
+  }, [user])
 
   const signUp = useCallback((form) => api.signUp(form), [])
   const signIn = useCallback((e, p) => api.signIn(e, p), [])

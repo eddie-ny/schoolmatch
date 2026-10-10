@@ -31,7 +31,7 @@ export default function Layout() {
             <span className="text-brand-green">Match</span>
           </Link>
 
-          <nav className="hidden md:flex items-center gap-5 text-sm font-medium">
+          <nav className="hidden lg:flex items-center gap-5 text-sm font-medium whitespace-nowrap">
             {links.map((l) => (
               <NavLink key={l.to} to={l.to} className={({ isActive }) => (isActive ? 'text-brand-orange' : 'hover:text-brand-green')}>
                 {l.label}
@@ -39,7 +39,7 @@ export default function Layout() {
             ))}
           </nav>
 
-          <div className="hidden md:flex items-center gap-3">
+          <div className="hidden lg:flex items-center gap-3 whitespace-nowrap">
             {user ? (
               <>
                 <Link to="/profile" className="text-sm font-medium">{user.fullName.split(' ')[0]}</Link>
@@ -53,13 +53,13 @@ export default function Layout() {
             )}
           </div>
 
-          <button className="md:hidden btn btn-outline !px-3" onClick={() => setOpen(!open)} aria-label="Menu">
+          <button className="lg:hidden btn btn-outline !px-3" onClick={() => setOpen(!open)} aria-label="Menu">
             {open ? 'Close' : 'Menu'}
           </button>
         </div>
 
         {open && (
-          <div className="md:hidden border-t border-neutral-200 px-4 py-3 flex flex-col gap-1" onClick={() => setOpen(false)}>
+          <div className="lg:hidden border-t border-neutral-200 px-4 py-3 flex flex-col gap-1" onClick={() => setOpen(false)}>
             {links.map((l) => (
               <NavLink key={l.to} to={l.to} className="py-3 font-medium">{l.label}</NavLink>
             ))}

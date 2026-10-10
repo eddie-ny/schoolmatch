@@ -2,6 +2,7 @@ import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { timeLeft } from '../lib/access'
+import { ConfirmDialog } from './ui'
 
 export const APP_NAME = 'SchoolMatch' // placeholder name
 
@@ -16,8 +17,11 @@ const links = [
 export default function Layout() {
   const { user, access, signOut } = useAuth()
   const [open, setOpen] = useState(false)
+  const [confirmOut, setConfirmOut] = useState(false)
   const nav = useNavigate()
   const handleSignOut = async () => {
+    setConfirmOut(false)
+    setOpen(false)
     nav('/')
     await signOut()
   }
@@ -43,7 +47,7 @@ export default function Layout() {
             {user ? (
               <>
                 <Link to="/profile" className="text-sm font-medium">{user.fullName.split(' ')[0]}</Link>
-                <button onClick={handleSignOut} className="btn btn-outline !min-h-10">Sign out</button>
+                <button onClick={() => setConfirmOut(true)} className="btn btn-outline !min-h-10">Sign out</button>
               </>
             ) : (
               <>
@@ -67,7 +71,7 @@ export default function Layout() {
               <>
                 <Link to="/profile" className="py-3 font-medium">My profile</Link>
                 {user.role === 'admin' && <Link to="/admin" className="py-3 font-medium">Admin</Link>}
-                <button onClick={handleSignOut} className="py-3 text-left font-medium">Sign out</button>
+                <button onClick={() => setConfirmOut(true)} className="py-3 text-left font-medium">Sign out</button>
               </>
             ) : (
               <div className="flex gap-3 pt-2">
@@ -94,6 +98,16 @@ export default function Layout() {
           </div>
         )}
       </header>
+
+      <ConfirmDialog
+        open={confirmOut}
+        title="Sign out?"
+        text="You will need to sign in again to see your results."
+        confirmLabel="Sign out"
+        cancelLabel="Stay signed in"
+        onConfirm={handleSignOut}
+        onCancel={() => setConfirmOut(false)}
+      />
 
       <main className="flex-1 max-w-5xl w-full mx-auto px-4 py-6">
         <Outlet />

@@ -1,4 +1,4 @@
-import { cloneElement, isValidElement, useId, useState } from 'react'
+import { cloneElement, isValidElement, useEffect, useId, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
@@ -179,6 +179,35 @@ export function LockedRows({ rows = ['Entry requirements', 'Cut-off aggregate', 
           </span>
         </div>
       ))}
+    </div>
+  )
+}
+
+// Small confirmation popup. Escape or tapping outside closes it.
+export function ConfirmDialog({ open, title, text, confirmLabel = 'Yes', cancelLabel = 'Cancel', onConfirm, onCancel }) {
+  useEffect(() => {
+    if (!open) return
+    const onKey = (e) => { if (e.key === 'Escape') onCancel() }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [open, onCancel])
+  if (!open) return null
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onCancel}>
+      <div
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="confirm-title"
+        className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm space-y-4"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h2 id="confirm-title" className="text-lg font-bold">{title}</h2>
+        {text && <p className="text-neutral-600 text-sm">{text}</p>}
+        <div className="flex gap-3">
+          <button className="btn btn-outline flex-1" onClick={onCancel} autoFocus>{cancelLabel}</button>
+          <button className="btn btn-orange flex-1" onClick={onConfirm}>{confirmLabel}</button>
+        </div>
+      </div>
     </div>
   )
 }

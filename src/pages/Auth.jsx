@@ -124,14 +124,22 @@ export function ForgotPassword() {
   const [done, setDone] = useState(false)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
+  const [wait, setWait] = useState(0) // seconds until another link can be requested
+
+  useEffect(() => {
+    if (wait <= 0) return
+    const t = setTimeout(() => setWait(wait - 1), 1000)
+    return () => clearTimeout(t)
+  }, [wait])
 
   const submit = async (e) => {
-    e.preventDefault()
+    e?.preventDefault()
     setError('')
     setBusy(true)
     try {
       await requestPasswordReset(email)
       setDone(true)
+      setWait(60)
     } catch (err) {
       setError(err.message)
     } finally {
@@ -144,8 +152,15 @@ export function ForgotPassword() {
       <PageTitle title="Reset your password" />
       {done ? (
         <div className="card space-y-3">
-          <p>If an account exists for <b>{email}</b>, a reset link is on its way.</p>
-          <Link to="/login" className="btn btn-orange">Back to sign in</Link>
+          <p>If an account exists for <b>{email}</b>, a reset link is on its way. The link can be used once and expires, so use it soon.</p>
+          <p className="text-sm text-neutral-600">Nothing arrived? Check your spam folder.</p>
+          {error && <p className="text-red-700 text-sm">{error}</p>}
+          <div className="flex flex-wrap gap-3">
+            <button className="btn btn-outline" onClick={submit} disabled={busy || wait > 0}>
+              {wait > 0 ? `Send another link in ${wait}s` : busy ? 'Sending...' : 'Send another link'}
+            </button>
+            <Link to="/login" className="btn btn-orange">Back to sign in</Link>
+          </div>
         </div>
       ) : (
         <form onSubmit={submit} className="card space-y-4">
@@ -165,6 +180,8 @@ export function ResetPassword() {
   const [error, setError] = useState('')
   const [done, setDone] = useState(false)
   const [busy, setBusy] = useState(false)
+  // Supabase sends people back with #error_code=otp_expired when the link is expired or already used.
+  const [linkProblem] = useState(() => /error_code=otp_expired|error=access_denied/.test(window.location.hash + window.location.search))
 
   const submit = async (e) => {
     e.preventDefault()
@@ -185,7 +202,7 @@ export function ResetPassword() {
   if (!recovering && !user) {
     return (
       <div className="max-w-md mx-auto card space-y-3">
-        <p>This reset link is missing or expired.</p>
+        <p>{linkProblem ? 'This reset link has expired or was already used. Each link works once.' : 'This reset link is missing, expired or already used.'}</p>
         <Link to="/forgot-password" className="btn btn-orange">Request a new link</Link>
       </div>
     )

@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
-import { useCatalog } from '../hooks/useCatalog'
+import { useEffect } from 'react'
+import { listEligibilityPrograms, checkEligibility } from '../lib/api'
 import { CORE_SUBJECTS, ELECTIVE_SUBJECTS, GRADES, DISCLAIMER, FIELDS } from '../lib/constants'
-import { computeAggregate, rankByProgramName } from '../lib/eligibility'
 import { Badge, Field, Gate, PageTitle, RequireAuth, Segmented } from '../components/ui'
 
 const labelTone = {
@@ -24,35 +24,35 @@ function GradeSelect({ value, onChange }) {
   )
 }
 
-function ResultCard({ r, program, showDetail, highlight }) {
-  const { result } = r
+function ResultCard({ item, highlight }) {
   return (
     <div className={`card space-y-2 ${highlight ? 'border-2 border-brand-orange' : ''}`}>
       <div className="flex flex-wrap items-center gap-2">
-        <Badge tone={labelTone[result.label]}>{result.label}</Badge>
-        {result.projection && <Badge tone="orange">Projection</Badge>}
-        {program.demo && <Badge tone="orange">Sample data</Badge>}
+        <Badge tone={labelTone[item.label]}>{item.label}</Badge>
+        {item.projection && <Badge tone="orange">Projection</Badge>}
+        {item.demo && <Badge tone="orange">Sample data</Badge>}
       </div>
-      <h3 className="font-bold">{program.name}</h3>
-      <p className="text-sm text-neutral-600">{program.schoolName}</p>
-      {showDetail ? (
-        <div className="text-sm space-y-1">
-          {result.aggregate != null && (
-            <p>Your aggregate: <b>{result.aggregate}</b>{result.cutoff != null ? ` · Usual cut-off: ${result.cutoff}` : ' · No cut-off data yet'}</p>
-          )}
-          {result.failures.length > 0 && (
-            <ul className="list-disc ml-5 text-neutral-700">{result.failures.map((f) => <li key={f}>{f}</li>)}</ul>
-          )}
-          {result.notes.map((n) => <p key={n} className="text-neutral-600">{n}</p>)}
-        </div>
-      ) : null}
+      <h3 className="font-bold">{item.programName}</h3>
+      <p className="text-sm text-neutral-600">{item.schoolName}</p>
+      <div className="text-sm space-y-1">
+        {item.aggregate != null && (
+          <p>Your aggregate: <b>{item.aggregate}</b>{item.cutoff != null ? ` · Usual cut-off: ${item.cutoff}` : ' · No cut-off data yet'}</p>
+        )}
+        {item.failures.length > 0 && (
+          <ul className="list-disc ml-5 text-neutral-700">{item.failures.map((f) => <li key={f}>{f}</li>)}</ul>
+        )}
+        {item.notes.map((n) => <p key={n} className="text-neutral-600">{n}</p>)}
+      </div>
     </div>
   )
 }
 
 function EligibilityInner() {
-  const { user, saveResults, access } = useAuth()
-  const { programs, loading } = useCatalog()
+  const { user, saveResults } = useAuth()
+  const [programs, setPrograms] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [busy, setBusy] = useState(false)
+  useEffect(() => { listEligibilityPrograms().then(setPrograms).catch((e) => setError(e.message)).finally(() => setLoading(false)) }, [])
   const saved = user.results
   const [mode, setMode] = useState(saved?.mode || 'final')
   const [grades, setGrades] = useState(saved?.grades || {})
@@ -63,7 +63,6 @@ function EligibilityInner() {
   const [programName, setProgramName] = useState('')
   const [output, setOutput] = useState(null)
   const [error, setError] = useState('')
-  const full = access.level === 'full'
 
   const scoped = useMemo(
     () => programs.filter((p) => scope === 'both' || (scope === 'local' ? !p.international : p.international)),
@@ -93,10 +92,15 @@ function EligibilityInner() {
     const clean = {}
     ;[...CORE_SUBJECTS, ...chosen].forEach((s) => { if (grades[s]) clean[s] = grades[s] })
 
-    const { aggregate, reason } = computeAggregate(clean, CORE_SUBJECTS, chosen)
-    const student = { grades: clean, aggregate, mode, sat: sat ? Number(sat) : null }
-    const ranked = rankByProgramName(scoped, programName, student)
-    setOutput({ ranked, aggregate, reason, mode, programName })
+    setBusy(true)
+    try {
+      const res = await checkEligibility({ programName, scope, mode, grades: clean, electives: chosen, sat })
+      setOutput(res)
+    } catch (err) {
+      setBusy(false)
+      return setError(err.message)
+    }
+    setBusy(false)
 
     // Saved results are reused everywhere. A failed save must not be silent.
     try {
@@ -166,10 +170,18 @@ function EligibilityInner() {
         </div>
 
         {error && <p className="text-red-700 text-sm">{error}</p>}
-        <button className="btn btn-orange w-full sm:w-auto">Check eligibility</button>
+        <button className="btn btn-orange w-full sm:w-auto" disabled={busy}>{busy ? 'Checking...' : 'Check eligibility'}</button>
       </form>
 
-      {output && (
+      {output && output.locked && (
+        <section className="space-y-4">
+          <h2 className="text-xl font-bold">Results</h2>
+          <p>We found {output.targetCount} school{output.targetCount === 1 ? '' : 's'} offering this program and {output.otherCount} other option{output.otherCount === 1 ? '' : 's'}.</p>
+          <Gate text="Subscribe to see your aggregate, your match labels and how you rank." />
+        </section>
+      )}
+
+      {output && !output.locked && (
         <section className="space-y-4">
           <h2 className="text-xl font-bold">Results</h2>
           {output.aggregate != null
@@ -178,21 +190,15 @@ function EligibilityInner() {
           {output.mode === 'terminal' && <p className="text-sm font-semibold">These are projections based on terminal or mock grades.</p>}
 
           <h3 className="font-semibold">Schools offering {output.programName}</h3>
+          {output.targets.length === 0 && <p className="text-neutral-600">No schools offer this program yet.</p>}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {output.ranked.targets.map((r) => <ResultCard key={r.program.id} r={r} program={r.program} showDetail highlight />)}
+            {output.targets.map((r) => <ResultCard key={r.programId} item={r} highlight />)}
           </div>
 
           <h3 className="font-semibold">Other programs you could consider, best first</h3>
-          {full ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {output.ranked.others.map((r) => <ResultCard key={r.program.id} r={r} program={r.program} showDetail />)}
-            </div>
-          ) : (
-            <>
-              <p>{output.ranked.others.length} other options found.</p>
-              <Gate text="Subscribe to see how you rank against every other program." />
-            </>
-          )}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {output.others.map((r) => <ResultCard key={r.programId} item={r} />)}
+          </div>
           <p className="text-xs text-neutral-500">{DISCLAIMER}</p>
         </section>
       )}

@@ -1,6 +1,6 @@
 // DATA LAYER.
 // Auth, profile, results and documents now talk to Supabase.
-// The catalog (schools, programs, scholarships) still uses local starter data until step 5.
+// Browsing the catalog still uses local starter data until step 5. The eligibility check runs on the server (step 4).
 // Payments are not wired yet (step 6): the browser can never write subscriptions.
 
 import { supabase } from './supabase'
@@ -199,6 +199,31 @@ const imported = () => {
 export async function listSchools() { return [...seedSchools, ...imported().schools] }
 export async function listPrograms() { return [...seedPrograms, ...imported().programs] }
 export async function listScholarships() { return [...seedScholarships, ...imported().scholarships] }
+
+// Program names for the eligibility pickers. Only the teaser columns, which visitors may read.
+export async function listEligibilityPrograms() {
+  const [{ data: progs, error: e1 }, { data: schools, error: e2 }] = await Promise.all([
+    supabase.from('programs_summary').select('id, school_id, name, level, field, demo'),
+    supabase.from('schools_summary').select('id, name, country'),
+  ])
+  fail(e1 || e2, 'Could not load programs.')
+  const byId = Object.fromEntries(schools.map((x) => [x.id, x]))
+  return progs.map((p) => ({
+    id: p.id, name: p.name, field: p.field, level: p.level, demo: p.demo,
+    schoolName: byId[p.school_id]?.name || '',
+    international: (byId[p.school_id]?.country || '').toLowerCase() !== 'ghana',
+  }))
+}
+
+// The eligibility maths and the cut-offs live on the server. The browser only sends grades and gets labels back.
+export async function checkEligibility({ programName, scope, mode, grades, electives, sat }) {
+  const { data, error } = await supabase.rpc('check_eligibility', {
+    p_program_name: programName, p_scope: scope, p_mode: mode,
+    p_grades: grades, p_electives: electives, p_sat: sat ? Number(sat) : null,
+  })
+  fail(error, 'Could not check eligibility.')
+  return data
+}
 
 export async function importCatalog(kind, rows) {
   const cur = imported()

@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react'
-import { listSchools, listPrograms, listScholarships } from '../lib/api'
+import { loadCatalog } from '../lib/api'
 
 export function useCatalog() {
-  const [data, setData] = useState({ schools: [], programs: [], scholarships: [], loading: true })
+  const [data, setData] = useState({ schools: [], programs: [], scholarships: [], loading: true, error: '' })
   useEffect(() => {
-    Promise.all([listSchools(), listPrograms(), listScholarships()]).then(([schools, programs, scholarships]) =>
-      setData({ schools, programs, scholarships, loading: false })
-    )
+    let live = true
+    loadCatalog()
+      .then((c) => live && setData({ ...c, loading: false, error: '' }))
+      .catch((e) => live && setData({ schools: [], programs: [], scholarships: [], loading: false, error: e.message }))
+    return () => { live = false }
   }, [])
   return data
 }

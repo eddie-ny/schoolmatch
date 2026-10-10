@@ -42,9 +42,8 @@ export function rowsToSchools(rows) {
   }))
 }
 
-export function rowsToPrograms(rows, schools) {
+export function rowsToPrograms(rows) {
   return rows.map((r, i) => {
-    const school = schools.find((s) => s.name.toLowerCase() === r.school_name.toLowerCase())
     const requirements = []
     if (r.min_core_maths) requirements.push({ subject: 'Core Mathematics', minGrade: r.min_core_maths })
     if (r.min_core_english) requirements.push({ subject: 'English Language', minGrade: r.min_core_english })
@@ -57,7 +56,6 @@ export function rowsToPrograms(rows, schools) {
     }
     return {
       id: `imp-p-${i}-${r.program_name}`.toLowerCase().replace(/\s+/g, '-'),
-      schoolId: school?.id ?? null,
       schoolName: r.school_name,
       name: r.program_name,
       level: r.level,
@@ -71,7 +69,6 @@ export function rowsToPrograms(rows, schools) {
       satHigh: num(r.sat_high),
       englishTestWaiver: yes(r.english_test_waiver),
       foundationAvailable: yes(r.foundation_available),
-      international: school ? school.country.toLowerCase() !== 'ghana' : false,
       verified: yes(r.verified),
     }
   })

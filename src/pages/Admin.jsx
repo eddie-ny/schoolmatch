@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
-import { listUsers, importCatalog, listSchools, clearImports } from '../lib/api'
+import { listUsers, importCatalog, deleteDemoData } from '../lib/api'
 import { parseCsv, rowsToSchools, rowsToPrograms, rowsToScholarships } from '../lib/csv'
 import { Badge, Field, PageTitle } from '../components/ui'
 
@@ -19,10 +19,15 @@ function Importer({ sheet }) {
     if (!rows.length) return setMsg('No rows found. Check the file is a CSV with a header row.')
     let converted
     if (sheet.kind === 'schools') converted = rowsToSchools(rows)
-    else if (sheet.kind === 'programs') converted = rowsToPrograms(rows, await listSchools())
+    else if (sheet.kind === 'programs') converted = rowsToPrograms(rows)
     else converted = rowsToScholarships(rows)
-    await importCatalog(sheet.kind, converted)
-    setMsg(`Imported ${converted.length} rows.`)
+    setMsg('Importing...')
+    try {
+      const res = await importCatalog(sheet.kind, converted)
+      setMsg(`Added ${res.added}, updated ${res.updated}.${res.skipped.length ? ` Skipped ${res.skipped.length}: ${res.skipped.slice(0, 5).join('; ')}` : ''}`)
+    } catch (err) {
+      setMsg(`Import stopped: ${err.message}`)
+    }
     e.target.value = ''
   }
   return (
@@ -46,7 +51,7 @@ export default function Admin() {
 
   return (
     <div className="space-y-8">
-      <PageTitle title="Admin" sub="Sign-ups come from the database. Spreadsheet import is still browser-only until step 5. Authenticator 2FA for admins is not added yet." />
+      <PageTitle title="Admin" sub="Sign-ups come from the database. Authenticator 2FA for admins is not added yet." />
 
       <section className="space-y-3">
         <h2 className="text-xl font-bold">Sign-ups ({users.length})</h2>
@@ -83,7 +88,15 @@ export default function Admin() {
         <h2 className="text-xl font-bold">Spreadsheet import (CSV)</h2>
         <p className="text-sm text-neutral-600">Import schools first, then programs so they link to the right school. Export your Excel sheet as CSV.</p>
         <div className="grid gap-4 md:grid-cols-3">{SHEETS.map((s) => <Importer key={s.kind} sheet={s} />)}</div>
-        <button className="btn btn-outline" onClick={async () => { await clearImports(); location.reload() }}>Remove all imported rows</button>
+        <button
+          className="btn btn-outline"
+          onClick={async () => {
+            if (!window.confirm('Delete all sample (demo) schools, programs and scholarships? Real rows are not touched.')) return
+            try { await deleteDemoData(); location.reload() } catch (err) { alert(err.message) }
+          }}
+        >
+          Delete sample (demo) data
+        </button>
       </section>
     </div>
   )

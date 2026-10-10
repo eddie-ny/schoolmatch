@@ -1,10 +1,9 @@
 // DATA LAYER.
 // Auth, profile, results and documents now talk to Supabase.
-// Browsing the catalog still uses local starter data until step 5. The eligibility check runs on the server (step 4).
+// The catalogue and the eligibility check both live in Supabase.
 // Payments are not wired yet (step 6): the browser can never write subscriptions.
 
 import { supabase } from './supabase'
-import { seedSchools, seedPrograms, seedScholarships } from '../data/seed'
 import { CORE_SUBJECTS } from './constants'
 
 const fail = (error, fallback) => {
@@ -187,18 +186,153 @@ export async function removeDocument(doc) {
 }
 
 // ---------- Catalog (local starter data until step 5) ----------
-const IMPORT_KEY = 'sm_imported'
-const imported = () => {
-  try {
-    return JSON.parse(localStorage.getItem(IMPORT_KEY)) || { schools: [], programs: [], scholarships: [] }
-  } catch {
-    return { schools: [], programs: [], scholarships: [] }
-  }
+// ---------- Catalogue (schools, programs, scholarships) ----------
+// Everyone can read the teaser columns through the summary views. People with full access (and admins)
+// also read the full tables, so the details come back only for them. Row level security decides, not the browser.
+const isLocalCountry = (c) => (c || '').toLowerCase() === 'ghana'
+
+export async function loadCatalog() {
+  const quiet = (q) => q.then((r) => (r.error ? { data: [] } : r)) // no access to the full tables is normal, not an error
+  const [sS, sP, sC, fS, fP, fC] = await Promise.all([
+    supabase.from('schools_summary').select('*'),
+    supabase.from('programs_summary').select('*'),
+    supabase.from('scholarships_summary').select('*'),
+    quiet(supabase.from('schools').select('*')),
+    quiet(supabase.from('programs').select('*, program_requirements(subject, min_grade), program_cutoffs(year, cutoff_aggregate, sat_low, sat_high)')),
+    quiet(supabase.from('scholarships').select('*')),
+  ])
+  fail(sS.error || sP.error || sC.error, 'Could not load the catalogue.')
+
+  const fullSchools = Object.fromEntries((fS.data || []).map((x) => [x.id, x]))
+  const fullPrograms = Object.fromEntries((fP.data || []).map((x) => [x.id, x]))
+  const fullSch = Object.fromEntries((fC.data || []).map((x) => [x.id, x]))
+
+  const schools = sS.data.map((x) => {
+    const f = fullSchools[x.id] || x
+    return { id: x.id, name: x.name, country: x.country, type: x.type, city: x.city, website: f.website || '', category: f.category || '', verified: x.verified, demo: x.demo }
+  })
+  const schoolById = Object.fromEntries(schools.map((x) => [x.id, x]))
+
+  const programs = sP.data.map((x) => {
+    const f = fullPrograms[x.id]
+    const school = schoolById[x.school_id]
+    const latest = [...(f?.program_cutoffs || [])].sort((a, b) => b.year - a.year)[0]
+    return {
+      id: x.id, schoolId: x.school_id, schoolName: school?.name || '', name: x.name, level: x.level, field: x.field, demo: x.demo,
+      international: school ? !isLocalCountry(school.country) : false,
+      feesUsd: f?.fees_usd ?? null, durationYears: f?.duration_years ?? null,
+      englishTestWaiver: !!f?.english_test_waiver, foundationAvailable: !!f?.foundation_available, verified: !!f?.verified,
+      requirements: (f?.program_requirements || []).map((r) => ({ subject: r.subject, minGrade: r.min_grade })),
+      cutoffAggregate: latest?.cutoff_aggregate ?? null, cutoffYear: latest?.year ?? null,
+      satLow: latest?.sat_low ?? null, satHigh: latest?.sat_high ?? null,
+    }
+  })
+
+  const scholarships = sC.data.map((x) => {
+    const f = fullSch[x.id] || {}
+    return {
+      id: x.id, name: x.name, funder: x.funder, country: x.country, fundingType: x.funding_type, verified: x.verified, demo: x.demo,
+      level: f.level || '', minAggregate: f.min_aggregate ?? null, minSat: f.min_sat ?? null,
+      criteria: f.criteria || '', deadline: f.deadline || '', link: f.link || '',
+    }
+  })
+  return { schools, programs, scholarships }
 }
 
-export async function listSchools() { return [...seedSchools, ...imported().schools] }
-export async function listPrograms() { return [...seedPrograms, ...imported().programs] }
-export async function listScholarships() { return [...seedScholarships, ...imported().scholarships] }
+export async function listSchools() { return (await loadCatalog()).schools }
+
+// ---------- Admin spreadsheet import (writes to the database; row level security allows admins only) ----------
+const CORE = ['English Language', 'Core Mathematics', 'Integrated Science', 'Social Studies']
+const clean = (v) => (v === '' || v === undefined ? null : v)
+
+export async function importCatalog(kind, rows) {
+  const out = { added: 0, updated: 0, skipped: [] }
+
+  if (kind === 'schools') {
+    const { data: existing, error } = await supabase.from('schools').select('id, name')
+    fail(error, 'Could not read schools.')
+    const byName = Object.fromEntries(existing.map((x) => [x.name.toLowerCase(), x.id]))
+    for (const r of rows) {
+      if (!r.name || !r.country) { out.skipped.push(r.name || '(no name)'); continue }
+      const row = { name: r.name, country: r.country, type: clean(r.type), category: clean(r.category), city: clean(r.city), website: clean(r.website), verified: !!r.verified }
+      const id = byName[r.name.toLowerCase()]
+      const res = id ? await supabase.from('schools').update(row).eq('id', id) : await supabase.from('schools').insert(row)
+      fail(res.error, `Could not save ${r.name}.`)
+      id ? out.updated++ : out.added++
+    }
+  }
+
+  if (kind === 'programs') {
+    const { data: schools, error } = await supabase.from('schools').select('id, name')
+    fail(error, 'Could not read schools.')
+    const schoolId = Object.fromEntries(schools.map((x) => [x.name.toLowerCase(), x.id]))
+    for (const r of rows) {
+      const sid = schoolId[(r.schoolName || '').toLowerCase()]
+      if (!sid || !r.name) { out.skipped.push(`${r.name || '(no name)'} (school "${r.schoolName}" not found, import schools first)`); continue }
+      const row = {
+        school_id: sid, name: r.name, level: clean(r.level), field: clean(r.field), fees_usd: r.feesUsd, duration_years: r.durationYears,
+        english_test_waiver: !!r.englishTestWaiver, foundation_available: !!r.foundationAvailable, verified: !!r.verified,
+      }
+      const { data: found, error: e1 } = await supabase.from('programs').select('id').eq('school_id', sid).eq('name', r.name).maybeSingle()
+      fail(e1, 'Could not read programs.')
+      let pid = found?.id
+      if (pid) {
+        fail((await supabase.from('programs').update(row).eq('id', pid)).error, `Could not save ${r.name}.`)
+        out.updated++
+      } else {
+        const ins = await supabase.from('programs').insert(row).select('id').single()
+        fail(ins.error, `Could not save ${r.name}.`)
+        pid = ins.data.id
+        out.added++
+      }
+      // Requirements are replaced by what the sheet says.
+      fail((await supabase.from('program_requirements').delete().eq('program_id', pid)).error, 'Could not update requirements.')
+      if (r.requirements?.length) {
+        const reqs = r.requirements.map((q) => ({ program_id: pid, subject: q.subject, min_grade: q.minGrade, is_core: CORE.includes(q.subject) }))
+        fail((await supabase.from('program_requirements').insert(reqs)).error, 'Could not save requirements.')
+      }
+      // One cut-off row per year, so the history builds up as years are imported.
+      if (r.cutoffAggregate != null && r.cutoffYear != null) {
+        const cut = { program_id: pid, year: r.cutoffYear, cutoff_aggregate: r.cutoffAggregate, sat_low: r.satLow, sat_high: r.satHigh }
+        fail((await supabase.from('program_cutoffs').delete().eq('program_id', pid).eq('year', r.cutoffYear)).error, 'Could not update cut-offs.')
+        fail((await supabase.from('program_cutoffs').insert(cut)).error, 'Could not save the cut-off.')
+      } else if (r.cutoffAggregate != null) {
+        out.skipped.push(`${r.name}: cut-off ignored because cutoff_year is empty`)
+      }
+    }
+  }
+
+  if (kind === 'scholarships') {
+    const { data: existing, error } = await supabase.from('scholarships').select('id, name')
+    fail(error, 'Could not read scholarships.')
+    const byName = Object.fromEntries(existing.map((x) => [x.name.toLowerCase(), x.id]))
+    for (const r of rows) {
+      if (!r.name) { out.skipped.push('(no name)'); continue }
+      const row = {
+        name: r.name, funder: clean(r.funder), country: clean(r.country), funding_type: r.fundingType, level: clean(r.level),
+        min_aggregate: r.minAggregate, min_sat: r.minSat, criteria: clean(r.criteria), deadline: clean(r.deadline), link: clean(r.link), verified: !!r.verified,
+      }
+      const id = byName[r.name.toLowerCase()]
+      const res = id ? await supabase.from('scholarships').update(row).eq('id', id) : await supabase.from('scholarships').insert(row)
+      fail(res.error, `Could not save ${r.name}.`)
+      id ? out.updated++ : out.added++
+    }
+  }
+  return out
+}
+
+// Removes the made-up sample rows (flagged demo). Real rows are never touched.
+export async function deleteDemoData() {
+  const { data: progs } = await supabase.from('programs').select('id').eq('demo', true)
+  const ids = (progs || []).map((x) => x.id)
+  if (ids.length) {
+    fail((await supabase.from('program_requirements').delete().in('program_id', ids)).error, 'Could not remove sample data.')
+    fail((await supabase.from('program_cutoffs').delete().in('program_id', ids)).error, 'Could not remove sample data.')
+    fail((await supabase.from('programs').delete().in('id', ids)).error, 'Could not remove sample data.')
+  }
+  fail((await supabase.from('schools').delete().eq('demo', true)).error, 'Could not remove sample schools (they may still have real programs).')
+  fail((await supabase.from('scholarships').delete().eq('demo', true)).error, 'Could not remove sample scholarships.')
+}
 
 // Program names for the eligibility pickers. Only the teaser columns, which visitors may read.
 export async function listEligibilityPrograms() {
@@ -223,16 +357,6 @@ export async function checkEligibility({ programName, scope, mode, grades, elect
   })
   fail(error, 'Could not check eligibility.')
   return data
-}
-
-export async function importCatalog(kind, rows) {
-  const cur = imported()
-  cur[kind] = [...cur[kind], ...rows]
-  localStorage.setItem(IMPORT_KEY, JSON.stringify(cur))
-  return cur[kind].length
-}
-export async function clearImports() {
-  localStorage.removeItem(IMPORT_KEY)
 }
 
 // ---------- Admin ----------

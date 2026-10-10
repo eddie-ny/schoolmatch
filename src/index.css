@@ -1,0 +1,86 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-orange: #FFB02E;
+  --color-brand-green: #B2DE2B;
+  --color-brand-orange-soft: #FFF1D6;
+  --color-brand-green-soft: #F1FAD3;
+  --color-page: #FBFAF1;
+  --color-ink: #333333;
+  --font-heading: "Poppins", sans-serif;
+  --font-body: "Inter", sans-serif;
+}
+
+body {
+  /* Warm off-white with a faint wash of both brand colours, so the orange and the green sit naturally on it. */
+  background-color: var(--color-page);
+  background-image:
+    radial-gradient(60rem 30rem at -10% -5%, rgba(178, 222, 43, 0.28), transparent 60%),
+    radial-gradient(55rem 30rem at 110% 8%, rgba(255, 176, 46, 0.26), transparent 60%),
+    radial-gradient(50rem 30rem at 50% 115%, rgba(178, 222, 43, 0.16), transparent 60%);
+  background-attachment: fixed;
+  color: var(--color-ink);
+  font-family: var(--font-body);
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-heading);
+}
+
+@layer components {
+/* Large tap targets for phones */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 0 20px;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.btn:hover { opacity: 0.9; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-orange { background: var(--color-brand-orange); color: #1f1f1f; }
+.btn-green { background: var(--color-brand-green); color: #1f1f1f; }
+.btn-outline { border: 2px solid var(--color-brand-green); color: var(--color-ink); background: #fff; }
+.btn-outline:hover { background: var(--color-brand-green-soft); opacity: 1; }
+
+.card {
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  border-radius: 16px;
+  padding: 20px;
+}
+
+/* File pickers look like buttons so people know they can click them */
+input[type="file"] { font-size: 14px; max-width: 100%; }
+input[type="file"]::file-selector-button {
+  min-height: 44px;
+  margin-right: 12px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--color-brand-orange);
+  color: #1f1f1f;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+}
+input[type="file"]::file-selector-button:hover { opacity: 0.9; }
+.dropzone { border: 2px dashed var(--color-brand-orange); border-radius: 16px; padding: 16px; background: rgba(255,255,255,0.7); }
+
+.input {
+  width: 100%;
+  min-height: 48px;
+  border: 1px solid #cfcfcf;
+  border-radius: 12px;
+  padding: 0 14px;
+  background: #fff;
+  font-size: 16px;
+}
+.input:focus { outline: 2px solid var(--color-brand-orange); border-color: transparent; }
+
+.label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+}

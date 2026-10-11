@@ -125,7 +125,7 @@ export default function Layout() {
 
         {user && access.level === 'full' && access.trial && (
           <div className="bg-brand-green/20 text-sm text-center py-2 px-4">
-            Free trial: {timeLeft(access.expiresAt)} left. <Link to="/pricing" className="underline font-semibold">See plans</Link>
+            Free trial: {timeLeft(access.expiresAt)} left. <Link to="/pricing" className="underline font-semibold inline-block py-2">See plans</Link>
           </div>
         )}
         {user && access.level === 'summary' && (

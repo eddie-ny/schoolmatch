@@ -12,6 +12,13 @@ const SHEETS = [
   { kind: 'scholarships', label: 'Scholarships sheet', cols: 'name, funder, country, funding_type, level, min_aggregate, min_sat, criteria, deadline, link, verified' },
 ]
 
+function accessLabel(u) {
+  const now = Date.now()
+  const subbed = u.subscription?.status === 'active' && new Date(u.subscription.expiresAt).getTime() > now
+  const trial = u.trialEndsAt && new Date(u.trialEndsAt).getTime() > now
+  return { subbed, trial, label: subbed ? 'Subscriber' : trial ? 'Trial' : u.trialEndsAt ? 'Expired' : 'No trial' }
+}
+
 function Importer({ sheet }) {
   const [msg, setMsg] = useState('')
   const onFile = async (e) => {
@@ -42,9 +49,9 @@ function Importer({ sheet }) {
     e.target.value = ''
   }
   return (
-    <div className="card space-y-2">
+    <div className="card space-y-2 min-w-0">
       <h3 className="font-bold">{sheet.label}</h3>
-      <p className="text-xs text-neutral-500">Columns: {sheet.cols}</p>
+      <p className="text-xs text-neutral-600 break-words">Columns: {sheet.cols}</p>
       <div className="dropzone"><input type="file" accept=".csv" onChange={onFile} /></div>
       {msg && <p className="text-sm font-semibold">{msg}</p>}
     </div>
@@ -71,6 +78,11 @@ export default function Admin() {
     } catch (e) { setTarget(null); setErr(e.message) }
   }
 
+  const makeLink = async (x) => {
+    setLinkErr('')
+    try { setLink({ name: x.studentName, url: await createParentLink(x.studentId) }); load() } catch (e) { setLinkErr(e.message) }
+  }
+
   if (loading) return <p>Loading...</p>
   if (user?.role !== 'admin') return <p>Admins only.</p>
   if (mfa.current !== 'aal2') {
@@ -84,7 +96,7 @@ export default function Admin() {
 
   return (
     <div className="space-y-8">
-      <PageTitle title="Admin" sub="Sign-ups come from the database. Authenticator 2FA for admins is not added yet." />
+      <PageTitle title="Admin" sub="Sign-ups, parent confirmations, the activity log and data imports." />
 
       <section className="space-y-3">
         <h2 className="text-xl font-bold">Sign-ups ({users.length})</h2>
@@ -98,17 +110,33 @@ export default function Admin() {
           onConfirm={toggle}
           onCancel={() => setTarget(null)}
         />
-        <div className="overflow-x-auto card !p-0">
+        <ul className="md:hidden space-y-3" aria-label="Sign-ups">
+          {users.map((u) => {
+            const { subbed, trial, label } = accessLabel(u)
+            return (
+              <li key={u.id} className="card space-y-1 text-sm">
+                <p className="font-semibold break-words">{u.fullName}{u.isMinor && ' (under 18)'}</p>
+                <p className="break-all">{u.email}</p>
+                <p>{u.phone}</p>
+                <p className="flex flex-wrap items-center gap-2">
+                  <Badge tone={subbed || trial ? 'green' : 'orange'}>{label}</Badge>
+                  {u.disabled && <Badge tone="orange">Disabled</Badge>}
+                  <span className="text-neutral-600">{u.profileComplete ? 'Profile complete' : 'Profile incomplete'}</span>
+                </p>
+                <button className="btn btn-outline w-full" onClick={() => setTarget(u)}>{u.disabled ? 'Reactivate' : 'Disable'}</button>
+              </li>
+            )
+          })}
+          {users.length === 0 && <li className="card text-sm text-neutral-500">No sign-ups yet.</li>}
+        </ul>
+        <div className="hidden md:block overflow-x-auto card !p-0">
           <table className="w-full text-sm">
             <thead className="text-left bg-neutral-50">
               <tr><th className="p-3">Name</th><th className="p-3">Email</th><th className="p-3">Phone</th><th className="p-3">Access</th><th className="p-3">Profile</th><th className="p-3">Account</th></tr>
             </thead>
             <tbody>
               {users.map((u) => {
-                const now = Date.now()
-                const subbed = u.subscription?.status === 'active' && new Date(u.subscription.expiresAt).getTime() > now
-                const trial = u.trialEndsAt && new Date(u.trialEndsAt).getTime() > now
-                const label = subbed ? 'Subscriber' : trial ? 'Trial' : u.trialEndsAt ? 'Expired' : 'No trial'
+                const { subbed, trial, label } = accessLabel(u)
                 return (
                   <tr key={u.id} className="border-t border-neutral-200">
                     <td className="p-3">{u.fullName}{u.isMinor && ' (under 18)'}</td>
@@ -149,7 +177,19 @@ export default function Admin() {
             <p className="text-xs text-neutral-600">This link is shown only now. Do not post it anywhere public.</p>
           </div>
         )}
-        <div className="overflow-x-auto card !p-0">
+        <ul className="md:hidden space-y-3" aria-label="Waiting for a parent or guardian">
+          {pending.map((x) => (
+            <li key={x.studentId} className="card space-y-1 text-sm">
+              <p className="font-semibold break-words">{x.studentName}</p>
+              <p>Parent: {x.parentName}</p>
+              <p>Phone: <a className="underline inline-block py-2" href={`tel:${x.parentPhone}`}>{x.parentPhone}</a></p>
+              <p className="break-all">Email: {x.parentEmail}{x.parentEmail && x.parentEmail.toLowerCase() === x.studentEmail.toLowerCase() ? ' (same as student)' : ''}</p>
+              <button className="btn btn-outline w-full" onClick={() => makeLink(x)}>Create link</button>
+            </li>
+          ))}
+          {pending.length === 0 && <li className="card text-sm text-neutral-500">No one is waiting.</li>}
+        </ul>
+        <div className="hidden md:block overflow-x-auto card !p-0">
           <table className="w-full text-sm">
             <thead className="text-left bg-neutral-50"><tr><th className="p-3">Student</th><th className="p-3">Parent or guardian</th><th className="p-3">Parent phone</th><th className="p-3">Parent email</th><th className="p-3"></th></tr></thead>
             <tbody>
@@ -160,10 +200,7 @@ export default function Admin() {
                   <td className="p-3">{x.parentPhone}</td>
                   <td className="p-3">{x.parentEmail}{x.parentEmail && x.parentEmail.toLowerCase() === x.studentEmail.toLowerCase() ? ' (same as student)' : ''}</td>
                   <td className="p-3 whitespace-nowrap">
-                    <button className="underline min-h-11 px-1" onClick={async () => {
-                      setLinkErr('')
-                      try { setLink({ name: x.studentName, url: await createParentLink(x.studentId) }); load() } catch (e) { setLinkErr(e.message) }
-                    }}>Create link</button>
+                    <button className="underline min-h-11 px-1" onClick={() => makeLink(x)}>Create link</button>
                   </td>
                 </tr>
               ))}
@@ -176,7 +213,22 @@ export default function Admin() {
       <section className="space-y-3">
         <h2 className="text-xl font-bold">Activity log</h2>
         <p className="text-sm text-neutral-600">Admin actions and payments, newest first. It cannot be edited or deleted. It never holds passwords or card details.</p>
-        <div className="overflow-x-auto card !p-0">
+        <ul className="md:hidden space-y-2" aria-label="Activity log">
+          {log.map((e) => {
+            const who = users.find((u) => u.id === e.actor_id)
+            const tgt = users.find((u) => u.id === e.target_user)
+            return (
+              <li key={e.id} className="card text-sm space-y-0.5">
+                <p className="text-xs text-neutral-600">{new Date(e.at).toLocaleString()}</p>
+                <p className="font-semibold">{e.action.replaceAll('_', ' ')}</p>
+                <p className="break-all">By: {who?.email || (e.actor_id ? e.actor_id.slice(0, 8) : 'system')}{e.actor_role ? ` (${e.actor_role})` : ''}</p>
+                {(tgt || e.target_user) && <p className="break-all">Account: {tgt?.email || e.target_user.slice(0, 8)}</p>}
+              </li>
+            )
+          })}
+          {log.length === 0 && <li className="card text-sm text-neutral-500">Nothing logged yet.</li>}
+        </ul>
+        <div className="hidden md:block overflow-x-auto card !p-0">
           <table className="w-full text-sm">
             <thead className="text-left bg-neutral-50"><tr><th className="p-3">When</th><th className="p-3">Who</th><th className="p-3">Action</th><th className="p-3">Account</th></tr></thead>
             <tbody>
@@ -201,7 +253,7 @@ export default function Admin() {
       <section className="space-y-3">
         <h2 className="text-xl font-bold">Spreadsheet import (CSV)</h2>
         <p className="text-sm text-neutral-600">Import schools first, then programs so they link to the right school. Export your Excel sheet as CSV.</p>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">{SHEETS.map((s) => <Importer key={s.kind} sheet={s} />)}</div>
+        <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">{SHEETS.map((s) => <Importer key={s.kind} sheet={s} />)}</div>
         <button
           className="btn btn-outline"
           onClick={async () => {

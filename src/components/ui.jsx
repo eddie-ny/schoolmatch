@@ -1,4 +1,4 @@
-import { cloneElement, isValidElement, useEffect, useId, useState } from 'react'
+import { cloneElement, isValidElement, useEffect, useId, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
@@ -186,16 +186,32 @@ export function LockedRows({ rows = ['Entry requirements', 'Cut-off aggregate', 
 
 // Small confirmation popup. Escape or tapping outside closes it.
 export function ConfirmDialog({ open, title, text, confirmLabel = 'Yes', cancelLabel = 'Cancel', onConfirm, onCancel }) {
+  const box = useRef(null)
   useEffect(() => {
     if (!open) return
-    const onKey = (e) => { if (e.key === 'Escape') onCancel() }
+    const opener = document.activeElement
+    const onKey = (e) => {
+      if (e.key === 'Escape') return onCancel()
+      if (e.key !== 'Tab' || !box.current) return
+      // keep Tab inside the dialog
+      const items = box.current.querySelectorAll('button:not([disabled])')
+      if (!items.length) return
+      const first = items[0], last = items[items.length - 1]
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus() }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus() }
+      else if (!box.current.contains(document.activeElement)) { e.preventDefault(); first.focus() }
+    }
     window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      if (opener && document.contains(opener)) opener.focus()
+    }
   }, [open, onCancel])
   if (!open) return null
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onCancel}>
       <div
+        ref={box}
         role="alertdialog"
         aria-modal="true"
         aria-labelledby="confirm-title"

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { setNewPassword, closeMyAccount, passwordProblem, PASSWORD_RULE } from '../lib/api'
+import MfaSettings from '../components/MfaSettings'
 import { ConfirmDialog, Field, PageTitle, RequireAuth, SectionLabel } from '../components/ui'
 
 function SettingsInner() {
@@ -65,6 +66,8 @@ function SettingsInner() {
           <button className="btn btn-orange" disabled={busy || !pw}>{busy ? 'Saving...' : 'Change password'}</button>
         </form>
       </section>
+
+      <MfaSettings />
 
       <section className="space-y-3">
         <h2 className="text-xs font-bold tracking-widest uppercase text-red-700 border-b border-red-200 pb-2">Danger zone</h2>

@@ -2,6 +2,7 @@ import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { Suspense, useEffect, useRef, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { timeLeft } from '../lib/access'
+import MfaChallenge from './MfaChallenge'
 import { ConfirmDialog } from './ui'
 
 export const APP_NAME = 'SchoolMatch' // placeholder name
@@ -56,7 +57,7 @@ function UserMenu({ user, onSignOut }) {
 }
 
 export default function Layout() {
-  const { user, access, signOut } = useAuth()
+  const { user, access, signOut, mfaNeeded } = useAuth()
   const [open, setOpen] = useState(false)
   const [confirmOut, setConfirmOut] = useState(false)
   const nav = useNavigate()
@@ -86,7 +87,7 @@ export default function Layout() {
           </nav>
 
           <div className="hidden lg:flex items-center gap-3 whitespace-nowrap">
-            {user ? (
+            {user && !mfaNeeded ? (
               <UserMenu user={user} onSignOut={() => setConfirmOut(true)} />
             ) : (
               <>
@@ -151,7 +152,7 @@ export default function Layout() {
 
       <main id="main" tabIndex={-1} className="flex-1 outline-none max-w-5xl w-full mx-auto px-4 py-6">
         <Suspense fallback={<p role="status" className="min-h-[60vh]">Loading...</p>}>
-          <Outlet />
+          {mfaNeeded ? <MfaChallenge /> : <Outlet />}
         </Suspense>
       </main>
 

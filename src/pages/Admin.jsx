@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { listUsers, importCatalog, deleteDemoData, setAccountDisabled, listAuditLog } from '../lib/api'
+import { listUsers, importCatalog, deleteDemoData, setAccountDisabled, listAuditLog, importPlans } from '../lib/api'
 import { parseCsv, rowsToSchools, rowsToPrograms, rowsToScholarships } from '../lib/csv'
 import { Badge, ConfirmDialog, Field, PageTitle } from '../components/ui'
 
 const SHEETS = [
   { kind: 'schools', label: 'Schools sheet', cols: 'school_name, country, type, category, city, website, verified' },
   { kind: 'programs', label: 'Programs sheet', cols: 'school_name, program_name, level, field, fees_usd, duration_years, min_core_maths, min_core_english, min_core_science, required_electives, cutoff_aggregate, cutoff_year, sat_low, sat_high, english_test_waiver, foundation_available, verified' },
+  { kind: 'plans', label: 'Plan prices sheet', cols: 'id, label, months, price, currency  (price in normal money, for example 49.50)' },
   { kind: 'scholarships', label: 'Scholarships sheet', cols: 'name, funder, country, funding_type, level, min_aggregate, min_sat, criteria, deadline, link, verified' },
 ]
 
@@ -17,6 +19,15 @@ function Importer({ sheet }) {
     if (!file) return
     const rows = parseCsv(await file.text())
     if (!rows.length) return setMsg('No rows found. Check the file is a CSV with a header row.')
+    if (sheet.kind === 'plans') {
+      setMsg('Importing...')
+      try {
+        const res = await importPlans(rows)
+        setMsg(`Added ${res.added}, updated ${res.updated}.${res.skipped.length ? ` Skipped ${res.skipped.length}: ${res.skipped.slice(0, 5).join('; ')}` : ''}`)
+      } catch (err) { setMsg(`Import stopped: ${err.message}`) }
+      e.target.value = ''
+      return
+    }
     let converted
     if (sheet.kind === 'schools') converted = rowsToSchools(rows)
     else if (sheet.kind === 'programs') converted = rowsToPrograms(rows)
@@ -41,7 +52,7 @@ function Importer({ sheet }) {
 }
 
 export default function Admin() {
-  const { user, loading } = useAuth()
+  const { user, loading, mfa } = useAuth()
   const [users, setUsers] = useState([])
 
   const [target, setTarget] = useState(null) // account waiting for confirmation
@@ -59,6 +70,14 @@ export default function Admin() {
 
   if (loading) return <p>Loading...</p>
   if (user?.role !== 'admin') return <p>Admins only.</p>
+  if (mfa.current !== 'aal2') {
+    return (
+      <div className="max-w-xl card space-y-3">
+        <h1 className="text-xl font-bold">Two-step verification needed</h1>
+        <p>The Admin page needs a code from your authenticator app. Turn it on in <Link to="/settings" className="underline">Settings</Link>, then sign out and sign in again and enter your code.</p>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-8">
@@ -137,7 +156,7 @@ export default function Admin() {
       <section className="space-y-3">
         <h2 className="text-xl font-bold">Spreadsheet import (CSV)</h2>
         <p className="text-sm text-neutral-600">Import schools first, then programs so they link to the right school. Export your Excel sheet as CSV.</p>
-        <div className="grid gap-4 md:grid-cols-3">{SHEETS.map((s) => <Importer key={s.kind} sheet={s} />)}</div>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">{SHEETS.map((s) => <Importer key={s.kind} sheet={s} />)}</div>
         <button
           className="btn btn-outline"
           onClick={async () => {

@@ -9,6 +9,7 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
   const [recovering, setRecovering] = useState(false)
+  const [mfa, setMfa] = useState({ current: 'aal1', next: 'aal1' })
   // Bumped on sign out so a slow in-flight refresh can never put the old user back.
   const generation = useRef(0)
 
@@ -23,6 +24,7 @@ export function AuthProvider({ children }) {
         api.signOut().catch(() => {})
         return
       }
+      if (u && !u.mfaPending) { const m = await api.mfaState(); if (gen === generation.current) setMfa(m) }
       if (gen === generation.current) setUser(u)
     } catch (e) {
       console.error(e)
@@ -81,7 +83,7 @@ export function AuthProvider({ children }) {
   return (
     <AuthContext.Provider
       value={{
-        user, loading, access, profileComplete, parentPending, recovering,
+        user, loading, access, mfa, mfaNeeded: !!user?.mfaPending, profileComplete, parentPending, recovering,
         signUp, signIn, signOut, saveProfile, saveResults, addDocument, removeDocument, refresh,
         requestPasswordReset: api.requestPasswordReset,
         setNewPassword: async (pw) => { await api.setNewPassword(pw); setRecovering(false) },

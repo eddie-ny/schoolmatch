@@ -81,6 +81,41 @@ export async function setNewPassword(password) {
   fail(error, 'Could not update your password.')
 }
 
+// ---------- Two-step verification (authenticator app) ----------
+// current = what this session has proven; next = what it could prove. aal1 -> aal2 means a code is still owed.
+export async function mfaState() {
+  const { data, error } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
+  if (error) return { current: 'aal1', next: 'aal1' }
+  return { current: data.currentLevel, next: data.nextLevel }
+}
+
+export async function mfaFactor() {
+  const { data, error } = await supabase.auth.mfa.listFactors()
+  fail(error, 'Could not read your two-step verification.')
+  return (data.totp || []).find((f) => f.status === 'verified') || null
+}
+
+export async function mfaStartEnroll() {
+  // Remove any half-finished setup first, so repeated tries do not pile up.
+  const { data: list } = await supabase.auth.mfa.listFactors()
+  for (const f of (list?.all || []).filter((x) => x.status === 'unverified')) await supabase.auth.mfa.unenroll({ factorId: f.id })
+  const { data, error } = await supabase.auth.mfa.enroll({ factorType: 'totp', friendlyName: 'Authenticator app' })
+  fail(error, 'Could not start setup.')
+  return { factorId: data.id, qr: data.totp.qr_code, secret: data.totp.secret }
+}
+
+export async function mfaVerifyCode(factorId, code) {
+  const ch = await supabase.auth.mfa.challenge({ factorId })
+  fail(ch.error, 'Could not check the code.')
+  const v = await supabase.auth.mfa.verify({ factorId, challengeId: ch.data.id, code: code.replace(/\s/g, '') })
+  if (v.error) throw new Error('That code is not right or has expired. Try the newest code from your app.')
+}
+
+export async function mfaRemove(factorId) {
+  const { error } = await supabase.auth.mfa.unenroll({ factorId })
+  fail(error, 'Could not turn off two-step verification.')
+}
+
 // Builds the user object the pages expect, from several tables. Every read is limited by
 // row-level security, so a student only ever gets their own rows.
 export async function getCurrentUser() {
@@ -98,7 +133,14 @@ export async function getCurrentUser() {
   ])
   if (prof.error) throw new Error(prof.error.message)
   const p = prof.data
-  if (!p) return null // profile row is created by the signup trigger; should always exist
+  if (!p) {
+    // With two-step verification on, the database hides everything until the code is entered.
+    const m = await mfaState()
+    if (m.current === 'aal1' && m.next === 'aal2') {
+      return { id: uid, mfaPending: true, fullName: '', email: sess.session.user.email, phone: '', role: 'student', documents: [], profile: {}, subscription: null, results: null, parent: null }
+    }
+    return null // profile row is created by the signup trigger; should always exist
+  }
 
   let results = null
   if (res.data) {
@@ -384,6 +426,32 @@ export async function checkEligibility({ programName, scope, mode, grades, elect
 }
 
 // ---------- Payments (Paystack, through the server function) ----------
+// Plan prices from a spreadsheet. The sheet has the price in normal money (for example 49.50); the database keeps
+// the smallest unit (pesewas), so we convert here. Existing plans are updated by id, new ids are added.
+export async function importPlans(rows) {
+  const out = { added: 0, updated: 0, skipped: [] }
+  const { data: existing, error } = await supabase.from('plans').select('id')
+  fail(error, 'Could not read plans.')
+  const have = new Set(existing.map((x) => x.id))
+  for (const r of rows) {
+    const id = String(r.id || '').trim()
+    const price = Number(r.price)
+    const months = Number(r.months)
+    const currency = String(r.currency || 'GHS').trim().toUpperCase()
+    if (!id) { out.skipped.push('(row without id)'); continue }
+    if (!Number.isFinite(price) || price <= 0) { out.skipped.push(`${id}: price must be a number above 0`); continue }
+    if (!Number.isInteger(months) || months < 1) { out.skipped.push(`${id}: months must be a whole number`); continue }
+    if (!/^[A-Z]{3}$/.test(currency)) { out.skipped.push(`${id}: currency must be 3 letters such as GHS`); continue }
+    const row = { id, label: (r.label || '').trim() || `${months} months`, months, price_minor: Math.round(price * 100), currency }
+    const res = have.has(id)
+      ? await supabase.from('plans').update({ label: row.label, months, price_minor: row.price_minor, currency }).eq('id', id)
+      : await supabase.from('plans').insert({ ...row, sort: months })
+    fail(res.error, `Could not save plan ${id}.`)
+    have.has(id) ? out.updated++ : out.added++
+  }
+  return out
+}
+
 export async function listPlans() {
   const { data, error } = await supabase.from('plans').select('id, label, months, price_minor, currency').order('sort')
   fail(error, 'Could not load plans.')

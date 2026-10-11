@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { SHS_PROGRAMS } from '../lib/constants'
-import { Badge, Field, PageTitle, RequireAuth } from '../components/ui'
+import { Badge, Field, PageTitle, RequireAuth, SectionLabel } from '../components/ui'
+import { saveAccount } from '../lib/api'
 import { timeLeft } from '../lib/access'
 
 const ALLOWED = ['application/pdf', 'image/jpeg', 'image/png']
@@ -10,12 +11,12 @@ const MAX_MB = 5
 
 function ProfileInner() {
   const { user, access, saveProfile, addDocument, removeDocument, profileComplete, parentPending } = useAuth()
-  const [p, setP] = useState(user.profile)
+  const [p, setP] = useState({ ...user.profile, phone: user.phone || '' })
   const [saved, setSaved] = useState('')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
 
-  useEffect(() => { setP(user.profile) }, [user.profile])
+  useEffect(() => { setP({ ...user.profile, phone: user.phone || '' }) }, [user.profile, user.phone])
 
   const save = async (e) => {
     e.preventDefault()
@@ -24,8 +25,9 @@ function ProfileInner() {
     if (!p.shsAttended.trim() || !p.shsProgram) return setError('SHS attended and the program you studied are required.')
     setBusy(true)
     try {
+      if (p.phone !== (user.phone || '')) await saveAccount(user.id, { fullName: user.fullName, phone: p.phone.trim() })
       await saveProfile(p)
-      setSaved('Profile saved.')
+      setSaved('Changes saved.')
     } catch (err) {
       setError(err.message)
     } finally {
@@ -58,7 +60,7 @@ function ProfileInner() {
 
   return (
     <div className="space-y-6 max-w-2xl">
-      <PageTitle title="My profile" />
+      <PageTitle title="Profile" />
 
       {!profileComplete && (
         <div className="rounded-xl bg-brand-orange/20 p-4 text-sm font-medium">
@@ -79,8 +81,22 @@ function ProfileInner() {
       )}
       {user.isMinor && !parentPending && <Badge tone="green">Parent confirmed</Badge>}
 
-      <form onSubmit={save} className="card space-y-4">
-        <h2 className="font-bold text-lg">School details</h2>
+      <form onSubmit={save} className="card space-y-5">
+        <SectionLabel>Personal information</SectionLabel>
+        <Field label="Full name" hint="Your name cannot be changed once it is set. If it is wrong, contact support.">
+          <input className="input bg-neutral-50 text-neutral-600" value={user.fullName} readOnly disabled />
+        </Field>
+        <Field label="Email" hint="Email cannot be changed.">
+          <input className="input bg-neutral-50 text-neutral-600" value={user.email} readOnly disabled />
+        </Field>
+        <Field label="Phone number">
+          <input className="input" type="tel" value={p.phone} onChange={(e) => setP({ ...p, phone: e.target.value })} />
+        </Field>
+        <Field label="Date of birth" hint="Your date of birth cannot be changed once it is set. If it is wrong, contact support.">
+          <input className="input bg-neutral-50 text-neutral-600" value={user.dateOfBirth || ''} readOnly disabled />
+        </Field>
+
+        <SectionLabel>School details</SectionLabel>
         <Field label="SHS attended *"><input className="input" value={p.shsAttended} onChange={(e) => setP({ ...p, shsAttended: e.target.value })} /></Field>
         <Field label="High school program studied *">
           <select className="input" value={p.shsProgram} onChange={(e) => setP({ ...p, shsProgram: e.target.value })}>
@@ -97,13 +113,13 @@ function ProfileInner() {
           </select>
         </Field>
         <Field label="Desired programs (optional)"><input className="input" placeholder="e.g. Computer Science, Engineering" value={p.desiredPrograms} onChange={(e) => setP({ ...p, desiredPrograms: e.target.value })} /></Field>
-        {error && <p className="text-red-700 text-sm">{error}</p>}
-        {saved && <p className="text-sm font-semibold text-green-800">{saved}</p>}
-        <button className="btn btn-orange" disabled={busy}>{busy ? 'Saving...' : 'Save profile'}</button>
+        {error && <p className="text-red-700 text-sm" role="alert">{error}</p>}
+        {saved && <p className="text-sm font-semibold text-green-800" role="status">{saved}</p>}
+        <button className="btn btn-orange w-full" disabled={busy}>{busy ? 'Saving...' : 'Save changes'}</button>
       </form>
 
       <div className="card space-y-3">
-        <h2 className="font-bold text-lg">Documents</h2>
+        <SectionLabel>Documents</SectionLabel>
         <p className="text-sm text-neutral-600">PDF, JPG or PNG, up to {MAX_MB} MB each. Only you can see these files.</p>
         <div className="dropzone"><input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={onFile} /></div>
         {user.documents.length === 0 && <p className="text-sm text-neutral-500">No documents uploaded yet.</p>}
@@ -118,7 +134,7 @@ function ProfileInner() {
       </div>
 
       <div className="card space-y-2">
-        <h2 className="font-bold text-lg">Access</h2>
+        <SectionLabel>Access</SectionLabel>
         <p className="text-sm">{access.detail}{access.expiresAt ? `, ${timeLeft(access.expiresAt)} left` : ''}</p>
         <Link to="/pricing" className="btn btn-green">See plans</Link>
         <p className="text-sm text-neutral-600">Name, phone, password and closing your account are in <Link to="/settings" className="underline">Settings</Link>.</p>

@@ -212,3 +212,8 @@ export function ConfirmDialog({ open, title, text, confirmLabel = 'Yes', cancelL
     </div>
   )
 }
+
+// Small grey section heading with a rule under it (GoScholar-style).
+export function SectionLabel({ children }) {
+  return <h2 className="text-xs font-bold tracking-widest uppercase text-neutral-600 border-b border-neutral-200 pb-2">{children}</h2>
+}

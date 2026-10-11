@@ -6,6 +6,9 @@
   --color-brand-orange-soft: #FFF1D6;
   --color-brand-green-soft: #F1FAD3;
   --color-page: #FBFAF1;
+  /* Darker shades of the brand colours for TEXT. The pure brand shades are only 1.5:1 and 1.7:1 on the page colour. */
+  --color-brand-green-ink: #6B8E0A;
+  --color-brand-orange-ink: #CC6A00;
   --color-ink: #333333;
   --font-heading: "Poppins", sans-serif;
   --font-body: "Inter", sans-serif;

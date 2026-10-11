@@ -101,7 +101,7 @@ export default function Home() {
           Free for your first 24 hours
         </span>
         <h1 className="mt-5 text-4xl md:text-6xl font-bold leading-tight text-neutral-900">
-          Find the right school for <span className="rounded-lg bg-brand-orange/40 px-2">your results</span>
+          Find the <span className="text-brand-green-ink">right school</span> for <span className="text-brand-orange-ink">your results</span>
         </h1>
         <p className="mt-4 text-lg text-neutral-700 max-w-xl mx-auto">
           Check your eligibility for local and international schools, and find scholarships, all in one place.

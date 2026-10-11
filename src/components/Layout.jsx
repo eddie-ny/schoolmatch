@@ -1,5 +1,5 @@
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
-import { useEffect, useRef, useState } from 'react'
+import { Suspense, useEffect, useRef, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { timeLeft } from '../lib/access'
 import { ConfirmDialog } from './ui'
@@ -150,7 +150,9 @@ export default function Layout() {
       />
 
       <main id="main" tabIndex={-1} className="flex-1 outline-none max-w-5xl w-full mx-auto px-4 py-6">
-        <Outlet />
+        <Suspense fallback={<p role="status" className="min-h-[60vh]">Loading...</p>}>
+          <Outlet />
+        </Suspense>
       </main>
 
       <footer className="border-t border-neutral-200 text-sm text-neutral-600">

@@ -1,18 +1,23 @@
+import { lazy, Suspense } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import Layout from './components/Layout'
 import Home from './pages/Home'
-import { Schools, SchoolDetail } from './pages/Schools'
-import Abroad from './pages/Abroad'
-import Scholarships from './pages/Scholarships'
-import Eligibility from './pages/Eligibility'
-import { Login, Signup, ForgotPassword, ResetPassword } from './pages/Auth'
-import Profile from './pages/Profile'
-import Pricing from './pages/Pricing'
-import Admin from './pages/Admin'
-import Privacy from './pages/Privacy'
-import Settings from './pages/Settings'
-import Legal from './pages/Legal'
-import NotFound from './pages/NotFound'
+const Schools = lazy(() => import('./pages/Schools').then((m) => ({ default: m.Schools })))
+const SchoolDetail = lazy(() => import('./pages/Schools').then((m) => ({ default: m.SchoolDetail })))
+const Abroad = lazy(() => import('./pages/Abroad'))
+const Scholarships = lazy(() => import('./pages/Scholarships'))
+const Eligibility = lazy(() => import('./pages/Eligibility'))
+const Login = lazy(() => import('./pages/Auth').then((m) => ({ default: m.Login })))
+const Signup = lazy(() => import('./pages/Auth').then((m) => ({ default: m.Signup })))
+const ForgotPassword = lazy(() => import('./pages/Auth').then((m) => ({ default: m.ForgotPassword })))
+const ResetPassword = lazy(() => import('./pages/Auth').then((m) => ({ default: m.ResetPassword })))
+const Profile = lazy(() => import('./pages/Profile'))
+const Pricing = lazy(() => import('./pages/Pricing'))
+const Admin = lazy(() => import('./pages/Admin'))
+const Privacy = lazy(() => import('./pages/Privacy'))
+const Settings = lazy(() => import('./pages/Settings'))
+const Legal = lazy(() => import('./pages/Legal'))
+const NotFound = lazy(() => import('./pages/NotFound'))
 
 export default function App() {
   return (

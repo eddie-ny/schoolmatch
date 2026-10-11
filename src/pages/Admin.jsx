@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
-import { listUsers, importCatalog, deleteDemoData, setAccountDisabled } from '../lib/api'
+import { listUsers, importCatalog, deleteDemoData, setAccountDisabled, listAuditLog } from '../lib/api'
 import { parseCsv, rowsToSchools, rowsToPrograms, rowsToScholarships } from '../lib/csv'
 import { Badge, ConfirmDialog, Field, PageTitle } from '../components/ui'
 
@@ -46,7 +46,8 @@ export default function Admin() {
 
   const [target, setTarget] = useState(null) // account waiting for confirmation
   const [err, setErr] = useState('')
-  const load = () => listUsers().then(setUsers)
+  const [log, setLog] = useState([])
+  const load = () => Promise.all([listUsers().then(setUsers), listAuditLog().then(setLog).catch(() => {})])
   useEffect(() => { load() }, [])
   const toggle = async () => {
     try {
@@ -103,6 +104,31 @@ export default function Admin() {
               {users.length === 0 && (
                 <tr><td className="p-3 text-neutral-500" colSpan={6}>No sign-ups yet.</td></tr>
               )}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="text-xl font-bold">Activity log</h2>
+        <p className="text-sm text-neutral-600">Admin actions and payments, newest first. It cannot be edited or deleted. It never holds passwords or card details.</p>
+        <div className="overflow-x-auto card !p-0">
+          <table className="w-full text-sm">
+            <thead className="text-left bg-neutral-50"><tr><th className="p-3">When</th><th className="p-3">Who</th><th className="p-3">Action</th><th className="p-3">Account</th></tr></thead>
+            <tbody>
+              {log.map((e) => {
+                const who = users.find((u) => u.id === e.actor_id)
+                const target = users.find((u) => u.id === e.target_user)
+                return (
+                  <tr key={e.id} className="border-t border-neutral-200">
+                    <td className="p-3 whitespace-nowrap">{new Date(e.at).toLocaleString()}</td>
+                    <td className="p-3">{who?.email || (e.actor_id ? e.actor_id.slice(0, 8) : 'system')}{e.actor_role ? ` (${e.actor_role})` : ''}</td>
+                    <td className="p-3">{e.action.replaceAll('_', ' ')}</td>
+                    <td className="p-3">{target?.email || (e.target_user ? e.target_user.slice(0, 8) : '')}</td>
+                  </tr>
+                )
+              })}
+              {log.length === 0 && <tr><td className="p-3 text-neutral-500" colSpan={4}>Nothing logged yet.</td></tr>}
             </tbody>
           </table>
         </div>

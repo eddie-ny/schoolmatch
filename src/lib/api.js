@@ -119,7 +119,7 @@ export async function getCurrentUser() {
     dateOfBirth: p.date_of_birth,
     isMinor: p.is_minor,
     disabled: !!p.disabled_at,
-    role: adm.data ? 'admin' : 'student',
+    role: adm.data ? (adm.data.role === 'support' ? 'support' : 'admin') : 'student',
     createdAt: p.created_at,
     trialEndsAt: p.trial_ends_at,
     profile: {
@@ -409,6 +409,12 @@ export async function verifyPayment(reference) {
 
 // ---------- Admin ----------
 // Row-level security lets only admins read every profile and subscription.
+export async function listAuditLog(limit = 50) {
+  const { data, error } = await supabase.from('audit_log').select('id, at, actor_id, actor_role, action, target_user, detail').order('id', { ascending: false }).limit(limit)
+  fail(error, 'Could not load the activity log.')
+  return data || []
+}
+
 export async function listUsers() {
   const [p, s] = await Promise.all([
     supabase.from('profiles').select('id, full_name, email, phone, is_minor, trial_ends_at, created_at, profile_complete, disabled_at').order('created_at', { ascending: false }),

@@ -76,7 +76,7 @@ function ProfileInner() {
               ? `${user.parent.name} (${user.parent.email}) needs to confirm your account. Your account stays limited until they do.`
               : 'A parent or guardian must confirm your account. Your account stays limited until they do.'}
           </p>
-          <p className="text-xs text-neutral-500">The confirmation email is added in a later step. Until then the team confirms parents manually.</p>
+          <p className="text-xs text-neutral-500">The team confirms with your parent or guardian directly and sends them a one-time link. Once they agree, refresh this page. Automatic emails are added later.</p>
         </div>
       )}
       {user.isMinor && !parentPending && <Badge tone="green">Parent confirmed</Badge>}

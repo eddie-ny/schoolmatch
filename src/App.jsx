@@ -17,6 +17,7 @@ const Admin = lazy(() => import('./pages/Admin'))
 const Privacy = lazy(() => import('./pages/Privacy'))
 const Settings = lazy(() => import('./pages/Settings'))
 const Legal = lazy(() => import('./pages/Legal'))
+const ParentConfirm = lazy(() => import('./pages/ParentConfirm'))
 const NotFound = lazy(() => import('./pages/NotFound'))
 
 export default function App() {
@@ -38,6 +39,7 @@ export default function App() {
         <Route path="/pricing" element={<Pricing />} />
         <Route path="/admin" element={<Admin />} />
         <Route path="/privacy" element={<Privacy />} />
+        <Route path="/parent-confirm" element={<ParentConfirm />} />
         <Route path="/terms" element={<Legal page="terms" />} />
         <Route path="/refunds" element={<Legal page="refunds" />} />
         <Route path="/cookies" element={<Legal page="cookies" />} />

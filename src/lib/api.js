@@ -477,6 +477,37 @@ export async function verifyPayment(reference) {
 
 // ---------- Admin ----------
 // Row-level security lets only admins read every profile and subscription.
+// ---------- Parent confirmation ----------
+export async function previewParentLink(token) {
+  const { data, error } = await supabase.functions.invoke('parent-confirm/preview', { body: { token } })
+  if (error) throw new Error('Could not check this link. Please try again.')
+  return data // { state: ok | invalid | used | expired, studentFirstName, parentName }
+}
+export async function confirmParentLink(token) {
+  const { data, error } = await supabase.functions.invoke('parent-confirm/confirm', { body: { token } })
+  if (error) throw new Error('Could not record your confirmation. Please try again.')
+  return data.state // confirmed | invalid | used | expired
+}
+// Staff only. Returns a one-time link to give to the parent after checking who they are.
+export async function createParentLink(studentId) {
+  const { data, error } = await supabase.functions.invoke('parent-confirm/issue', { body: { studentId } })
+  if (error) {
+    let msg = ''
+    try { msg = (await error.context.json()).error } catch { /* not JSON */ }
+    throw new Error(msg || 'Could not create the link.')
+  }
+  return data.url
+}
+export async function listPendingParents() {
+  const [c, p] = await Promise.all([
+    supabase.from('parent_contacts').select('student_id, name, phone, email, confirmed_at').is('confirmed_at', null),
+    supabase.from('profiles').select('id, full_name, email'),
+  ])
+  fail(c.error, 'Could not load parent confirmations.')
+  const byId = Object.fromEntries((p.data || []).map((x) => [x.id, x]))
+  return (c.data || []).map((x) => ({ studentId: x.student_id, parentName: x.name, parentPhone: x.phone, parentEmail: x.email, studentName: byId[x.student_id]?.full_name || '', studentEmail: byId[x.student_id]?.email || '' }))
+}
+
 export async function listAuditLog(limit = 50) {
   const { data, error } = await supabase.from('audit_log').select('id, at, actor_id, actor_role, action, target_user, detail').order('id', { ascending: false }).limit(limit)
   fail(error, 'Could not load the activity log.')

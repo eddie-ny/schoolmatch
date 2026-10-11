@@ -65,7 +65,13 @@ If the accounts are yours today, transfer them as below.
 - A lawyer has reviewed Terms, Privacy, Refunds and Cookies against Ghana law, including the Data Protection Act and the rule that closed accounts are disabled, not deleted.
 - Support email address added where the site says "contact support".
 
-## 8. Last checks
+## 8. Clean-up before launch
+
+- Drop the test helper functions in the database: `dev_grant_plan`, `dev_expire_plan`, `dev_remove_plan`, `dev_set_trial`, `dev_confirm_parent`, `dev_show`. They are blocked from the website but should not exist in production.
+- Delete the sample (demo) data from the Admin page.
+- Remove `supabase/test_helpers.sql` from the repository if it is no longer needed.
+
+## 9. Last checks
 
 - Run the accessibility audit and a manual keyboard and screen-reader test.
 - Check the site on a real phone on a slow connection.

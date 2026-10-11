@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { listUsers, importCatalog, deleteDemoData, setAccountDisabled, listAuditLog, importPlans } from '../lib/api'
+import { listUsers, importCatalog, deleteDemoData, setAccountDisabled, listAuditLog, importPlans, listPendingParents, createParentLink } from '../lib/api'
 import { parseCsv, rowsToSchools, rowsToPrograms, rowsToScholarships } from '../lib/csv'
 import { Badge, ConfirmDialog, Field, PageTitle } from '../components/ui'
 
@@ -58,7 +58,10 @@ export default function Admin() {
   const [target, setTarget] = useState(null) // account waiting for confirmation
   const [err, setErr] = useState('')
   const [log, setLog] = useState([])
-  const load = () => Promise.all([listUsers().then(setUsers), listAuditLog().then(setLog).catch(() => {})])
+  const [pending, setPending] = useState([])
+  const [link, setLink] = useState(null) // { name, url }
+  const [linkErr, setLinkErr] = useState('')
+  const load = () => Promise.all([listUsers().then(setUsers), listAuditLog().then(setLog).catch(() => {}), listPendingParents().then(setPending).catch(() => {})])
   useEffect(() => { load() }, [])
   const toggle = async () => {
     try {
@@ -123,6 +126,48 @@ export default function Admin() {
               {users.length === 0 && (
                 <tr><td className="p-3 text-neutral-500" colSpan={6}>No sign-ups yet.</td></tr>
               )}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="text-xl font-bold">Waiting for a parent or guardian ({pending.length})</h2>
+        <p className="text-sm text-neutral-600">
+          Phone the parent on the number below and make sure you are speaking to them. Then create a one-time link and send it to that parent only. It works once and expires in 7 days.
+          Creating a new link cancels the old one. Every link is recorded in the activity log.
+        </p>
+        {linkErr && <p className="text-red-700 text-sm" role="alert">{linkErr}</p>}
+        {link && (
+          <div className="card space-y-2 border-brand-green" role="status">
+            <p className="font-semibold">Link for the parent of {link.name}</p>
+            <input className="input text-xs" readOnly value={link.url} onFocus={(e) => e.target.select()} aria-label="Confirmation link" />
+            <div className="flex gap-3">
+              <button className="btn btn-green" onClick={() => navigator.clipboard?.writeText(link.url)}>Copy link</button>
+              <button className="btn btn-outline" onClick={() => setLink(null)}>Hide</button>
+            </div>
+            <p className="text-xs text-neutral-600">This link is shown only now. Do not post it anywhere public.</p>
+          </div>
+        )}
+        <div className="overflow-x-auto card !p-0">
+          <table className="w-full text-sm">
+            <thead className="text-left bg-neutral-50"><tr><th className="p-3">Student</th><th className="p-3">Parent or guardian</th><th className="p-3">Parent phone</th><th className="p-3">Parent email</th><th className="p-3"></th></tr></thead>
+            <tbody>
+              {pending.map((x) => (
+                <tr key={x.studentId} className="border-t border-neutral-200">
+                  <td className="p-3">{x.studentName}</td>
+                  <td className="p-3">{x.parentName}</td>
+                  <td className="p-3">{x.parentPhone}</td>
+                  <td className="p-3">{x.parentEmail}{x.parentEmail && x.parentEmail.toLowerCase() === x.studentEmail.toLowerCase() ? ' (same as student)' : ''}</td>
+                  <td className="p-3 whitespace-nowrap">
+                    <button className="underline min-h-11 px-1" onClick={async () => {
+                      setLinkErr('')
+                      try { setLink({ name: x.studentName, url: await createParentLink(x.studentId) }); load() } catch (e) { setLinkErr(e.message) }
+                    }}>Create link</button>
+                  </td>
+                </tr>
+              ))}
+              {pending.length === 0 && <tr><td className="p-3 text-neutral-500" colSpan={5}>No one is waiting.</td></tr>}
             </tbody>
           </table>
         </div>

@@ -36,7 +36,11 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     const { data } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'PASSWORD_RECOVERY') setRecovering(true)
+      if (event === 'PASSWORD_RECOVERY') {
+        setRecovering(true)
+        // If the email link landed anywhere else (for example the home page), take the person to the reset form.
+        if (window.location.pathname !== '/reset-password') window.location.replace('/reset-password')
+      }
       if (!session) {
         setUser(null)
         setLoading(false)

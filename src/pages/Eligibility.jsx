@@ -185,7 +185,10 @@ function EligibilityInner() {
         <section className="space-y-4">
           <h2 className="text-xl font-bold">Results</h2>
           {output.aggregate != null
-            ? <p>Your aggregate: <b>{output.aggregate}</b> (lower is better, 6 is the best possible).</p>
+            ? <>
+                <p>Your aggregate: <b>{output.aggregate}</b> (lower is better, 6 is the best possible).</p>
+                <p className="text-sm text-neutral-600">Counted from English, Mathematics, Integrated Science (science programs) or Social Studies (other programs), plus your 3 best electives. You need at least C6 in each of the three core subjects.</p>
+              </>
             : <p className="text-neutral-600">{output.reason}</p>}
           {output.mode === 'terminal' && <p className="text-sm font-semibold">These are projections based on terminal or mock grades.</p>}
 

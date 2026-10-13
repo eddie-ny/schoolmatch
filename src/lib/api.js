@@ -16,9 +16,17 @@ const fail = (error, fallback) => {
 
 function friendly(error) {
   const m = (error.message || '').toLowerCase()
+  const code = error.code || ''
   if (m.includes('invalid login')) return 'Wrong email or password.'
   if (m.includes('email not confirmed')) return 'Please confirm your email first. Check your inbox for the link.'
-  if (m.includes('rate limit') || m.includes('too many')) return 'Too many attempts. Please wait a few minutes and try again.'
+  // The email limit is shared by the whole site, not by one account, so say that plainly.
+  if (code === 'over_email_send_rate_limit' || m.includes('email rate limit')) {
+    return 'We cannot send emails right now because the email service is at its limit. This is not about your account. Signing in is not affected. Please try again in about an hour.'
+  }
+  if (m.includes('failed to fetch') || m.includes('networkerror') || m.includes('network request failed') || error.name === 'AuthRetryableFetchError') {
+    return 'Could not reach the server. Check your internet connection and try again. If you were creating an account, check your email first, it may have gone through.'
+  }
+  if (code === 'over_request_rate_limit' || m.includes('rate limit') || m.includes('too many')) return 'Too many attempts from this connection. Please wait a few minutes and try again.'
   if (m.includes('banned')) return 'This account is closed or disabled. Contact support if you think this is a mistake.'
   if (m.includes('at least one character of each')) return PASSWORD_RULE
   if (m.includes('password') && m.includes('characters')) return 'Password is too short. ' + PASSWORD_RULE

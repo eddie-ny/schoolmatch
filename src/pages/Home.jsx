@@ -2,12 +2,12 @@ import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useCatalog, isLocal } from '../hooks/useCatalog'
-import { FIELDS } from '../lib/constants'
+import { FIELDS, SHOW_INTERNATIONAL } from '../lib/constants'
 import { Badge, LockedRows, Segmented, VerifiedBadges } from '../components/ui'
 
 const tasks = [
-  { to: '/schools', title: 'Find a School', text: 'Search local and international schools and programs.', bar: 'border-l-brand-orange' },
-  { to: '/abroad', title: 'Study Abroad', text: 'Compare entry rules, English waivers and costs.', bar: 'border-l-brand-green' },
+  { to: '/schools', title: 'Find a School', text: SHOW_INTERNATIONAL ? 'Search local and international schools and programs.' : 'Search Ghanaian universities and their programs.', bar: 'border-l-brand-orange' },
+  ...(SHOW_INTERNATIONAL ? [{ to: '/abroad', title: 'Study Abroad', text: 'Compare entry rules, English waivers and costs.', bar: 'border-l-brand-green' }] : []),
   { to: '/scholarships', title: 'Find Scholarships', text: 'Browse funding by type and country.', bar: 'border-l-brand-orange' },
   { to: '/eligibility', title: 'Check My Eligibility', text: 'Enter your results and see where you stand.', bar: 'border-l-brand-green' },
 ]
@@ -104,7 +104,7 @@ export default function Home() {
           Find the <span className="text-brand-green-ink">right school</span> for <span className="text-brand-orange-ink">your results</span>
         </h1>
         <p className="mt-4 text-lg text-neutral-700 max-w-xl mx-auto">
-          Check your eligibility for local and international schools, and find scholarships, all in one place.
+          {SHOW_INTERNATIONAL ? 'Check your eligibility for local and international schools, and find scholarships, all in one place.' : 'Check your eligibility for Ghanaian universities and find scholarships, all in one place.'}
         </p>
         <div className="mt-7 flex flex-col sm:flex-row gap-3 justify-center">
           <Link to="/eligibility" className="btn btn-orange !min-h-14 !px-8 text-lg">Check My Eligibility</Link>
@@ -138,11 +138,13 @@ export default function Home() {
       <section className="space-y-4">
         <h2 className="text-2xl font-bold">Browse</h2>
         <div className="space-y-3">
-          <Segmented
-            value={where}
-            onChange={setWhere}
-            options={[{ value: 'all', label: 'All' }, { value: 'local', label: 'Local' }, { value: 'intl', label: 'International' }]}
-          />
+          {SHOW_INTERNATIONAL && (
+            <Segmented
+              value={where}
+              onChange={setWhere}
+              options={[{ value: 'all', label: 'All' }, { value: 'local', label: 'Local' }, { value: 'intl', label: 'International' }]}
+            />
+          )}
           <div>
             <Segmented
               value={funding}

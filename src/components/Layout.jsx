@@ -4,12 +4,13 @@ import { useAuth } from '../context/AuthContext'
 import { timeLeft } from '../lib/access'
 import MfaChallenge from './MfaChallenge'
 import { ConfirmDialog } from './ui'
+import { SHOW_INTERNATIONAL } from '../lib/constants'
 
 export const APP_NAME = 'SchoolMatch' // placeholder name
 
 const links = [
   { to: '/schools', label: 'Find a School' },
-  { to: '/abroad', label: 'Study Abroad' },
+  ...(SHOW_INTERNATIONAL ? [{ to: '/abroad', label: 'Study Abroad' }] : []),
   { to: '/scholarships', label: 'Scholarships' },
   { to: '/eligibility', label: 'Check My Eligibility' },
   { to: '/pricing', label: 'Plans' },

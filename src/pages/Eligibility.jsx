@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useEffect } from 'react'
 import { listEligibilityPrograms, checkEligibility } from '../lib/api'
-import { CORE_SUBJECTS, ELECTIVE_SUBJECTS, GRADES, DISCLAIMER, FIELDS } from '../lib/constants'
+import { CORE_SUBJECTS, ELECTIVE_SUBJECTS, GRADES, DISCLAIMER, FIELDS, SHOW_INTERNATIONAL } from '../lib/constants'
 import { Badge, Field, Gate, PageTitle, RequireAuth, Segmented } from '../components/ui'
 
 const labelTone = {
@@ -58,7 +58,7 @@ function EligibilityInner() {
   const [grades, setGrades] = useState(saved?.grades || {})
   const [electives, setElectives] = useState(saved?.electives || ['', '', ''])
   const [sat, setSat] = useState(saved?.sat || '')
-  const [scope, setScope] = useState('both')
+  const [scope, setScope] = useState(SHOW_INTERNATIONAL ? 'both' : 'local')
   const [field, setField] = useState('')
   const [programName, setProgramName] = useState('')
   const [output, setOutput] = useState(null)
@@ -145,14 +145,14 @@ function EligibilityInner() {
             )}
           </div>
 
-          <Field label="SAT or ACT score (optional)" hint="Used for international schools that publish a score range.">
+          {SHOW_INTERNATIONAL && (<Field label="SAT or ACT score (optional)" hint="Used for international schools that publish a score range.">
             <input className="input" type="number" inputMode="numeric" value={sat} onChange={(e) => setSat(e.target.value)} />
-          </Field>
+          </Field>)}
         </div>
 
         <div className="card space-y-4">
           <h2 className="font-bold text-lg">2. What do you want to study?</h2>
-          <Segmented value={scope} onChange={(v) => { setScope(v); setProgramName('') }} options={[{ value: 'local', label: 'Local' }, { value: 'intl', label: 'International' }, { value: 'both', label: 'Both' }]} />
+          {SHOW_INTERNATIONAL && <Segmented value={scope} onChange={(v) => { setScope(v); setProgramName('') }} options={[{ value: 'local', label: 'Local' }, { value: 'intl', label: 'International' }, { value: 'both', label: 'Both' }]} />}
           <Field label="Field">
             <select className="input" value={field} onChange={(e) => { setField(e.target.value); setProgramName('') }}>
               <option value="">Select a field</option>

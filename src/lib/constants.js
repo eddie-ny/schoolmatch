@@ -72,3 +72,7 @@ export const FIELDS = [
   { id: 'Law', blurb: 'Law and public policy' },
   { id: 'Education', blurb: 'Teaching and development' },
 ]
+
+// Launch is local (Ghana) only. International schools and scholarships stay in the database and the code;
+// set this to true to bring them back everywhere (filters, Study Abroad page, eligibility scope).
+export const SHOW_INTERNATIONAL = false

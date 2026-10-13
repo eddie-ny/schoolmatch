@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import Layout from './components/Layout'
 import Home from './pages/Home'
+import { SHOW_INTERNATIONAL } from './lib/constants'
 const Schools = lazy(() => import('./pages/Schools').then((m) => ({ default: m.Schools })))
 const SchoolDetail = lazy(() => import('./pages/Schools').then((m) => ({ default: m.SchoolDetail })))
 const Abroad = lazy(() => import('./pages/Abroad'))
@@ -27,7 +28,7 @@ export default function App() {
         <Route path="/" element={<Home />} />
         <Route path="/schools" element={<Schools />} />
         <Route path="/schools/:id" element={<SchoolDetail />} />
-        <Route path="/abroad" element={<Abroad />} />
+        {SHOW_INTERNATIONAL && <Route path="/abroad" element={<Abroad />} />}
         <Route path="/scholarships" element={<Scholarships />} />
         <Route path="/eligibility" element={<Eligibility />} />
         <Route path="/login" element={<Login />} />

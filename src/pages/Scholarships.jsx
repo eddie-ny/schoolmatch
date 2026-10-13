@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useCatalog, isLocal } from '../hooks/useCatalog'
 import { Badge, Gate, PageTitle, Segmented, VerifiedBadges } from '../components/ui'
+import { SHOW_INTERNATIONAL } from '../lib/constants'
 
 export default function Scholarships() {
   const { access } = useAuth()
@@ -22,10 +23,10 @@ export default function Scholarships() {
 
   return (
     <div>
-      <PageTitle title="Scholarships" sub="Browse by funding type and country." />
+      <PageTitle title="Scholarships" sub={SHOW_INTERNATIONAL ? 'Browse by funding type and country.' : 'Funding for study in Ghana.'} />
       <div className="space-y-3 mb-6">
         <Segmented value={funding} onChange={setFunding} options={[{ value: 'all', label: 'Any funding' }, { value: 'partial', label: 'Partial' }, { value: 'full', label: 'Fully funded' }]} />
-        <div><Segmented value={where} onChange={setWhere} options={[{ value: 'all', label: 'All' }, { value: 'local', label: 'Local' }, { value: 'intl', label: 'International' }]} /></div>
+        {SHOW_INTERNATIONAL && <div><Segmented value={where} onChange={setWhere} options={[{ value: 'all', label: 'All' }, { value: 'local', label: 'Local' }, { value: 'intl', label: 'International' }]} /></div>}
       </div>
       {!full && <div className="mb-5"><Gate /></div>}
       {loading ? <p>Loading...</p> : (

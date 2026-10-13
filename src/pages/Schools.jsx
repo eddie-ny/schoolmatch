@@ -3,7 +3,7 @@ import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useCatalog, isLocal } from '../hooks/useCatalog'
 import { Badge, Gate, PageTitle, Segmented, VerifiedBadges } from '../components/ui'
-import { FIELDS } from '../lib/constants'
+import { FIELDS, SHOW_INTERNATIONAL } from '../lib/constants'
 
 export function Schools() {
   const { user } = useAuth()
@@ -41,11 +41,11 @@ export function Schools() {
 
   return (
     <div>
-      <PageTitle title="Find a School" sub="Local and international schools and programs." />
+      <PageTitle title="Find a School" sub={SHOW_INTERNATIONAL ? 'Local and international schools and programs.' : 'Ghanaian universities and their programs.'} />
       <div className="space-y-3 mb-6">
         <input className="input" placeholder="Search by school, program (for example law), city or country" value={q} onChange={(e) => setParam('q', e.target.value)} />
         <div className="flex flex-wrap items-center gap-3">
-          <Segmented value={where} onChange={(v) => setParam('where', v === 'all' ? '' : v)} options={[{ value: 'all', label: 'All' }, { value: 'local', label: 'Local' }, { value: 'intl', label: 'International' }]} />
+          {SHOW_INTERNATIONAL && <Segmented value={where} onChange={(v) => setParam('where', v === 'all' ? '' : v)} options={[{ value: 'all', label: 'All' }, { value: 'local', label: 'Local' }, { value: 'intl', label: 'International' }]} />}
           <select className="input !w-auto" value={field} onChange={(e) => setParam('field', e.target.value)} aria-label="Field of study">
             <option value="">Any field</option>
             {FIELDS.map((f) => <option key={f.id}>{f.id}</option>)}

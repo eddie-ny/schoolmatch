@@ -314,6 +314,23 @@ export async function loadCatalog() {
   return { schools, programs, scholarships }
 }
 
+// ---------- Interested (hearted programs) ----------
+export async function listSavedIds() {
+  const { data, error } = await supabase.from('saved_programs').select('program_id')
+  fail(error, 'Could not load your interested list.')
+  return (data || []).map((x) => x.program_id)
+}
+export async function setSaved(programId, on) {
+  const { data: sess } = await supabase.auth.getSession()
+  const uid = sess?.session?.user?.id
+  if (!uid) throw new Error('Please sign in first.')
+  const q = on
+    ? supabase.from('saved_programs').upsert({ user_id: uid, program_id: programId }, { onConflict: 'user_id,program_id', ignoreDuplicates: true })
+    : supabase.from('saved_programs').delete().eq('user_id', uid).eq('program_id', programId)
+  const { error } = await q
+  fail(error, 'Could not update your interested list.')
+}
+
 export async function listSchools() { return (await loadCatalog()).schools }
 
 // ---------- Admin spreadsheet import (writes to the database; row level security allows admins only) ----------

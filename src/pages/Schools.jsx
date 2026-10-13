@@ -2,7 +2,9 @@ import { useMemo, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useCatalog, isLocal } from '../hooks/useCatalog'
-import { Badge, Gate, PageTitle, Segmented, VerifiedBadges } from '../components/ui'
+import { Gate, PageTitle, Segmented, VerifiedBadges } from '../components/ui'
+import { ProgramCard, SchoolCard } from '../components/Cards'
+import { useSaved } from '../hooks/useSaved'
 import { FIELDS, SHOW_INTERNATIONAL } from '../lib/constants'
 
 export function Schools() {
@@ -30,7 +32,7 @@ export function Schools() {
         const own = programs.filter((p) => p.schoolId === s.id)
         const schoolHit = !needle || (s.name + ' ' + (s.city || '') + ' ' + s.country).toLowerCase().includes(needle)
         const inField = (p) => !field || (p.field || '').toLowerCase() === field.toLowerCase()
-        const progHit = (p) => !needle || (p.name || '').toLowerCase().includes(needle)
+        const progHit = (p) => !needle || ((p.name || '') + ' ' + (p.field || '')).toLowerCase().includes(needle)
         const matched = own.filter((p) => inField(p) && (schoolHit || progHit(p)))
         // Program names show on the card only when a program search or a field is narrowing the list.
         const show = field ? matched : needle ? own.filter((p) => progHit(p)) : []
@@ -60,30 +62,7 @@ export function Schools() {
             if (q) query.set('q', q)
             if (field) query.set('field', field)
             const qs = query.toString() ? `?${query.toString()}` : ''
-            return (
-              <div key={s.id} className="card flex flex-col gap-3 hover:border-brand-orange transition-colors">
-                <div>
-                  <h3 className="font-bold">{s.name}</h3>
-                  <p className="text-sm text-neutral-600">{[s.city, s.country].filter(Boolean).join(', ')}</p>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {s.type && <Badge>{s.type}</Badge>}
-                  <Badge>{count} program{count === 1 ? '' : 's'}</Badge>
-                </div>
-                <VerifiedBadges item={s} />
-                {show.length > 0 && (
-                  <div className="text-sm">
-                    <p className="text-neutral-500">Matching programs</p>
-                    <ul className="list-disc pl-5">
-                      {show.slice(0, 3).map((p) => <li key={p.id}>{p.name}</li>)}
-                    </ul>
-                    {show.length > 3 && <p className="text-neutral-500">and {show.length - 3} more</p>}
-                  </div>
-                )}
-                {user ? <Link to={`/schools/${s.id}${qs}`} className="btn btn-outline mt-auto">{show.length > 0 ? 'See these programs' : 'Read more'}</Link>
-                  : <Link to="/signup" className="btn btn-outline mt-auto">Sign in to see more</Link>}
-              </div>
-            )
+            return <SchoolCard key={s.id} s={s} count={count} matches={show} to={`/schools/${s.id}${qs}`} signedIn={!!user} />
           })}
           {list.length === 0 && <p className="text-neutral-600">No schools match these filters yet.</p>}
         </div>
@@ -96,6 +75,7 @@ export function SchoolDetail() {
   const { id } = useParams()
   const { user, access } = useAuth()
   const { schools, programs, loading } = useCatalog()
+  const saved = useSaved()
   const [params, setParams] = useSearchParams()
   const school = schools.find((s) => s.id === id)
   const q = params.get('q') || ''
@@ -117,7 +97,7 @@ export function SchoolDetail() {
   const progs = allProgs.filter((p) =>
     (!only || p.id === only) &&
     (!field || (p.field || '').toLowerCase() === field.toLowerCase()) &&
-    (!needle || (p.name || '').toLowerCase().includes(needle))
+    (!needle || ((p.name || '') + ' ' + (p.field || '')).toLowerCase().includes(needle))
   )
   const filtered = !!(only || field || needle)
   const full = access.level === 'full'
@@ -142,22 +122,11 @@ export function SchoolDetail() {
           </p>
           {allProgs.length === 0 && <p className="text-neutral-600">No programs added yet.</p>}
           {allProgs.length > 0 && progs.length === 0 && <p className="text-neutral-600">No programs match. Clear the search to see them all.</p>}
-          {progs.map((p) => (
-            <div key={p.id} className="card space-y-2">
-              <h3 className="font-bold">{p.name}</h3>
-              <div className="flex flex-wrap gap-2">
-                {p.level && <Badge>{p.level}</Badge>}
-                {p.field && <Badge>{p.field}</Badge>}
-                {p.demo && <Badge tone="orange">Sample data</Badge>}
-              </div>
-              <dl className="text-sm grid grid-cols-2 gap-x-4 gap-y-1">
-                <dt className="text-neutral-500">Fees (USD)</dt><dd>{p.feesUsd ?? 'Not added yet'}</dd>
-                <dt className="text-neutral-500">Cut-off aggregate</dt><dd>{p.cutoffAggregate != null ? `${p.cutoffAggregate} (${p.cutoffYear ?? 'year unknown'})` : 'Not added yet'}</dd>
-                <dt className="text-neutral-500">Requirements</dt>
-                <dd>{p.requirements.length ? p.requirements.map((r) => `${r.subject}${r.minGrade ? ' ' + r.minGrade : ''}`).join(', ') : 'Not added yet'}</dd>
-              </dl>
-            </div>
-          ))}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {progs.map((p) => (
+              <ProgramCard key={p.id} p={p} school={school} full={full} saved={saved.ids.has(p.id)} onToggle={saved.toggle} hideSchool />
+            ))}
+          </div>
         </>
       ) : (
         <>

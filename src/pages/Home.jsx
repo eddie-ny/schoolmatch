@@ -3,7 +3,9 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useCatalog, isLocal } from '../hooks/useCatalog'
 import { FIELDS, SHOW_INTERNATIONAL } from '../lib/constants'
-import { Badge, LockedRows, Segmented, VerifiedBadges } from '../components/ui'
+import { Segmented } from '../components/ui'
+import { ProgramCard, SchoolCard, ScholarshipCard } from '../components/Cards'
+import { useSaved } from '../hooks/useSaved'
 
 const tasks = [
   { to: '/schools', title: 'Find a School', text: SHOW_INTERNATIONAL ? 'Search local and international schools and programs.' : 'Search Ghanaian universities and their programs.', bar: 'border-l-brand-orange' },
@@ -66,6 +68,9 @@ function HeroArt() {
 export default function Home() {
   const { user, access } = useAuth()
   const { schools, programs, scholarships, loading } = useCatalog()
+  const saved = useSaved()
+  const schoolById = useMemo(() => Object.fromEntries(schools.map((s) => [s.id, s])), [schools])
+  const progCount = useMemo(() => { const m = {}; programs.forEach((p) => { m[p.schoolId] = (m[p.schoolId] || 0) + 1 }); return m }, [programs])
   const [where, setWhere] = useState('all')
   const [funding, setFunding] = useState('all')
   const [showAll, setShowAll] = useState(false)
@@ -167,25 +172,9 @@ export default function Home() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {(showAll ? results : results.slice(0, 6)).map((r) => (
-              <div key={`${r.kind}-${r.id}`} className="card flex flex-col gap-3 hover:border-brand-orange transition-colors">
-                <div className="flex flex-wrap gap-2">
-                  <Badge tone={r.kind === 'school' ? 'orange' : 'green'}>{r.kind === 'school' ? 'School' : 'Scholarship'}</Badge>
-                  <Badge>{r.tag}</Badge>
-                </div>
-                <div>
-                  <h3 className="font-bold">{r.title}</h3>
-                  <p className="text-sm text-neutral-600">{r.place}</p>
-                </div>
-                <VerifiedBadges item={r.item} />
-                {!full && <LockedRows rows={r.kind === 'school' ? ['Entry requirements', 'Fees'] : ['Who can apply', 'Deadline']} />}
-                {user ? (
-                  <Link to={r.kind === 'school' ? `/schools/${r.id}` : '/scholarships'} className="btn btn-outline mt-auto">
-                    {access.level === 'full' ? 'View details' : 'Read more'}
-                  </Link>
-                ) : (
-                  <Link to="/login" className="btn btn-outline mt-auto">Sign in to see more</Link>
-                )}
-              </div>
+              r.kind === 'school'
+                ? <SchoolCard key={`school-${r.id}`} s={r.item} count={progCount[r.id] || 0} to={`/schools/${r.id}`} signedIn={!!user} />
+                : <ScholarshipCard key={`sch-${r.id}`} s={r.item} full={full} />
             ))}
           </div>
         )}
@@ -227,21 +216,15 @@ export default function Home() {
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {(full ? fieldPrograms : fieldPrograms.slice(0, TEASE)).map((p) => (
-                    <div key={p.id} className="card flex flex-col gap-3">
-                      <div>
-                        <h3 className="font-bold">{p.name}</h3>
-                        <p className="text-sm text-neutral-600">{p.schoolName}</p>
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        {p.level && <Badge>{p.level}</Badge>}
-                        {p.demo && <Badge tone="orange">Sample data</Badge>}
-                      </div>
-                      {full ? (
-                        <Link to={`/schools/${p.schoolId}?program=${p.id}`} className="btn btn-outline mt-auto">View details</Link>
-                      ) : (
-                        <LockedRows rows={['Entry requirements', 'Cut-off aggregate', 'Fees', 'Your chances']} />
-                      )}
-                    </div>
+                    <ProgramCard
+                      key={p.id}
+                      p={p}
+                      school={schoolById[p.schoolId]}
+                      full={full}
+                      saved={saved.ids.has(p.id)}
+                      onToggle={saved.toggle}
+                      to={full ? `/schools/${p.schoolId}?program=${p.id}` : null}
+                    />
                   ))}
                   {!full && fieldPrograms.length > TEASE && (
                     <div className="card flex flex-col items-center justify-center text-center gap-2 bg-neutral-50 border-dashed">

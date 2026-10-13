@@ -1,0 +1,134 @@
+// Result cards shared by Home, Find a School, School pages, Scholarships and Interested.
+import { Link } from 'react-router-dom'
+import { Badge, LockedRows, VerifiedBadges } from './ui'
+
+// A square with the school's initials. Real logos can replace this later.
+export function Monogram({ name, className = '' }) {
+  const initials = (name || '?').replace(/\(.*?\)/g, '').split(/\s+/).filter((w) => /^[A-Za-z]/.test(w) && !['of', 'for', 'and', 'the'].includes(w.toLowerCase())).slice(0, 3).map((w) => w[0].toUpperCase()).join('')
+  return (
+    <span aria-hidden="true" className={`shrink-0 w-12 h-12 rounded-xl border border-neutral-200 bg-brand-green-soft flex items-center justify-center font-heading font-bold text-sm text-neutral-800 ${className}`}>
+      {initials || '?'}
+    </span>
+  )
+}
+
+export function HeartButton({ active, onClick, label }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      aria-label={active ? `Remove ${label} from your interested list` : `Add ${label} to your interested list`}
+      className="shrink-0 w-11 h-11 -mr-2 -mt-2 inline-flex items-center justify-center rounded-full hover:bg-neutral-100"
+    >
+      <svg viewBox="0 0 24 24" width="24" height="24" fill={active ? '#E5484D' : 'none'} stroke={active ? '#E5484D' : 'currentColor'} strokeWidth="2" strokeLinejoin="round" aria-hidden="true">
+        <path d="M12 21s-7.5-4.6-9.6-9.2C1 8.7 2.7 5 6.3 5c2.1 0 3.7 1.2 5.7 3.3C14 6.2 15.600 5 17.700 5c3.600 0 5.300 3.700 3.900 6.800C19.500 16.400 12 21 12 21z" />
+      </svg>
+    </button>
+  )
+}
+
+// One programme at one university.
+export function ProgramCard({ p, school, full, saved, onToggle, to, showSchoolLink = true, hideSchool = false }) {
+  return (
+    <article className="card flex flex-col gap-3 hover:border-brand-orange transition-colors">
+      {hideSchool ? (
+        <div className="flex items-start gap-3">
+          <h3 className="text-lg font-bold leading-snug break-words flex-1">{p.name}</h3>
+          <HeartButton active={saved} onClick={() => onToggle(p.id)} label={p.name} />
+        </div>
+      ) : (
+        <>
+          <div className="flex items-start gap-3">
+            <Monogram name={p.schoolName} />
+            <div className="min-w-0 flex-1">
+              <p className="font-semibold text-sm leading-tight break-words">{p.schoolName}</p>
+              <p className="text-sm text-neutral-600">{school?.city ? `${school.city}, ` : ''}{school?.country || 'Ghana'}</p>
+            </div>
+            <HeartButton active={saved} onClick={() => onToggle(p.id)} label={p.name} />
+          </div>
+          <h3 className="text-lg font-bold leading-snug break-words">{p.name}</h3>
+        </>
+      )}
+      <div className="flex flex-wrap gap-2">
+        {p.level && <Badge>{p.level}</Badge>}
+        {p.field && <Badge>{p.field}</Badge>}
+        {p.durationYears != null && full && <Badge>{p.durationYears} years</Badge>}
+        {p.demo && <Badge tone="orange">Sample data</Badge>}
+        {full && p.verified === false && !p.demo && <Badge>Unverified</Badge>}
+      </div>
+      {full ? (
+        <dl className="text-sm grid grid-cols-2 gap-x-4 gap-y-1">
+          <dt className="text-neutral-500">Cut-off aggregate</dt>
+          <dd>{p.cutoffAggregate != null ? `${p.cutoffAggregate}${p.cutoffYear ? ` (${p.cutoffYear})` : ''}` : 'Not added yet'}</dd>
+          <dt className="text-neutral-500">Requirements</dt>
+          <dd className="break-words">{p.requirements?.length ? p.requirements.map((r) => `${r.subject}${r.minGrade ? ' ' + r.minGrade : ''}`).join(', ') : 'Not added yet'}</dd>
+        </dl>
+      ) : (
+        <LockedRows rows={['Entry requirements', 'Cut-off aggregate', 'Your chances']} />
+      )}
+      {to && showSchoolLink && <Link to={to} className="btn btn-outline mt-auto">{full ? 'View programme information' : 'Read more'}</Link>}
+    </article>
+  )
+}
+
+export function SchoolCard({ s, count, matches = [], to, signedIn }) {
+  return (
+    <article className="card flex flex-col gap-3 hover:border-brand-orange transition-colors">
+      <div className="flex items-start gap-3">
+        <Monogram name={s.name} />
+        <div className="min-w-0 flex-1">
+          <h3 className="font-bold leading-snug break-words">{s.name}</h3>
+          <p className="text-sm text-neutral-600">{[s.city, s.country].filter(Boolean).join(', ')}</p>
+        </div>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {s.type && <Badge>{s.type}</Badge>}
+        <Badge>{count} program{count === 1 ? '' : 's'}</Badge>
+      </div>
+      <VerifiedBadges item={s} />
+      {matches.length > 0 && (
+        <div className="text-sm">
+          <p className="text-neutral-500">Matching programs</p>
+          <ul className="list-disc pl-5">
+            {matches.slice(0, 3).map((p) => <li key={p.id}>{p.name}</li>)}
+          </ul>
+          {matches.length > 3 && <p className="text-neutral-500">and {matches.length - 3} more</p>}
+        </div>
+      )}
+      {signedIn
+        ? <Link to={to} className="btn btn-outline mt-auto">{matches.length > 0 ? 'See these programs' : 'View programmes'}</Link>
+        : <Link to="/signup" className="btn btn-outline mt-auto">Sign in to see more</Link>}
+    </article>
+  )
+}
+
+export function ScholarshipCard({ s, full }) {
+  return (
+    <article className="card flex flex-col gap-3 hover:border-brand-orange transition-colors">
+      <div className="flex items-start gap-3">
+        <Monogram name={s.funder || s.name} />
+        <div className="min-w-0 flex-1">
+          <p className="font-semibold text-sm leading-tight break-words">{s.funder}</p>
+          <p className="text-sm text-neutral-600">{s.country}</p>
+        </div>
+      </div>
+      <h3 className="text-lg font-bold leading-snug break-words">{s.name}</h3>
+      <div className="flex flex-wrap gap-2">
+        <Badge tone="green">{s.fundingType} funding</Badge>
+        {s.level && full && <Badge>{s.level}</Badge>}
+      </div>
+      <VerifiedBadges item={s} />
+      {full ? (
+        <dl className="text-sm grid grid-cols-2 gap-x-4 gap-y-1">
+          <dt className="text-neutral-500">Best aggregate</dt><dd>{s.minAggregate ?? 'Not added yet'}</dd>
+          <dt className="text-neutral-500">Deadline</dt><dd>{s.deadline || 'Not added yet'}</dd>
+          <dt className="text-neutral-500">Criteria</dt><dd className="break-words">{s.criteria || 'Not added yet'}</dd>
+        </dl>
+      ) : (
+        <LockedRows rows={['Who can apply', 'Deadline']} />
+      )}
+      {full && s.link && <a className="btn btn-outline mt-auto" href={s.link} target="_blank" rel="noreferrer">Visit site</a>}
+    </article>
+  )
+}

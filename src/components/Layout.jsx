@@ -64,6 +64,7 @@ export default function Layout() {
   const [confirmOut, setConfirmOut] = useState(false)
   const nav = useNavigate()
   const { pathname } = useLocation()
+  const navLinks = user ? [...links.slice(0, -1), { to: '/interested', label: 'Interested' }, links[links.length - 1]] : links
 
   // Staff go straight to their own page once per sign-in: support to /support, admins to /admin.
   useEffect(() => {
@@ -94,7 +95,7 @@ export default function Layout() {
           </Link>
 
           <nav className="hidden lg:flex items-center gap-5 text-sm font-medium whitespace-nowrap">
-            {links.map((l) => (
+            {navLinks.map((l) => (
               <NavLink key={l.to} to={l.to} className={({ isActive }) => `inline-flex items-center min-h-11 ${isActive ? 'text-brand-orange' : 'hover:text-brand-green'}`}>
                 {l.label}
               </NavLink>
@@ -119,7 +120,7 @@ export default function Layout() {
 
         {open && (
           <div className="lg:hidden border-t border-neutral-200 px-4 py-3 flex flex-col gap-1" onClick={() => setOpen(false)}>
-            {links.map((l) => (
+            {navLinks.map((l) => (
               <NavLink key={l.to} to={l.to} className="py-3 font-medium">{l.label}</NavLink>
             ))}
             {user ? (

@@ -20,20 +20,30 @@ export function Schools() {
     setParams(next, { replace: true })
   }
 
-  const list = useMemo(
-    () =>
-      schools
-        .filter((s) => where === 'all' || (where === 'local' ? isLocal(s.country) : !isLocal(s.country)))
-        .filter((s) => (s.name + ' ' + (s.city || '') + ' ' + s.country).toLowerCase().includes(q.toLowerCase()))
-        .filter((s) => !field || programs.some((p) => p.schoolId === s.id && (p.field || '').toLowerCase() === field.toLowerCase())),
-    [schools, programs, q, where, field]
-  )
+  // A school is listed when its own details match the search OR one of its programs does.
+  // `matched` holds the programs that fit the search and field, so the card can show them.
+  const list = useMemo(() => {
+    const needle = q.trim().toLowerCase()
+    return schools
+      .filter((s) => where === 'all' || (where === 'local' ? isLocal(s.country) : !isLocal(s.country)))
+      .map((s) => {
+        const own = programs.filter((p) => p.schoolId === s.id)
+        const schoolHit = !needle || (s.name + ' ' + (s.city || '') + ' ' + s.country).toLowerCase().includes(needle)
+        const inField = (p) => !field || (p.field || '').toLowerCase() === field.toLowerCase()
+        const progHit = (p) => !needle || (p.name || '').toLowerCase().includes(needle)
+        const matched = own.filter((p) => inField(p) && (schoolHit || progHit(p)))
+        // Program names show on the card only when a program search or a field is narrowing the list.
+        const show = field ? matched : needle ? own.filter((p) => progHit(p)) : []
+        return { s, count: own.length, show, keep: matched.length > 0 || (!field && schoolHit) }
+      })
+      .filter((x) => x.keep)
+  }, [schools, programs, q, where, field])
 
   return (
     <div>
       <PageTitle title="Find a School" sub="Local and international schools and programs." />
       <div className="space-y-3 mb-6">
-        <input className="input" placeholder="Search by school, city or country" value={q} onChange={(e) => setParam('q', e.target.value)} />
+        <input className="input" placeholder="Search by school, program (for example law), city or country" value={q} onChange={(e) => setParam('q', e.target.value)} />
         <div className="flex flex-wrap items-center gap-3">
           <Segmented value={where} onChange={(v) => setParam('where', v === 'all' ? '' : v)} options={[{ value: 'all', label: 'All' }, { value: 'local', label: 'Local' }, { value: 'intl', label: 'International' }]} />
           <select className="input !w-auto" value={field} onChange={(e) => setParam('field', e.target.value)} aria-label="Field of study">
@@ -45,8 +55,11 @@ export function Schools() {
       </div>
       {!loading && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {list.map((s) => {
-            const count = programs.filter((p) => p.schoolId === s.id).length
+          {list.map(({ s, count, show }) => {
+            const query = new URLSearchParams()
+            if (q) query.set('q', q)
+            if (field) query.set('field', field)
+            const qs = query.toString() ? `?${query.toString()}` : ''
             return (
               <div key={s.id} className="card flex flex-col gap-3 hover:border-brand-orange transition-colors">
                 <div>
@@ -58,7 +71,16 @@ export function Schools() {
                   <Badge>{count} program{count === 1 ? '' : 's'}</Badge>
                 </div>
                 <VerifiedBadges item={s} />
-                {user ? <Link to={`/schools/${s.id}`} className="btn btn-outline mt-auto">Read more</Link>
+                {show.length > 0 && (
+                  <div className="text-sm">
+                    <p className="text-neutral-500">Matching programs</p>
+                    <ul className="list-disc pl-5">
+                      {show.slice(0, 3).map((p) => <li key={p.id}>{p.name}</li>)}
+                    </ul>
+                    {show.length > 3 && <p className="text-neutral-500">and {show.length - 3} more</p>}
+                  </div>
+                )}
+                {user ? <Link to={`/schools/${s.id}${qs}`} className="btn btn-outline mt-auto">{show.length > 0 ? 'See these programs' : 'Read more'}</Link>
                   : <Link to="/signup" className="btn btn-outline mt-auto">Sign in to see more</Link>}
               </div>
             )
@@ -74,13 +96,30 @@ export function SchoolDetail() {
   const { id } = useParams()
   const { user, access } = useAuth()
   const { schools, programs, loading } = useCatalog()
+  const [params, setParams] = useSearchParams()
   const school = schools.find((s) => s.id === id)
+  const q = params.get('q') || ''
+  const field = params.get('field') || ''
+  const only = params.get('program') || ''
+  const setParam = (k, v) => {
+    const next = new URLSearchParams(params)
+    if (v) next.set(k, v)
+    else next.delete(k)
+    setParams(next, { replace: true })
+  }
 
   if (loading) return <p>Loading...</p>
   if (!school) return <p>School not found. <Link to="/schools" className="underline">Back to schools</Link></p>
   if (!user) return <Gate />
 
-  const progs = programs.filter((p) => p.schoolId === school.id)
+  const allProgs = programs.filter((p) => p.schoolId === school.id)
+  const needle = q.trim().toLowerCase()
+  const progs = allProgs.filter((p) =>
+    (!only || p.id === only) &&
+    (!field || (p.field || '').toLowerCase() === field.toLowerCase()) &&
+    (!needle || (p.name || '').toLowerCase().includes(needle))
+  )
+  const filtered = !!(only || field || needle)
   const full = access.level === 'full'
 
   return (
@@ -96,7 +135,13 @@ export function SchoolDetail() {
         <>
           {school.website && <a href={school.website} target="_blank" rel="noreferrer" className="underline">{school.website}</a>}
           <h2 className="text-lg font-bold">Programs</h2>
-          {progs.length === 0 && <p className="text-neutral-600">No programs added yet.</p>}
+          <input className="input" placeholder="Search this school's programs (for example law)" value={q} onChange={(e) => { setParam('q', e.target.value); setParam('program', '') }} aria-label="Search programs at this school" />
+          <p className="text-sm text-neutral-600">
+            {filtered ? `Showing ${progs.length} of ${allProgs.length} programs. ` : `${allProgs.length} programs. `}
+            {filtered && <button type="button" className="underline" onClick={() => setParams({}, { replace: true })}>Show all programs</button>}
+          </p>
+          {allProgs.length === 0 && <p className="text-neutral-600">No programs added yet.</p>}
+          {allProgs.length > 0 && progs.length === 0 && <p className="text-neutral-600">No programs match. Clear the search to see them all.</p>}
           {progs.map((p) => (
             <div key={p.id} className="card space-y-2">
               <h3 className="font-bold">{p.name}</h3>
@@ -116,7 +161,7 @@ export function SchoolDetail() {
         </>
       ) : (
         <>
-          <p>{progs.length} program{progs.length === 1 ? '' : 's'} listed.</p>
+          <p>{allProgs.length} program{allProgs.length === 1 ? '' : 's'} listed.</p>
           <Gate />
         </>
       )}

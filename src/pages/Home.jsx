@@ -235,7 +235,7 @@ export default function Home() {
                         {p.demo && <Badge tone="orange">Sample data</Badge>}
                       </div>
                       {full ? (
-                        <Link to={`/schools/${p.schoolId}`} className="btn btn-outline mt-auto">View details</Link>
+                        <Link to={`/schools/${p.schoolId}?program=${p.id}`} className="btn btn-outline mt-auto">View details</Link>
                       ) : (
                         <LockedRows rows={['Entry requirements', 'Cut-off aggregate', 'Fees', 'Your chances']} />
                       )}

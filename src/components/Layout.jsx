@@ -181,6 +181,7 @@ export default function Layout() {
             <Link to="/terms" className="underline inline-flex items-center min-h-11">Terms</Link>
             <Link to="/refunds" className="underline inline-flex items-center min-h-11">Refunds</Link>
             <Link to="/cookies" className="underline inline-flex items-center min-h-11">Cookies</Link>
+            <Link to="/complaints" className="underline inline-flex items-center min-h-11">Complaints</Link>
             {user?.role === 'admin' && <Link to="/admin" className="underline inline-flex items-center min-h-11">Admin</Link>}
             {user?.role === 'support' && <Link to="/support" className="underline inline-flex items-center min-h-11">Support</Link>}
           </div>

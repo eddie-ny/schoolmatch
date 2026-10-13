@@ -1,4 +1,4 @@
-import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { Suspense, useEffect, useRef, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { timeLeft } from '../lib/access'
@@ -50,6 +50,7 @@ function UserMenu({ user, onSignOut }) {
           <Link role="menuitem" to="/profile" className={item}>Profile</Link>
           <Link role="menuitem" to="/settings" className={item}>Account Settings</Link>
           {user.role === 'admin' && <Link role="menuitem" to="/admin" className={item}>Admin</Link>}
+          {user.role === 'support' && <Link role="menuitem" to="/support" className={item}>Support</Link>}
           <button role="menuitem" onClick={onSignOut} className={`${item} text-red-700 border-t border-neutral-200`}>Sign out</button>
         </div>
       )}
@@ -62,6 +63,19 @@ export default function Layout() {
   const [open, setOpen] = useState(false)
   const [confirmOut, setConfirmOut] = useState(false)
   const nav = useNavigate()
+  const { pathname } = useLocation()
+
+  // Staff go straight to their own page once per sign-in: support to /support, admins to /admin.
+  useEffect(() => {
+    try {
+      if (!user) { sessionStorage.removeItem('staffRouted'); return }
+      if (user.mfaPending || mfaNeeded) return
+      if ((user.role === 'admin' || user.role === 'support') && !sessionStorage.getItem('staffRouted')) {
+        sessionStorage.setItem('staffRouted', '1')
+        if (pathname === '/' || pathname === '/login') nav(user.role === 'support' ? '/support' : '/admin', { replace: true })
+      }
+    } catch { /* storage blocked: staff can still use the menu */ }
+  }, [user, mfaNeeded, pathname, nav])
   const handleSignOut = async () => {
     setConfirmOut(false)
     setOpen(false)
@@ -113,6 +127,7 @@ export default function Layout() {
                 <Link to="/profile" className="py-3 font-medium">Profile</Link>
                 <Link to="/settings" className="py-3 font-medium">Account Settings</Link>
                 {user.role === 'admin' && <Link to="/admin" className="py-3 font-medium">Admin</Link>}
+                {user.role === 'support' && <Link to="/support" className="py-3 font-medium">Support</Link>}
                 <button onClick={() => setConfirmOut(true)} className="py-3 text-left font-medium">Sign out</button>
               </>
             ) : (
@@ -167,6 +182,7 @@ export default function Layout() {
             <Link to="/refunds" className="underline inline-flex items-center min-h-11">Refunds</Link>
             <Link to="/cookies" className="underline inline-flex items-center min-h-11">Cookies</Link>
             {user?.role === 'admin' && <Link to="/admin" className="underline inline-flex items-center min-h-11">Admin</Link>}
+            {user?.role === 'support' && <Link to="/support" className="underline inline-flex items-center min-h-11">Support</Link>}
           </div>
         </div>
       </footer>

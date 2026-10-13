@@ -4,6 +4,9 @@
 export function getAccess(user, now = Date.now()) {
   if (!user) return { level: 'visitor', detail: 'Sign in to see more.' }
 
+  // Staff (super admin, admin, support) are not subject to plans or the trial.
+  if (user.staffRole) return { level: 'full', detail: 'Staff account', staff: true }
+
   // Under 18: limited until a parent confirms.
   if (user.isMinor && !user.parent?.confirmedAt) {
     return { level: 'summary', detail: 'Waiting for parent or guardian confirmation.', needsParent: true }

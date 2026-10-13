@@ -15,6 +15,7 @@ const ResetPassword = lazy(() => import('./pages/Auth').then((m) => ({ default: 
 const Profile = lazy(() => import('./pages/Profile'))
 const Pricing = lazy(() => import('./pages/Pricing'))
 const Admin = lazy(() => import('./pages/Admin'))
+const Support = lazy(() => import('./pages/Support'))
 const Privacy = lazy(() => import('./pages/Privacy'))
 const Settings = lazy(() => import('./pages/Settings'))
 const Legal = lazy(() => import('./pages/Legal'))
@@ -39,6 +40,7 @@ export default function App() {
         <Route path="/settings" element={<Settings />} />
         <Route path="/pricing" element={<Pricing />} />
         <Route path="/admin" element={<Admin />} />
+        <Route path="/support" element={<Support />} />
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/parent-confirm" element={<ParentConfirm />} />
         <Route path="/terms" element={<Legal page="terms" />} />

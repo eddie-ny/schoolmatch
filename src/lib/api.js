@@ -170,6 +170,7 @@ export async function getCurrentUser() {
     isMinor: p.is_minor,
     disabled: !!p.disabled_at,
     role: adm.data ? (adm.data.role === 'support' ? 'support' : 'admin') : 'student',
+    staffRole: adm.data ? adm.data.role : null, // 'owner' (super admin), 'admin' or 'support'
     createdAt: p.created_at,
     trialEndsAt: p.trial_ends_at,
     profile: {
@@ -514,6 +515,27 @@ export async function listPendingParents() {
   fail(c.error, 'Could not load parent confirmations.')
   const byId = Object.fromEntries((p.data || []).map((x) => [x.id, x]))
   return (c.data || []).map((x) => ({ studentId: x.student_id, parentName: x.name, parentPhone: x.phone, parentEmail: x.email, studentName: byId[x.student_id]?.full_name || '', studentEmail: byId[x.student_id]?.email || '' }))
+}
+
+// Admin or super admin, after speaking to the parent: opens the student's account without the link.
+export async function acceptParent(studentId) {
+  const { error } = await supabase.rpc('admin_accept_parent', { p_student: studentId })
+  fail(error, 'Could not accept this confirmation.')
+}
+// Super admin only.
+export async function listStaff() {
+  const { data, error } = await supabase.rpc('admin_list_staff')
+  fail(error, 'Could not load the team.')
+  return (data || []).map((x) => ({ userId: x.user_id, email: x.email, fullName: x.full_name, role: x.role, createdAt: x.created_at }))
+}
+export async function setStaffRole(email, role) {
+  const { error } = await supabase.rpc('admin_set_staff_role', { p_email: email, p_role: role })
+  fail(error, 'Could not change the role.')
+}
+export async function getAdminStats() {
+  const { data, error } = await supabase.rpc('admin_stats')
+  fail(error, 'Could not load the numbers.')
+  return data
 }
 
 export async function listAuditLog(limit = 50) {

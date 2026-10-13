@@ -1,7 +1,7 @@
 // Parent or guardian confirmation for under-18 students.
 //   POST /parent-confirm/preview  { token }   public: who is being asked to confirm (first name only)
 //   POST /parent-confirm/confirm  { token }   public: the parent agrees; the student's account opens
-//   POST /parent-confirm/issue    { studentId }  staff only (owner or admin, second step done): creates a one-time link
+//   POST /parent-confirm/issue    { studentId }  staff only (owner, admin or support, second step done): creates a one-time link
 // The random code is shown only to the person who creates the link. The database keeps only a hash of it.
 // All database work happens in functions that only the service role can run.
 import { createClient } from 'npm:@supabase/supabase-js@2'
@@ -57,7 +57,7 @@ Deno.serve(async (req) => {
       if (!user) return json({ error: 'Please sign in.' }, 401)
       // Staff only, and only after the authenticator step.
       const { data: staff } = await admin.from('admin_users').select('role').eq('user_id', user.id).maybeSingle()
-      if (!staff || !['owner', 'admin'].includes(staff.role)) return json({ error: 'Not allowed.' }, 403)
+      if (!staff || !['owner', 'admin', 'support'].includes(staff.role)) return json({ error: 'Not allowed.' }, 403)
       if (jwtClaims(bearer).aal !== 'aal2') return json({ error: 'Finish two-step verification first.' }, 403)
 
       let origin = ''

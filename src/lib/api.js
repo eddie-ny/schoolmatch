@@ -21,7 +21,7 @@ function friendly(error) {
   if (m.includes('email not confirmed')) return 'Please confirm your email first. Check your inbox for the link.'
   // The email limit is shared by the whole site, not by one account, so say that plainly.
   if (code === 'over_email_send_rate_limit' || m.includes('email rate limit')) {
-    return 'We cannot send emails right now because the email service is at its limit. This is not about your account. Signing in is not affected. Please try again in about an hour.'
+    return 'We cannot send an email or reset link right now because the email service has its limits. Please try again in an hour.'
   }
   if (m.includes('failed to fetch') || m.includes('networkerror') || m.includes('network request failed') || error.name === 'AuthRetryableFetchError') {
     return 'Could not reach the server. Check your internet connection and try again. If you were creating an account, check your email first, it may have gone through.'

@@ -44,6 +44,15 @@ If the accounts are yours today, transfer them as below.
 - Backups: Pro gives daily backups kept 7 days. Test one restore.
 - Spend cap left on unless there is a reason.
 
+### When custom SMTP is switched on (do all of these together)
+
+While the built-in Supabase email sender is in use, the site is limited to a small number of emails per hour for everyone together. Once her own SMTP is connected, the following must be revisited so one click does not end in "too many attempts":
+- `src/lib/api.js`, function `friendly()`: remove or reword the message for `over_email_send_rate_limit` ("We cannot send an email or reset link right now because the email service has its limits. Please try again in an hour."). With custom SMTP the limit becomes a per-user cooldown, so the wording should say to wait a minute, not an hour.
+- In Supabase, Authentication > Rate Limits: set the emails-per-hour, sign-ups, sign-ins and password-reset limits to sensible numbers for real use. With the built-in sender these cannot be changed.
+- Check the "too many attempts" wording for real per-connection limits still reads correctly.
+- Send test sign-up, reset and parent emails and check they arrive (inbox, not spam) and that links open the right page.
+- Decide whether to turn "Confirm email" back on if it was switched off for testing.
+
 ## 5. Paystack
 
 - Webhook URL: https://<project-ref>.supabase.co/functions/v1/paystack/webhook

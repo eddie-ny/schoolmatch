@@ -68,10 +68,29 @@ export function Segmented({ options, value, onChange }) {
   )
 }
 
+// Password box with a show/hide button. Takes the same props as an input.
+export function PasswordInput({ className = '', ...props }) {
+  const [shown, setShown] = useState(false)
+  return (
+    <div className="relative">
+      <input {...props} className={`input !pr-20 ${className}`} type={shown ? 'text' : 'password'} />
+      <button
+        type="button"
+        onClick={() => setShown((s) => !s)}
+        aria-pressed={shown}
+        aria-label={shown ? 'Hide password' : 'Show password'}
+        className="absolute right-1 top-1/2 -translate-y-1/2 min-h-11 px-3 text-sm font-semibold underline"
+      >
+        {shown ? 'Hide' : 'Show'}
+      </button>
+    </div>
+  )
+}
+
 export function Field({ label, children, hint }) {
   const id = useId()
   // Link the label to its input or select so tapping the label focuses it and screen readers announce it.
-  const linkable = isValidElement(children) && ['input', 'select', 'textarea'].includes(children.type)
+  const linkable = isValidElement(children) && (['input', 'select', 'textarea'].includes(children.type) || children.type === PasswordInput)
   return (
     <div>
       <label className="label" htmlFor={linkable ? id : undefined}>{label}</label>

@@ -7,7 +7,7 @@ import { supabase } from '../lib/supabase'
 // Read before Supabase clears the address: did the person just arrive from the email confirmation link?
 const ARRIVED_CONFIRMED = /type=signup|type=email/.test(window.location.hash)
 const CONFIRM_LINK_BAD = /error_code=otp_expired|error=access_denied/.test(window.location.hash)
-import { DobPicker, Field, PageTitle } from '../components/ui'
+import { DobPicker, Field, PageTitle, PasswordInput } from '../components/ui'
 
 export function Login() {
   const { signIn, user } = useAuth()
@@ -47,7 +47,7 @@ export function Login() {
       {CONFIRM_LINK_BAD && <p role="alert" className="rounded-xl bg-brand-orange/25 p-4 mb-4 text-sm">That confirmation link has expired or was already used. If you already confirmed, sign in below. Otherwise sign up again.</p>}
       <form onSubmit={submit} className="card space-y-4">
         <Field label="Email"><input className="input" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} /></Field>
-        <Field label="Password"><input className="input" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} /></Field>
+        <Field label="Password"><PasswordInput required autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} /></Field>
         {error && <p className="text-red-700 text-sm">{error}</p>}
         <button className="btn btn-orange w-full" disabled={busy}>{busy ? 'Signing in...' : 'Sign in'}</button>
         <p className="text-sm"><Link to="/forgot-password" className="underline inline-block py-3">Forgot your password?</Link></p>
@@ -61,7 +61,7 @@ export function Signup() {
   const { signUp, user } = useAuth()
   const nav = useNavigate()
   const [f, setF] = useState({
-    fullName: '', phone: '', email: '', password: '', dateOfBirth: '',
+    fullName: '', phone: '', email: '', password: '', confirm: '', dateOfBirth: '',
     parentName: '', parentPhone: '', parentEmail: '', consent: false,
   })
   const [error, setError] = useState('')
@@ -77,6 +77,7 @@ export function Signup() {
     setError('')
     if (!f.dateOfBirth) return setError('Please choose your full date of birth (day, month and year).')
     if (passwordProblem(f.password)) return setError(PASSWORD_RULE)
+    if (f.password !== f.confirm) return setError('The two passwords do not match.')
     if (!f.consent) return setError('Please accept the privacy notice to continue.')
     if (minor && (!f.parentName || !f.parentPhone || !f.parentEmail)) return setError('A parent or guardian name, phone and email are required for under 18s.')
     setBusy(true)
@@ -108,7 +109,8 @@ export function Signup() {
         <Field label="Full name"><input className="input" required value={f.fullName} onChange={set('fullName')} /></Field>
         <Field label="Phone"><input className="input" type="tel" required value={f.phone} onChange={set('phone')} placeholder="024 000 0000" /></Field>
         <Field label="Email"><input className="input" type="email" required value={f.email} onChange={set('email')} /></Field>
-        <Field label="Password" hint="At least 8 characters, with upper case, lower case and numbers."><input className="input" type="password" required value={f.password} onChange={set('password')} /></Field>
+        <Field label="Password" hint="At least 8 characters, with upper case, lower case and numbers."><PasswordInput required autoComplete="new-password" value={f.password} onChange={set('password')} /></Field>
+        <Field label="Confirm password"><PasswordInput required autoComplete="new-password" value={f.confirm} onChange={set('confirm')} /></Field>
         <Field label="Date of birth"><DobPicker value={f.dateOfBirth} onChange={(v) => { setF((cur) => ({ ...cur, dateOfBirth: v })); setError('') }} /></Field>
 
         {minor && (
@@ -192,6 +194,7 @@ export function ResetPassword() {
   const { recovering, setNewPassword, user } = useAuth()
   const nav = useNavigate()
   const [pw, setPw] = useState('')
+  const [confirm, setConfirm] = useState('')
   const [error, setError] = useState('')
   const [done, setDone] = useState(false)
   const [busy, setBusy] = useState(false)
@@ -202,6 +205,7 @@ export function ResetPassword() {
     e.preventDefault()
     setError('')
     if (passwordProblem(pw)) return setError(PASSWORD_RULE)
+    if (pw !== confirm) return setError('The two passwords do not match.')
     setBusy(true)
     try {
       await setNewPassword(pw)
@@ -228,7 +232,8 @@ export function ResetPassword() {
       <PageTitle title="Choose a new password" />
       {done ? <p className="card">Password updated. Taking you home...</p> : (
         <form onSubmit={submit} className="card space-y-4">
-          <Field label="New password" hint="At least 8 characters, with upper case, lower case and numbers."><input className="input" type="password" required value={pw} onChange={(e) => setPw(e.target.value)} /></Field>
+          <Field label="New password" hint="At least 8 characters, with upper case, lower case and numbers."><PasswordInput required autoComplete="new-password" value={pw} onChange={(e) => setPw(e.target.value)} /></Field>
+          <Field label="Confirm new password"><PasswordInput required autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} /></Field>
           {error && <p className="text-red-700 text-sm">{error}</p>}
           <button className="btn btn-orange w-full" disabled={busy}>{busy ? 'Saving...' : 'Save password'}</button>
         </form>

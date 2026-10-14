@@ -15,3 +15,4 @@ uesd.png    University of Environment and Sustainable Development (Somanya)
 cktutas.png C.K. Tedam University of Technology and Applied Sciences
 ubids.png   Simon Diedong Dombo University of Business and Integrated Development Studies
 ashesi.png  Ashesi University
+gctu.png    Ghana Communication Technology University

@@ -2,7 +2,7 @@
 
 Each university has `<slug>_school.csv`, `<slug>_programs.csv` and, where written, `<slug>_notes.md`. The columns match the Admin page CSV importer; the extra columns (source_url, source_note, cutoff_type) are ignored by it.
 
-Already loaded into the live database: ug, knust, cktutas, ubids, uds, uew, uhas, upsa, umat, uenr, aamusted, uesd (27 programmes, no cut-offs published).
+Already loaded into the live database: ug, knust, cktutas, ubids, uds, uew, uhas, upsa, umat, uenr, aamusted, uesd (27 programmes, no cut-offs published), gctu (26 programmes, no cut-offs published).
 Not yet collected: UCC (cut-off only on each programme page), technical universities.
 
 Rules used: official sources only, blank when not published, never estimated. See COLLECTION-RULES.md.

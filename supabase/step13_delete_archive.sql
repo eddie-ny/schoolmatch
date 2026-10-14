@@ -7,7 +7,7 @@
 --  * trial_ledger (phone hash) is kept on purpose, so deleting and re-registering does not give a new free trial.
 --  * audit_log is untouched, so the history of the deletion remains.
 --  * Everything else about the person is erased: login, profile, parent contact, results, saved programs, subscription, documents rows.
---  * Known limit: uploaded document FILES in storage are listed in the snapshot but are not removed by this function.
+--  * Uploaded document files in storage are removed by the staff-users edge function (delete-account), which then calls this function.
 --  * A deleted person who signs up again gets a brand new id.
 
 create table if not exists public.deleted_accounts (

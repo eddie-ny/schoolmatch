@@ -554,8 +554,13 @@ export async function setStaffRole(email, role) {
 }
 // Super admin: removes a student or staff account for good (a private copy goes to the archive). Needs the database function admin_delete_account.
 export async function deleteAccount(userId) {
-  const { data, error } = await supabase.rpc('admin_delete_account', { p_user: userId })
-  fail(error, 'Could not delete this account.')
+  // Goes through an edge function so the person's uploaded files are removed from storage too.
+  const { data, error } = await supabase.functions.invoke('staff-users/delete-account', { body: { userId } })
+  if (error) {
+    let msg = ''
+    try { msg = (await error.context.json()).error } catch { /* none */ }
+    throw new Error(msg || 'Could not delete this account.')
+  }
   return data
 }
 export async function listArchive() {

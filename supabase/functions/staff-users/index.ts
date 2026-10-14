@@ -1,5 +1,6 @@
 // Staff-created student accounts.
 //   POST /staff-users/create-student { fullName, phone, email, dateOfBirth, parentName?, parentPhone?, parentEmail? }
+//   POST /staff-users/delete-account { userId }   super admin only: archives and erases the account, then removes their uploaded files from storage
 // Allowed for any staff member (owner, admin, support) who finished the authenticator step.
 // The account is created with a one-time temporary password that is shown once to the staff member.
 // No subscription is created or changed here. Staff cannot assign subscriptions.
@@ -64,6 +65,26 @@ Deno.serve(async (req) => {
         actor_id: user.id, actor_role: staff.role, action: 'student_created_by_staff', target_user: data.user.id, detail: {},
       })
       return json({ email, password })
+    }
+    if (path.endsWith('/delete-account')) {
+      if (staff.role !== 'owner') return json({ error: 'Only a super admin can delete accounts.' }, 403)
+      const userId = String(body.userId ?? '')
+      if (!/^[0-9a-f-]{36}$/i.test(userId)) return json({ error: 'Bad account id.' }, 400)
+      // Note the file paths first; the database function removes the rows.
+      const { data: docs } = await admin.from('documents').select('file_path').eq('student_id', userId)
+      const paths = (docs ?? []).map((d: { file_path: string }) => d.file_path).filter(Boolean)
+      // Run the database function as the signed-in super admin so its own checks and the audit log apply.
+      const asCaller = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_ANON_KEY')!, {
+        global: { headers: { Authorization: `Bearer ${bearer}` } },
+      })
+      const { error } = await asCaller.rpc('admin_delete_account', { p_user: userId })
+      if (error) return json({ error: error.message }, 400)
+      let filesLeft = 0
+      if (paths.length) {
+        const { error: rmErr } = await admin.storage.from('documents').remove(paths)
+        if (rmErr) { console.error(rmErr); filesLeft = paths.length }
+      }
+      return json({ ok: true, filesRemoved: paths.length - filesLeft, filesLeft })
     }
     return json({ error: 'Not found' }, 404)
   } catch (e) {

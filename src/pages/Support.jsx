@@ -22,7 +22,7 @@ export default function Support() {
     <div className="space-y-8">
       <PageTitle title="Support" sub="Sign-ups, parents waiting for a link and the activity log." />
       <ParentsSection pending={pending} canAccept={false} reload={load} />
-      <SignupsSection users={users} canDisable={false} onToggle={() => {}} err="" />
+      <SignupsSection users={users} canDisable={false} onToggle={() => {}} err="" reload={load} />
       <ActivityLog log={log} users={users} canSeeAll={false} />
     </div>
   )

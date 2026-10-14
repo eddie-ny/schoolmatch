@@ -1,7 +1,7 @@
 // Pieces shared by the Admin page and the Support page.
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { acceptParent, createParentLink, getAdminStats, listStaff, setStaffRole } from '../lib/api'
+import { acceptParent, createParentLink, deleteStaff, getAdminStats, listStaff, setStaffRole, staffCreateStudent, staffUpdateProfile } from '../lib/api'
 import { Badge, ConfirmDialog, Field } from './ui'
 
 export function accessLabel(u) {
@@ -74,14 +74,99 @@ export function StatsPanel() {
 }
 
 // ---------- Sign-ups ----------
-export function SignupsSection({ users, canDisable, onToggle, err }) {
+function AddStudent({ onDone }) {
+  const empty = { fullName: '', phone: '', email: '', dateOfBirth: '', parentName: '', parentPhone: '', parentEmail: '' }
+  const [open, setOpen] = useState(false)
+  const [f, setF] = useState(empty)
+  const [busy, setBusy] = useState(false)
+  const [err, setErr] = useState('')
+  const [made, setMade] = useState(null)
+  const set = (k) => (e) => setF({ ...f, [k]: e.target.value })
+  const minor = f.dateOfBirth && new Date(f.dateOfBirth) > new Date(new Date().setFullYear(new Date().getFullYear() - 18))
+  const submit = async (e) => {
+    e.preventDefault()
+    setErr('')
+    setBusy(true)
+    try {
+      setMade(await staffCreateStudent(f))
+      setF(empty)
+      onDone()
+    } catch (x) { setErr(x.message) }
+    setBusy(false)
+  }
+  if (!open) return <button className="btn btn-outline" onClick={() => setOpen(true)}>Add student</button>
+  return (
+    <div className="card space-y-3 max-w-xl">
+      <h3 className="font-bold">Create an account for a student</h3>
+      <p className="text-sm text-neutral-600">Use this only to help a student who cannot sign up themselves. The account gets a temporary password that is shown once. It does not include a subscription.</p>
+      {made ? (
+        <div className="space-y-2 text-sm" role="status">
+          <p className="font-semibold">Account created. Give these to the student and ask them to change the password in Settings.</p>
+          <p>Email: <span className="break-all font-mono">{made.email}</span></p>
+          <p>Temporary password: <span className="font-mono">{made.password}</span></p>
+          <p className="text-neutral-600">This password is not shown again.</p>
+          <button className="btn btn-outline" onClick={() => { setMade(null); setOpen(false) }}>Done</button>
+        </div>
+      ) : (
+        <form onSubmit={submit} className="space-y-3">
+          <Field label="Full name"><input className="input" value={f.fullName} onChange={set('fullName')} required /></Field>
+          <Field label="Email"><input className="input" type="email" value={f.email} onChange={set('email')} required /></Field>
+          <Field label="Phone"><input className="input" type="tel" value={f.phone} onChange={set('phone')} required /></Field>
+          <Field label="Date of birth"><input className="input" type="date" value={f.dateOfBirth} onChange={set('dateOfBirth')} required /></Field>
+          {minor && (
+            <>
+              <p className="text-sm text-neutral-600">Under 18: a parent or guardian must confirm before this student gets full access.</p>
+              <Field label="Parent or guardian name"><input className="input" value={f.parentName} onChange={set('parentName')} required /></Field>
+              <Field label="Parent or guardian phone"><input className="input" type="tel" value={f.parentPhone} onChange={set('parentPhone')} /></Field>
+              <Field label="Parent or guardian email"><input className="input" type="email" value={f.parentEmail} onChange={set('parentEmail')} required /></Field>
+            </>
+          )}
+          {err && <p className="text-red-700 text-sm" role="alert">{err}</p>}
+          <div className="flex gap-3">
+            <button className="btn btn-primary" disabled={busy}>{busy ? 'Creating...' : 'Create account'}</button>
+            <button type="button" className="btn btn-outline" onClick={() => setOpen(false)}>Cancel</button>
+          </div>
+        </form>
+      )}
+    </div>
+  )
+}
+
+function EditStudent({ u, onClose, onSaved }) {
+  const [name, setName] = useState(u.fullName || '')
+  const [phone, setPhone] = useState(u.phone || '')
+  const [err, setErr] = useState('')
+  const save = async (e) => {
+    e.preventDefault()
+    setErr('')
+    try { await staffUpdateProfile(u.id, name, phone); onSaved() } catch (x) { setErr(x.message) }
+  }
+  return (
+    <form onSubmit={save} className="card space-y-3 max-w-xl" aria-label="Edit student">
+      <h3 className="font-bold">Edit {u.email}</h3>
+      <Field label="Full name"><input className="input" value={name} onChange={(e) => setName(e.target.value)} required /></Field>
+      <Field label="Phone"><input className="input" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} required /></Field>
+      {err && <p className="text-red-700 text-sm" role="alert">{err}</p>}
+      <div className="flex gap-3">
+        <button className="btn btn-primary">Save</button>
+        <button type="button" className="btn btn-outline" onClick={onClose}>Cancel</button>
+      </div>
+    </form>
+  )
+}
+
+export function SignupsSection({ users, canDisable, onToggle, err, reload }) {
+  const [editing, setEditing] = useState(null)
+  const done = () => { setEditing(null); reload && reload() }
   return (
     <section className="space-y-3">
       <h2 className="text-xl font-bold">Sign-ups ({users.length})</h2>
       <p className="text-sm text-neutral-600">
-        {canDisable ? 'Accounts are never deleted. Disabling blocks sign-in and keeps every record.' : 'You can see who has signed up. Only admins can disable accounts.'}
+        {canDisable ? 'Student accounts are never deleted. Disabling blocks sign-in and keeps every record.' : 'You can see, add and edit students. Only admins can disable accounts.'}
       </p>
       {err && <p className="text-red-700 text-sm" role="alert">{err}</p>}
+      {reload && <AddStudent onDone={done} />}
+      {editing && <EditStudent u={editing} onClose={() => setEditing(null)} onSaved={done} />}
       <ul className="md:hidden space-y-3" aria-label="Sign-ups">
         {users.map((u) => {
           const { subbed, trial, label } = accessLabel(u)
@@ -95,6 +180,7 @@ export function SignupsSection({ users, canDisable, onToggle, err }) {
                 {u.disabled && <Badge tone="orange">Disabled</Badge>}
                 <span className="text-neutral-600">{u.profileComplete ? 'Profile complete' : 'Profile incomplete'}</span>
               </p>
+              {reload && <button className="btn btn-outline w-full" onClick={() => setEditing(u)}>Edit details</button>}
               {canDisable && <button className="btn btn-outline w-full" onClick={() => onToggle(u)}>{u.disabled ? 'Reactivate account' : 'Disable account'}</button>}
             </li>
           )
@@ -104,7 +190,7 @@ export function SignupsSection({ users, canDisable, onToggle, err }) {
       <div className="hidden md:block overflow-x-auto card !p-0">
         <table className="w-full text-sm">
           <thead className="text-left bg-neutral-50">
-            <tr><th className="p-3">Name</th><th className="p-3">Email</th><th className="p-3">Phone</th><th className="p-3">Access</th><th className="p-3">Profile</th>{canDisable && <th className="p-3">Account</th>}</tr>
+            <tr><th className="p-3">Name</th><th className="p-3">Email</th><th className="p-3">Phone</th><th className="p-3">Access</th><th className="p-3">Profile</th><th className="p-3">Account</th></tr>
           </thead>
           <tbody>
             {users.map((u) => {
@@ -116,16 +202,15 @@ export function SignupsSection({ users, canDisable, onToggle, err }) {
                   <td className="p-3">{u.phone}</td>
                   <td className="p-3"><Badge tone={subbed || trial ? 'green' : 'orange'}>{label}</Badge></td>
                   <td className="p-3">{u.profileComplete ? 'Complete' : 'Incomplete'}</td>
-                  {canDisable && (
-                    <td className="p-3 whitespace-nowrap">
-                      {u.disabled && <Badge tone="orange">Disabled</Badge>}{' '}
-                      <button className="btn btn-outline !min-h-11 !py-1" onClick={() => onToggle(u)}>{u.disabled ? 'Reactivate account' : 'Disable account'}</button>
-                    </td>
-                  )}
+                  <td className="p-3 whitespace-nowrap space-x-2">
+                    {u.disabled && <Badge tone="orange">Disabled</Badge>}
+                    {reload && <button className="btn btn-outline !min-h-11 !py-1" onClick={() => setEditing(u)}>Edit</button>}
+                    {canDisable && <button className="btn btn-outline !min-h-11 !py-1" onClick={() => onToggle(u)}>{u.disabled ? 'Reactivate' : 'Disable'}</button>}
+                  </td>
                 </tr>
               )
             })}
-            {users.length === 0 && <tr><td className="p-3 text-neutral-500" colSpan={canDisable ? 6 : 5}>No sign-ups yet.</td></tr>}
+            {users.length === 0 && <tr><td className="p-3 text-neutral-500" colSpan={6}>No sign-ups yet.</td></tr>}
           </tbody>
         </table>
       </div>
@@ -306,12 +391,22 @@ export function TeamSection() {
     setRemoveTarget(null)
     try { await setStaffRole(t.email, 'none'); load() } catch (err) { setMsg({ ok: '', err: err.message }) }
   }
+  const [deleteTarget, setDeleteTarget] = useState(null)
+  const del = async () => {
+    const t = deleteTarget
+    setDeleteTarget(null)
+    try {
+      const r = await deleteStaff(t.userId)
+      setMsg({ ok: r === 'disabled' ? `${t.email} has payment records, so the account was closed and blocked instead of erased.` : `${t.email} was deleted.`, err: '' })
+      load()
+    } catch (err) { setMsg({ ok: '', err: err.message }) }
+  }
 
   return (
     <section className="space-y-3">
       <h2 className="text-xl font-bold">Team</h2>
       <p className="text-sm text-neutral-600">
-        Only super admins can add or remove staff. Admin: manages sign-ups, parent confirmations and data. Support: can see sign-ups and parents waiting, and create and send links. Neither can change roles.
+        Only super admins can add, remove or delete staff. Admin: manages sign-ups, parent confirmations and data. Support: can see sign-ups and parents waiting, and create and send links. Neither can change roles.
         The person must already have an account on the site.
       </p>
       <ConfirmDialog
@@ -321,6 +416,14 @@ export function TeamSection() {
         confirmLabel="Remove"
         onConfirm={remove}
         onCancel={() => setRemoveTarget(null)}
+      />
+      <ConfirmDialog
+        open={!!deleteTarget}
+        title="Delete this staff account?"
+        text={deleteTarget ? `${deleteTarget.email} will lose access and the account will be erased. This cannot be undone.` : ''}
+        confirmLabel="Delete"
+        onConfirm={del}
+        onCancel={() => setDeleteTarget(null)}
       />
       <div className="card !p-4 space-y-2">
         <p className="font-semibold">Support team page</p>
@@ -337,7 +440,8 @@ export function TeamSection() {
             </div>
             <div className="flex items-center gap-3">
               <Badge tone={m.role === 'owner' ? 'orange' : 'green'}>{ROLE_LABEL[m.role] || m.role}</Badge>
-              {m.role !== 'owner' && <button className="btn btn-outline !min-h-11 !py-1" onClick={() => setRemoveTarget(m)}>Remove</button>}
+              {m.role !== 'owner' && <button className="btn btn-outline !min-h-11 !py-1" onClick={() => setRemoveTarget(m)}>Remove role</button>}
+              {m.role !== 'owner' && <button className="btn btn-outline !min-h-11 !py-1" onClick={() => setDeleteTarget(m)}>Delete</button>}
             </div>
           </li>
         ))}

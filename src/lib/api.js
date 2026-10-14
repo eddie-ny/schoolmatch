@@ -549,6 +549,26 @@ export async function setStaffRole(email, role) {
   const { error } = await supabase.rpc('admin_set_staff_role', { p_email: email, p_role: role })
   fail(error, 'Could not change the role.')
 }
+export async function deleteStaff(userId) {
+  const { data, error } = await supabase.rpc('admin_delete_staff', { p_user: userId })
+  fail(error, 'Could not delete this staff account.')
+  return data
+}
+// Any staff: edit a student's name and phone.
+export async function staffUpdateProfile(userId, fullName, phone) {
+  const { error } = await supabase.rpc('staff_update_profile', { p_user: userId, p_full_name: fullName, p_phone: phone })
+  fail(error, 'Could not save the changes.')
+}
+// Any staff: create a student account on the student's behalf. Returns { email, password } once. No subscription is created.
+export async function staffCreateStudent(form) {
+  const { data, error } = await supabase.functions.invoke('staff-users/create-student', { body: form })
+  if (error) {
+    let msg = ''
+    try { msg = (await error.context.json()).error } catch { /* none */ }
+    throw new Error(msg || 'Could not create the account.')
+  }
+  return data
+}
 export async function getAdminStats() {
   const { data, error } = await supabase.rpc('admin_stats')
   fail(error, 'Could not load the numbers.')

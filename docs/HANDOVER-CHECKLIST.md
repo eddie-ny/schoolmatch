@@ -53,9 +53,14 @@ While the built-in Supabase email sender is in use, the site is limited to a sma
   - How many attempts are allowed before the site says "too many attempts" (sign-up, sign-in, forgot password, resend). Sign-up and sign-in should not be blocked by someone else's attempts.
   - How long a person must wait before trying again. One hour is too long. Options to discuss: 15 or 30 minutes, or a shorter wait for emails.
   - The message should then name that time, for example "Please try again in 15 minutes."
+- Parent link emails: today "Send link" opens the staff member's own email app with the message ready, because Supabase's built-in sender only sends its own sign-in emails and cannot send a custom message to a parent. Once SMTP is connected, add an edge function that emails the link from the site, and make Send link call it.
 - Check the "too many attempts" wording for real per-connection limits still reads correctly.
 - Send test sign-up, reset and parent emails and check they arrive (inbox, not spam) and that links open the right page.
 - Decide whether to turn "Confirm email" back on if it was switched off for testing.
+
+### School logos
+
+Schools show their initials until a logo is added. Add logos by putting image files in `public/logos/` (for example `public/logos/ug.png`) and setting the school's `logo_url` to `/logos/ug.png` in the Schools CSV, or use a full picture address. Use each university's own official logo and check its brand rules.
 
 ## 5. Paystack
 

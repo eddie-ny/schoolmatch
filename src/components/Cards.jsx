@@ -1,9 +1,18 @@
 // Result cards shared by Home, Find a School, School pages, Scholarships and Interested.
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Badge, LockedRows, VerifiedBadges } from './ui'
 
-// A square with the school's initials. Real logos can replace this later.
-export function Monogram({ name, className = '' }) {
+// The school's logo when we have one, otherwise a square with its initials.
+export function Monogram({ name, logo, className = '' }) {
+  const [broken, setBroken] = useState(false)
+  if (logo && !broken) {
+    return (
+      <span aria-hidden="true" className={`shrink-0 w-12 h-12 rounded-xl border border-neutral-200 bg-white flex items-center justify-center overflow-hidden ${className}`}>
+        <img src={logo} alt="" loading="lazy" className="max-w-full max-h-full object-contain p-1" onError={() => setBroken(true)} />
+      </span>
+    )
+  }
   const initials = (name || '?').replace(/\(.*?\)/g, '').split(/\s+/).filter((w) => /^[A-Za-z]/.test(w) && !['of', 'for', 'and', 'the'].includes(w.toLowerCase())).slice(0, 3).map((w) => w[0].toUpperCase()).join('')
   return (
     <span aria-hidden="true" className={`shrink-0 w-12 h-12 rounded-xl border border-neutral-200 bg-brand-green-soft flex items-center justify-center font-heading font-bold text-sm text-neutral-800 ${className}`}>
@@ -40,7 +49,7 @@ export function ProgramCard({ p, school, full, saved, onToggle, to, showSchoolLi
       ) : (
         <>
           <div className="flex items-start gap-3">
-            <Monogram name={p.schoolName} />
+            <Monogram name={p.schoolName} logo={school?.logoUrl} />
             <div className="min-w-0 flex-1">
               <p className="font-semibold text-sm leading-tight break-words">{p.schoolName}</p>
               <p className="text-sm text-neutral-600">{school?.city ? `${school.city}, ` : ''}{school?.country || 'Ghana'}</p>
@@ -76,7 +85,7 @@ export function SchoolCard({ s, count, matches = [], to, signedIn }) {
   return (
     <article className="card flex flex-col gap-3 hover:border-brand-orange transition-colors">
       <div className="flex items-start gap-3">
-        <Monogram name={s.name} />
+        <Monogram name={s.name} logo={s.logoUrl} />
         <div className="min-w-0 flex-1">
           <h3 className="font-bold leading-snug break-words">{s.name}</h3>
           <p className="text-sm text-neutral-600">{[s.city, s.country].filter(Boolean).join(', ')}</p>

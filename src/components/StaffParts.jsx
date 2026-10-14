@@ -11,14 +11,6 @@ export function accessLabel(u) {
   return { subbed, trial, label: subbed ? 'Subscriber' : trial ? 'Trial' : u.trialEndsAt ? 'Expired' : 'No trial' }
 }
 
-// Ghana numbers: 024 000 0000 becomes 233240000000 for WhatsApp links.
-export function waNumber(phone) {
-  const d = String(phone || '').replace(/\D/g, '')
-  if (d.startsWith('233')) return d
-  if (d.startsWith('0')) return '233' + d.slice(1)
-  return d
-}
-
 // Shown to staff who have not finished the authenticator step.
 export function NeedMfa({ what }) {
   return (
@@ -163,11 +155,9 @@ export function ParentsSection({ pending, canAccept, reload }) {
   }
 
   const message = link ? `Hello ${link.parent || ''}. ${link.name} signed up on SchoolMatch and needs a parent or guardian to confirm. Please open this link once to confirm. It expires in 7 days: ${link.url}` : ''
-  const send = link ? {
-    whatsapp: `https://wa.me/${waNumber(link.phone)}?text=${encodeURIComponent(message)}`,
-    sms: `sms:${link.phone}?&body=${encodeURIComponent(message)}`,
-    mail: `mailto:${link.email}?subject=${encodeURIComponent('Please confirm your child\'s SchoolMatch account')}&body=${encodeURIComponent(message)}`,
-  } : null
+  const mail = link
+    ? `mailto:${link.email}?subject=${encodeURIComponent('Please confirm your child\'s SchoolMatch account')}&body=${encodeURIComponent(message)}`
+    : ''
 
   const Buttons = ({ x, full }) => (
     <div className={`flex flex-wrap gap-2 ${full ? '' : 'justify-start'}`}>
@@ -180,7 +170,7 @@ export function ParentsSection({ pending, canAccept, reload }) {
     <section className="space-y-3">
       <h2 className="text-xl font-bold">Waiting for a parent or guardian ({pending.length})</h2>
       <p className="text-sm text-neutral-600">
-        Phone the parent on the number below and make sure you are speaking to them. Press Create link, then Send link to give it to that parent only. It works once and expires in 7 days.
+        Phone the parent on the number below and make sure you are speaking to them. Press Create link, then Send link to email it to that parent only. It works once and expires in 7 days.
         Creating a new link cancels the old one, so you can make another if the parent says it did not arrive. Every link is recorded in the activity log.
         {canAccept && ' Accept opens the student\'s account right away. Use it only after you have spoken to the parent.'}
       </p>
@@ -198,13 +188,12 @@ export function ParentsSection({ pending, canAccept, reload }) {
           <p className="font-semibold">Link for the parent of {link.name}</p>
           <input className="input text-xs" readOnly value={link.url} onFocus={(e) => e.target.select()} aria-label="Confirmation link" />
           <div className="flex flex-wrap gap-2">
-            <button className="btn btn-green !min-h-11 !py-1" onClick={() => navigator.clipboard?.writeText(link.url)}>Copy link</button>
-            {link.phone && <a className="btn btn-orange !min-h-11 !py-1" href={send.whatsapp} target="_blank" rel="noreferrer">Send by WhatsApp</a>}
-            {link.phone && <a className="btn btn-outline !min-h-11 !py-1" href={send.sms}>Send by SMS</a>}
-            {link.email && <a className="btn btn-outline !min-h-11 !py-1" href={send.mail}>Send by email</a>}
+            {link.email
+              ? <a className="btn btn-orange !min-h-11 !py-1" href={mail}>Send link</a>
+              : <p className="text-sm text-red-700">No parent email on file, so the link cannot be sent. Copy it from the box above.</p>}
             <button className="btn btn-outline !min-h-11 !py-1" onClick={() => setLink(null)}>Hide</button>
           </div>
-          <p className="text-xs text-neutral-600">Send opens WhatsApp, your messages or your email app with the message ready. You press send there. The site does not send it for you yet. This link is shown only now. Do not post it anywhere public.</p>
+          <p className="text-xs text-neutral-600">Send link opens your email app with the message to the parent ready. Press send there. The site cannot send the email by itself until we connect our own email service. This link is shown only now. Do not post it anywhere public.</p>
         </div>
       )}
       <ul className="md:hidden space-y-3" aria-label="Waiting for a parent or guardian">
@@ -241,11 +230,13 @@ export function ParentsSection({ pending, canAccept, reload }) {
 }
 
 // ---------- Activity log ----------
-export function ActivityLog({ log, users }) {
+export function ActivityLog({ log: all, users, canSeeAll = true }) {
+  const [showAll, setShowAll] = useState(false)
+  const log = showAll ? all : all.slice(0, 3)
   return (
     <section className="space-y-3">
       <h2 className="text-xl font-bold">Activity log</h2>
-      <p className="text-sm text-neutral-600">Staff actions and payments, newest first. It cannot be edited or deleted. It never holds passwords or card details.</p>
+      <p className="text-sm text-neutral-600">{canSeeAll ? 'Staff actions and payments, newest first.' : 'Your own actions, newest first.'} It cannot be edited or deleted. It never holds passwords or card details.</p>
       <ul className="md:hidden space-y-2" aria-label="Activity log">
         {log.map((e) => {
           const who = users.find((u) => u.id === e.actor_id)
@@ -281,6 +272,9 @@ export function ActivityLog({ log, users }) {
           </tbody>
         </table>
       </div>
+      {all.length > 3 && (
+        <button className="btn btn-outline" onClick={() => setShowAll(!showAll)}>{showAll ? 'Show fewer' : `See all activities (${all.length})`}</button>
+      )}
     </section>
   )
 }
@@ -328,6 +322,12 @@ export function TeamSection() {
         onConfirm={remove}
         onCancel={() => setRemoveTarget(null)}
       />
+      <div className="card !p-4 space-y-2">
+        <p className="font-semibold">Support team page</p>
+        <p className="text-sm text-neutral-600">Give this link to your support staff. They sign in with their own account, finish two-step verification, and land on it.</p>
+        <input className="input text-sm" readOnly value={`${window.location.origin}/support`} onFocus={(e) => e.target.select()} aria-label="Support page link" />
+        <button className="btn btn-outline !min-h-11 !py-1" onClick={() => navigator.clipboard?.writeText(`${window.location.origin}/support`)}>Copy link</button>
+      </div>
       <ul className="space-y-2" aria-label="Team">
         {team.map((m) => (
           <li key={m.userId} className="card !p-4 flex flex-wrap items-center justify-between gap-3 text-sm">

@@ -284,7 +284,7 @@ export async function loadCatalog() {
 
   const schools = sS.data.map((x) => {
     const f = fullSchools[x.id] || x
-    return { id: x.id, name: x.name, country: x.country, type: x.type, city: x.city, website: f.website || '', category: f.category || '', verified: x.verified, demo: x.demo }
+    return { id: x.id, name: x.name, country: x.country, type: x.type, city: x.city, website: f.website || '', category: f.category || '', logoUrl: x.logo_url || '', verified: x.verified, demo: x.demo }
   })
   const schoolById = Object.fromEntries(schools.map((x) => [x.id, x]))
 
@@ -346,7 +346,7 @@ export async function importCatalog(kind, rows) {
     const byName = Object.fromEntries(existing.map((x) => [x.name.toLowerCase(), x.id]))
     for (const r of rows) {
       if (!r.name || !r.country) { out.skipped.push(r.name || '(no name)'); continue }
-      const row = { name: r.name, country: r.country, type: clean(r.type), category: clean(r.category), city: clean(r.city), website: clean(r.website), verified: !!r.verified }
+      const row = { name: r.name, country: r.country, type: clean(r.type), category: clean(r.category), city: clean(r.city), website: clean(r.website), verified: !!r.verified, ...(r.logoUrl ? { logo_url: clean(r.logoUrl) } : {}) }
       const id = byName[r.name.toLowerCase()]
       const res = id ? await supabase.from('schools').update(row).eq('id', id) : await supabase.from('schools').insert(row)
       fail(res.error, `Could not save ${r.name}.`)
@@ -555,7 +555,7 @@ export async function getAdminStats() {
   return data
 }
 
-export async function listAuditLog(limit = 50) {
+export async function listAuditLog(limit = 200) {
   const { data, error } = await supabase.from('audit_log').select('id, at, actor_id, actor_role, action, target_user, detail').order('id', { ascending: false }).limit(limit)
   fail(error, 'Could not load the activity log.')
   return data || []

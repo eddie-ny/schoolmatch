@@ -68,20 +68,34 @@ export function Segmented({ options, value, onChange }) {
   )
 }
 
-// Password box with a show/hide button. Takes the same props as an input.
+// Password box with an eye button that shows or hides the password. Takes the same props as an input.
 export function PasswordInput({ className = '', ...props }) {
   const [shown, setShown] = useState(false)
   return (
     <div className="relative">
-      <input {...props} className={`input !pr-20 ${className}`} type={shown ? 'text' : 'password'} />
+      <input {...props} className={`input !pr-14 ${className}`} type={shown ? 'text' : 'password'} />
       <button
         type="button"
         onClick={() => setShown((s) => !s)}
         aria-pressed={shown}
         aria-label={shown ? 'Hide password' : 'Show password'}
-        className="absolute right-1 top-1/2 -translate-y-1/2 min-h-11 px-3 text-sm font-semibold underline"
+        className="absolute right-1 top-1/2 -translate-y-1/2 w-11 h-11 inline-flex items-center justify-center rounded-full text-neutral-600 hover:text-neutral-900"
       >
-        {shown ? 'Hide' : 'Show'}
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          {shown ? (
+            <>
+              <path d="M17.9 17.9A10.9 10.9 0 0 1 12 20C5 20 1 12 1 12a18.5 18.5 0 0 1 5.1-5.9" />
+              <path d="M9.9 4.2A10.9 10.9 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.2 3.2" />
+              <path d="M14.1 14.1a3 3 0 1 1-4.2-4.2" />
+              <path d="M1 1l22 22" />
+            </>
+          ) : (
+            <>
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z" />
+              <circle cx="12" cy="12" r="3" />
+            </>
+          )}
+        </svg>
       </button>
     </div>
   )

@@ -3,7 +3,7 @@ import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useCatalog, isLocal } from '../hooks/useCatalog'
 import { Gate, PageTitle, Segmented, VerifiedBadges } from '../components/ui'
-import { ProgramCard, SchoolCard } from '../components/Cards'
+import { Monogram, ProgramCard, SchoolCard } from '../components/Cards'
 import { useSaved } from '../hooks/useSaved'
 import { FIELDS, SHOW_INTERNATIONAL } from '../lib/constants'
 
@@ -105,10 +105,13 @@ export function SchoolDetail() {
   return (
     <div className="space-y-5">
       <Link to="/schools" className="text-sm underline">Back to schools</Link>
-      <div>
-        <h1 className="text-2xl font-bold">{school.name}</h1>
-        <p className="text-neutral-600">{[school.city, school.country].filter(Boolean).join(', ')}</p>
-        <div className="mt-2"><VerifiedBadges item={school} /></div>
+      <div className="flex items-start gap-4">
+        <Monogram name={school.name} logo={school.logoUrl} className="!w-16 !h-16" />
+        <div>
+          <h1 className="text-2xl font-bold">{school.name}</h1>
+          <p className="text-neutral-600">{[school.city, school.country].filter(Boolean).join(', ')}</p>
+          <div className="mt-2"><VerifiedBadges item={school} /></div>
+        </div>
       </div>
 
       {full ? (

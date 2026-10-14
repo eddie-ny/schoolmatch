@@ -38,6 +38,7 @@ export function rowsToSchools(rows) {
     category: r.category,
     city: r.city,
     website: r.website,
+    logoUrl: r.logo_url,
     verified: yes(r.verified),
   }))
 }

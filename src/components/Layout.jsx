@@ -10,6 +10,7 @@ export const APP_NAME = 'SchoolMatch' // placeholder name
 
 const links = [
   { to: '/schools', label: 'Find a School' },
+  { to: '/programs', label: 'Programs' },
   ...(SHOW_INTERNATIONAL ? [{ to: '/abroad', label: 'Study Abroad' }] : []),
   { to: '/scholarships', label: 'Scholarships' },
   { to: '/eligibility', label: 'Check My Eligibility' },

@@ -23,7 +23,7 @@ export default function Support() {
       <PageTitle title="Support" sub="Sign-ups, parents waiting for a link and the activity log." />
       <ParentsSection pending={pending} canAccept={false} reload={load} />
       <SignupsSection users={users} canDisable={false} onToggle={() => {}} err="" />
-      <ActivityLog log={log} users={users} />
+      <ActivityLog log={log} users={users} canSeeAll={false} />
     </div>
   )
 }

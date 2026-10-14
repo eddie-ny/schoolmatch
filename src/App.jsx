@@ -18,6 +18,7 @@ const Admin = lazy(() => import('./pages/Admin'))
 const Support = lazy(() => import('./pages/Support'))
 const Complaints = lazy(() => import('./pages/Complaints'))
 const Interested = lazy(() => import('./pages/Interested'))
+const Programs = lazy(() => import('./pages/Programs'))
 const Privacy = lazy(() => import('./pages/Privacy'))
 const Settings = lazy(() => import('./pages/Settings'))
 const Legal = lazy(() => import('./pages/Legal'))
@@ -45,6 +46,7 @@ export default function App() {
         <Route path="/support" element={<Support />} />
         <Route path="/complaints" element={<Complaints />} />
         <Route path="/interested" element={<Interested />} />
+        <Route path="/programs" element={<Programs />} />
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/parent-confirm" element={<ParentConfirm />} />
         <Route path="/terms" element={<Legal page="terms" />} />

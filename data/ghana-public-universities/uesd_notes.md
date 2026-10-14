@@ -1,27 +1,20 @@
-# UESD (University of Environment and Sustainable Development, Somanya): PARTIAL, not loaded
+# UESD (University of Environment and Sustainable Development, Somanya): collected 2026-10-14
 
-Status: collection stopped early because the usage limit was hit (resets 4pm Accra, 2026-10-13). No CSV written yet. Nothing from UESD is in the database.
+Captured 27 of 27 BSc programmes from the official programme list https://www.uesd.edu.gh/undergraduate-programmes/ (page list read 2026-10-14).
 
-## Sources opened
-- Programme list (27 BSc programmes, no durations, no faculty mapping): https://www.uesd.edu.gh/undergraduate-programmes/
-- Admission requirements PDF (2020/2021 intake, 11 programmes, general rule only): https://apps.uesd.edu.gh/admissions/public/information/admission_requirement.pdf
-- Cut-off page https://www.uesd.edu.gh/cut-off-points/ is EMPTY (heading only, no figures). No cut-off list found anywhere on the site yet.
-- Site footer shows copyright 2026; programme pages carry no date.
+## Sources
+- Programme pages on www.uesd.edu.gh (URLs in the source_url column). Programme pages carry no date.
+- Some pages were reached through their short links (?p=NNNN): Geography and Earth Science (7486), Nature Conservation Management (8542), Economics (15656), Fisheries Economics and Management (15653), Environmental and Sustainability Science (7470, the list page has no separate page), Development Economics (15008, uesd.edu.gh).
+- Cut-off page https://www.uesd.edu.gh/cut-off-points/ is empty (heading only). No cut-off list found, so no cut-off values are stored.
 
-## Rule common to the pages read
-WASSCE: credit (A1-C6) in core English, core Mathematics and Integrated Science or Social Studies, any three electives, aggregate 36 or better overall (SSSCE 24). The 36 is a university-wide entry maximum, not a programme cut-off, so it is NOT to be stored as a cut-off (same convention as AAMUSTED).
+## Rule
+Credit (A1-C6) in core English, core Mathematics and Integrated Science or Social Studies, three electives, aggregate 36 or better. Economics and Development Economics pages state 24 or better. These are entry maximums, not cut-offs, and are not stored (same convention as AAMUSTED). Core science grade is left blank because of the "or" wording.
 
-## Programme pages read so far (elective wording as reported by the page reader, to re-check on load)
-- Environment and Public Health: any three electives in Science, Home Economics, Geography and Economics.
-- Sustainable Development: electives must include at least one of Economics, Geography, Mathematics (page also lists ICT, Government, Elective Mathematics, General Agriculture, Accounting, Business Management, General Knowledge in Art).
-- Geoscience: electives must include at least one of Geography, Mathematics, Biology, Chemistry, Physics.
-- Energy and Resource Economics: at least one of Economics, Geography, Mathematics, Biology, Chemistry, Physics, Horticulture, Animal Husbandry, Crop Science.
-- Water Resources Development: at least one of Biology, Chemistry, Physics, Elective Mathematics, Geography, Animal Husbandry, General Agriculture, Fisheries and Aquaculture.
-- Biological and Mathematical Sciences, Chemistry and Biological Sciences: any three electives from Biology, Chemistry, Physics, Elective Mathematics.
+## Not captured
+Development Administration, Gender and Development, Aquaculture Resources Management, top-up and sandwich programmes (found elsewhere, not on the official 27 list).
 
-## Still to read (19 pages)
-Geography and Earth Science, Energy Sustainability, Mathematics, Environmental and Sustainability Science, Nature Conservation Management, Water Sanitation and Hygiene, Aquaculture Management, Chemistry and Mathematical Sciences, Physics and Mathematics, Physics and Biological Sciences, Chemistry and Physics, Environmental Economics and Policy, Urban Planning and Development, Sustainable Construction Management and Technology, Architecture and Sustainable Design, Development Economics, Statistics, Economics, Fisheries Economics and Management, Environmental Management. (Count is 20 including Environmental Management.)
-Note: the page fetch tool only opens links that came from search results, so search for each programme name first.
-
-## Other pages found but not on the official 27-programme list
-BSc Development Administration, BSc Gender and Development, BSc Aquaculture Resources Management, Top-Up Sandwich programmes. Not captured; check whether they are current.
+## Notes
+- Required electives are stored only for Statistics and Economics (Elective Mathematics). All other electives wording is in source_note.
+- Fields are my classification, not stated by the university. Durations only where the page states four years.
+- The Programme list calls one programme "Physics and Mathematics"; its page title is "Physics and Mathematical Sciences" (page title used).
+- A 2022 news article (https://www.uesd.edu.gh/?p=9613) lists 20 programmes and a C6 core rule; older than the programme pages, not used for values.

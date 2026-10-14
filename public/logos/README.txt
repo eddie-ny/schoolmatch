@@ -10,7 +10,8 @@ uenr.png    University of Energy and Natural Resources
 uhas.png    University of Health and Allied Sciences
 umat.png    University of Mines and Technology
 upsa.png    University of Professional Studies, Accra
-uesd.png    Akenten Appiah-Menka University (AAMUSTED/UESD)
+aamusted.png Akenten Appiah-Menka University (AAMUSTED)
+uesd.png    University of Environment and Sustainable Development (Somanya)
 cktutas.png C.K. Tedam University of Technology and Applied Sciences
 ubids.png   Simon Diedong Dombo University of Business and Integrated Development Studies
 ashesi.png  Ashesi University

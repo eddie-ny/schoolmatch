@@ -558,6 +558,11 @@ export async function deleteAccount(userId) {
   fail(error, 'Could not delete this account.')
   return data
 }
+export async function listArchive() {
+  const { data, error } = await supabase.rpc('admin_list_archive')
+  fail(error, 'Could not load the archive.')
+  return (data || []).map((x) => ({ id: x.id, userId: x.original_user_id, email: x.email, fullName: x.full_name, phone: x.phone, staffRole: x.staff_role, deletedAt: x.deleted_at, deletedBy: x.deleted_by, snapshot: x.snapshot || {} }))
+}
 export async function deleteStaff(userId) {
   const { data, error } = await supabase.rpc('admin_delete_staff', { p_user: userId })
   fail(error, 'Could not delete this staff account.')

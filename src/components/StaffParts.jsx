@@ -1,8 +1,8 @@
 // Pieces shared by the Admin page and the Support page.
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { acceptParent, createParentLink, cancelInvite, deleteAccount, deleteStaff, getAdminStats, inviteStaff, listInvites, listStaff, setStaffRole, staffCreateStudent, staffUpdateProfile } from '../lib/api'
-import { Badge, ConfirmDialog, Field } from './ui'
+import { acceptParent, createParentLink, cancelInvite, deleteAccount, listArchive, getAdminStats, inviteStaff, listInvites, listStaff, setStaffRole, staffCreateStudent, staffUpdateProfile } from '../lib/api'
+import { Badge, ConfirmDialog, Field, Spinner } from './ui'
 
 const ROLE_LABEL = { owner: 'Super admin', admin: 'Admin', support: 'Support' }
 
@@ -469,6 +469,48 @@ export function ActivityPage({ log, users, canSeeAll }) {
   )
 }
 
+// ---------- Archive of deleted accounts (super admin only) ----------
+export function ArchivePage() {
+  const [rows, setRows] = useState(null)
+  const [err, setErr] = useState('')
+  const [q, setQ] = useState('')
+  const [open, setOpen] = useState(null)
+  const [page, setPage] = useState(1)
+  useEffect(() => { listArchive().then(setRows).catch((e) => { setErr(e.message); setRows([]) }) }, [])
+  useEffect(() => { setPage(1) }, [q])
+  if (!rows) return <Spinner />
+  const needle = q.trim().toLowerCase()
+  const found = needle ? rows.filter((r) => `${r.fullName || ''} ${r.email || ''}`.toLowerCase().includes(needle)) : rows
+  const shown = found.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+  return (
+    <section className="space-y-3">
+      <h2 className="text-xl font-bold">Archive ({found.length})</h2>
+      <p className="text-sm text-neutral-600">Private copies of accounts that were deleted. These people are gone from the site; this is only a record. Only super admins can see it.</p>
+      {err && <p className="text-red-700 text-sm" role="alert">{err}</p>}
+      <input className="input max-w-xl" type="search" placeholder="Search by name or email" aria-label="Search the archive" value={q} onChange={(e) => setQ(e.target.value)} />
+      <ul className="space-y-2">
+        {shown.map((r) => (
+          <li key={r.id} className="card !p-4 text-sm space-y-2">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="min-w-0">
+                <p className="font-semibold break-words">{r.fullName || '(no name)'} {r.staffRole && <Badge tone="green">{ROLE_LABEL[r.staffRole]}</Badge>}</p>
+                <p className="break-all text-neutral-600">{r.email} {r.phone ? `| ${r.phone}` : ''}</p>
+                <p className="text-neutral-600">Deleted {new Date(r.deletedAt).toLocaleString()}</p>
+              </div>
+              <button className="btn btn-outline !min-h-11 !py-1" onClick={() => setOpen(open === r.id ? null : r.id)}>{open === r.id ? 'Hide details' : 'View details'}</button>
+            </div>
+            {open === r.id && (
+              <pre className="bg-neutral-50 rounded-xl p-3 overflow-x-auto text-xs whitespace-pre-wrap break-words">{JSON.stringify(r.snapshot, null, 2)}</pre>
+            )}
+          </li>
+        ))}
+        {shown.length === 0 && <li className="card text-sm text-neutral-500">Nothing in the archive.</li>}
+      </ul>
+      <Pager page={page} total={found.length} onPage={setPage} />
+    </section>
+  )
+}
+
 // ---------- Team (super admin only) ----------
 
 export function TeamSection() {
@@ -506,8 +548,8 @@ export function TeamSection() {
     const t = deleteTarget
     setDeleteTarget(null)
     try {
-      const r = await deleteStaff(t.userId)
-      setMsg({ ok: r === 'disabled' ? `${t.email} has payment records, so the account was closed and blocked instead of erased.` : `${t.email} was deleted.`, err: '' })
+      await deleteAccount(t.userId)
+      setMsg({ ok: `${t.email} was deleted. A private copy is in the Archive.`, err: '' })
       load()
     } catch (err) { setMsg({ ok: '', err: err.message }) }
   }

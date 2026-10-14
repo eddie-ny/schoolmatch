@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { listUsers, importCatalog, deleteDemoData, setAccountDisabled, listAuditLog, importPlans, listPendingParents } from '../lib/api'
 import { parseCsv, rowsToSchools, rowsToPrograms, rowsToScholarships } from '../lib/csv'
 import { ConfirmDialog, PageTitle, Spinner } from '../components/ui'
-import { ActivityLog, ActivityPage, NeedMfa, ParentsSection, SignupsSection, StatsPanel, TeamSection } from '../components/StaffParts'
+import { ActivityLog, ActivityPage, ArchivePage, NeedMfa, ParentsSection, SignupsSection, StatsPanel, TeamSection } from '../components/StaffParts'
 
 const SHEETS = [
   { kind: 'schools', label: 'Schools sheet', cols: 'school_name, country, type, category, city, website, logo_url (optional, a picture address or a path like /logos/ug.png), verified' },
@@ -128,6 +128,7 @@ export default function StaffArea({ base }) {
     { to: `${base}/parents`, label: `Parents${pending.length ? ` (${pending.length})` : ''}` },
     ...(owner && isAdminArea ? [{ to: `${base}/team`, label: 'Team' }] : []),
     { to: `${base}/activity`, label: 'Activity' },
+    ...(owner && isAdminArea ? [{ to: `${base}/archive`, label: 'Archive' }] : []),
     ...(isAdminArea ? [{ to: `${base}/data`, label: 'Data' }] : []),
   ]
   const sub = isAdminArea
@@ -158,6 +159,7 @@ export default function StaffArea({ base }) {
         <Route path="people" element={<SignupsSection users={users} canDisable={isAdminArea} onToggle={isAdminArea ? setTarget : () => {}} err={err} reload={load} canEditStaff={isAdminArea} canDelete={owner && isAdminArea} />} />
         <Route path="parents" element={<ParentsSection pending={pending} canAccept={isAdminArea} reload={load} />} />
         {owner && isAdminArea && <Route path="team" element={<TeamSection />} />}
+        {owner && isAdminArea && <Route path="archive" element={<ArchivePage />} />}
         <Route path="activity" element={<ActivityPage log={log} users={users} canSeeAll={canSeeAll} />} />
         {isAdminArea && <Route path="data" element={<DataSection />} />}
         <Route path="*" element={<p>Page not found. <Link className="underline" to={base}>Back to {label}</Link></p>} />

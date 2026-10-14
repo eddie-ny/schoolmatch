@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useCatalog, isLocal } from '../hooks/useCatalog'
-import { Gate, PageTitle, Segmented, VerifiedBadges } from '../components/ui'
+import { Gate, PageTitle, Segmented, VerifiedBadges, Spinner } from '../components/ui'
 import { Monogram, ProgramCard, SchoolCard } from '../components/Cards'
 import { useSaved } from '../hooks/useSaved'
 import { FIELDS, SHOW_INTERNATIONAL } from '../lib/constants'
@@ -88,7 +88,7 @@ export function SchoolDetail() {
     setParams(next, { replace: true })
   }
 
-  if (loading) return <p>Loading...</p>
+  if (loading) return <Spinner />
   if (!school) return <p>School not found. <Link to="/schools" className="underline">Back to schools</Link></p>
   if (!user) return <Gate />
 

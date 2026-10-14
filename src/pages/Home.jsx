@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useCatalog, isLocal } from '../hooks/useCatalog'
 import { FIELDS, SHOW_INTERNATIONAL } from '../lib/constants'
-import { Segmented } from '../components/ui'
+import { Segmented, Spinner } from '../components/ui'
 import { ProgramCard, SchoolCard, ScholarshipCard } from '../components/Cards'
 import { useSaved } from '../hooks/useSaved'
 
@@ -106,7 +106,7 @@ export default function Home() {
           Free for your first 24 hours
         </span>
         <h1 className="mt-5 text-4xl md:text-6xl font-bold leading-tight text-neutral-900">
-          Find the <span className="text-brand-green-ink">right school</span> for <span className="text-brand-orange-ink">your results</span>
+          Find the <span className="text-[#9CC722]">right school</span> for <span className="text-[#FFB02E]">your results</span>
         </h1>
         <p className="mt-4 text-lg text-neutral-700 max-w-xl mx-auto">
           {SHOW_INTERNATIONAL ? 'Check your eligibility for local and international schools, and find scholarships, all in one place.' : 'Check your eligibility for Ghanaian universities and find scholarships, all in one place.'}
@@ -166,7 +166,7 @@ export default function Home() {
         {!loading && <p className="text-sm text-neutral-600">{results.length} result{results.length === 1 ? '' : 's'}</p>}
 
         {loading ? (
-          <p>Loading...</p>
+          <Spinner />
         ) : results.length === 0 ? (
           <p className="text-neutral-600">Nothing matches these filters yet.</p>
         ) : (

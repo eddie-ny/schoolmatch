@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useCatalog } from '../hooks/useCatalog'
 import { useSaved } from '../hooks/useSaved'
-import { Gate, PageTitle } from '../components/ui'
+import { Gate, PageTitle, Spinner } from '../components/ui'
 import { ProgramCard } from '../components/Cards'
 
 // Programs the student hearted, grouped by university.
@@ -27,7 +27,7 @@ export default function Interested() {
     <div className="space-y-6">
       <PageTitle title="Interested" sub="Programs you have marked with a heart, with their universities." />
       {saved.error && <p className="text-red-700 text-sm" role="alert">{saved.error}</p>}
-      {loading ? <p>Loading...</p> : total === 0 ? (
+      {loading ? <Spinner /> : total === 0 ? (
         <div className="card space-y-3 max-w-xl">
           <p>You have not marked any programs yet. Press the heart on a program to keep it here.</p>
           <Link to="/schools" className="btn btn-orange">Find a school</Link>

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { listUsers, importCatalog, deleteDemoData, setAccountDisabled, listAuditLog, importPlans, listPendingParents } from '../lib/api'
 import { parseCsv, rowsToSchools, rowsToPrograms, rowsToScholarships } from '../lib/csv'
-import { ConfirmDialog, PageTitle } from '../components/ui'
+import { ConfirmDialog, PageTitle, Spinner } from '../components/ui'
 import { ActivityLog, NeedMfa, ParentsSection, SignupsSection, StatsPanel, TeamSection } from '../components/StaffParts'
 
 const SHEETS = [
@@ -68,7 +68,7 @@ export default function Admin() {
     } catch (e) { setTarget(null); setErr(e.message) }
   }
 
-  if (loading) return <p>Loading...</p>
+  if (loading) return <Spinner />
   if (user?.role !== 'admin') return <p>Admins only.</p>
   if (mfa.current !== 'aal2') return <NeedMfa what="Admin" />
 

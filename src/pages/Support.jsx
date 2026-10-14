@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { listUsers, listAuditLog, listPendingParents } from '../lib/api'
-import { PageTitle } from '../components/ui'
+import { PageTitle, Spinner } from '../components/ui'
 import { ActivityLog, NeedMfa, ParentsSection, SignupsSection } from '../components/StaffParts'
 
 // Support page: the same tools as Admin with fewer powers. Support can see sign-ups, see who is waiting for a parent,
@@ -14,7 +14,7 @@ export default function Support() {
   const load = () => Promise.all([listUsers().then(setUsers), listAuditLog().then(setLog).catch(() => {}), listPendingParents().then(setPending).catch(() => {})])
   useEffect(() => { load() }, [])
 
-  if (loading) return <p>Loading...</p>
+  if (loading) return <Spinner />
   if (!user || !['support', 'admin'].includes(user.role)) return <p>Support staff only.</p>
   if (mfa.current !== 'aal2') return <NeedMfa what="Support" />
 

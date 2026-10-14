@@ -3,7 +3,7 @@ import { Suspense, useEffect, useRef, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { timeLeft } from '../lib/access'
 import MfaChallenge from './MfaChallenge'
-import { ConfirmDialog } from './ui'
+import { ConfirmDialog, Spinner } from './ui'
 import { SHOW_INTERNATIONAL } from '../lib/constants'
 
 export const APP_NAME = 'SchoolMatch' // placeholder name
@@ -60,7 +60,7 @@ function UserMenu({ user, onSignOut }) {
 }
 
 export default function Layout() {
-  const { user, access, signOut, mfaNeeded } = useAuth()
+  const { user, access, signOut, mfaNeeded, notice, clearNotice } = useAuth()
   const [open, setOpen] = useState(false)
   const [confirmOut, setConfirmOut] = useState(false)
   const nav = useNavigate()
@@ -78,6 +78,11 @@ export default function Layout() {
       }
     } catch { /* storage blocked: staff can still use the menu */ }
   }, [user, mfaNeeded, pathname, nav])
+  useEffect(() => {
+    if (!notice) return
+    const t = setTimeout(clearNotice, 5000)
+    return () => clearTimeout(t)
+  }, [notice, clearNotice])
   const handleSignOut = async () => {
     setConfirmOut(false)
     setOpen(false)
@@ -158,6 +163,14 @@ export default function Layout() {
         )}
       </header>
 
+      {notice && (
+        <div role="status" className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-neutral-900 text-white rounded-2xl shadow-xl px-5 py-3 flex items-center gap-3 max-w-[92vw]">
+          <span aria-hidden="true" className="w-6 h-6 rounded-full bg-brand-green text-neutral-900 flex items-center justify-center font-bold shrink-0">&#10003;</span>
+          <span className="text-sm font-semibold">{notice}</span>
+          <button className="ml-2 text-sm underline min-h-11" onClick={clearNotice}>Dismiss</button>
+        </div>
+      )}
+
       <ConfirmDialog
         open={confirmOut}
         title="Sign out?"
@@ -169,7 +182,7 @@ export default function Layout() {
       />
 
       <main id="main" tabIndex={-1} className="flex-1 outline-none max-w-5xl w-full mx-auto px-4 py-6">
-        <Suspense fallback={<p role="status" className="min-h-[60vh]">Loading...</p>}>
+        <Suspense fallback={<Spinner className="min-h-[60vh]" />}>
           {mfaNeeded ? <MfaChallenge /> : <Outlet />}
         </Suspense>
       </main>

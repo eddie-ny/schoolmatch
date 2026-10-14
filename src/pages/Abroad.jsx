@@ -1,6 +1,6 @@
 import { useAuth } from '../context/AuthContext'
 import { useCatalog } from '../hooks/useCatalog'
-import { Badge, Gate, PageTitle, VerifiedBadges } from '../components/ui'
+import { Badge, Gate, PageTitle, VerifiedBadges, Spinner } from '../components/ui'
 
 export default function Abroad() {
   const { access } = useAuth()
@@ -12,7 +12,7 @@ export default function Abroad() {
     <div>
       <PageTitle title="Study Abroad" sub="Compare destinations: entry requirements, English test waivers, foundation options and costs." />
       {!full && <div className="mb-5"><Gate /></div>}
-      {loading ? <p>Loading...</p> : (
+      {loading ? <Spinner /> : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {intl.map((p) => {
             const school = schools.find((s) => s.id === p.schoolId)

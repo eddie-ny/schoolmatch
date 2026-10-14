@@ -9,6 +9,7 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
   const [recovering, setRecovering] = useState(false)
+  const [notice, setNotice] = useState('')
   const [mfa, setMfa] = useState({ current: 'aal1', next: 'aal1' })
   // Bumped on sign out so a slow in-flight refresh can never put the old user back.
   const generation = useRef(0)
@@ -57,7 +58,7 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     if (!user) return
     let t
-    const reset = () => { clearTimeout(t); t = setTimeout(() => { generation.current += 1; setUser(null); api.signOut().catch(() => {}) }, 30 * 60 * 1000) }
+    const reset = () => { clearTimeout(t); t = setTimeout(() => { generation.current += 1; setUser(null); setNotice('You were signed out after 30 minutes of inactivity.'); api.signOut().catch(() => {}) }, 30 * 60 * 1000) }
     const evts = ['pointerdown', 'keydown', 'scroll', 'touchstart']
     evts.forEach((e) => window.addEventListener(e, reset, { passive: true }))
     reset()
@@ -69,6 +70,7 @@ export function AuthProvider({ children }) {
   const signOut = useCallback(async () => {
     generation.current += 1
     setUser(null) // the screen updates at once; the server call finishes in the background
+    setNotice('You have been signed out.')
     try {
       await api.signOut()
     } catch (e) {
@@ -87,7 +89,7 @@ export function AuthProvider({ children }) {
   return (
     <AuthContext.Provider
       value={{
-        user, loading, access, mfa, mfaNeeded: !!user?.mfaPending, profileComplete, parentPending, recovering,
+        user, loading, notice, clearNotice: () => setNotice(''), access, mfa, mfaNeeded: !!user?.mfaPending, profileComplete, parentPending, recovering,
         signUp, signIn, signOut, saveProfile, saveResults, addDocument, removeDocument, refresh,
         requestPasswordReset: api.requestPasswordReset,
         setNewPassword: async (pw) => { await api.setNewPassword(pw); setRecovering(false) },

@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext'
 import { useEffect } from 'react'
 import { listEligibilityPrograms, checkEligibility } from '../lib/api'
 import { CORE_SUBJECTS, ELECTIVE_SUBJECTS, GRADES, DISCLAIMER, FIELDS, SHOW_INTERNATIONAL } from '../lib/constants'
-import { Badge, Field, Gate, PageTitle, RequireAuth, Segmented } from '../components/ui'
+import { Badge, Field, Gate, PageTitle, RequireAuth, Segmented, Spinner } from '../components/ui'
 
 const labelTone = {
   'Strong match': 'green',
@@ -110,7 +110,7 @@ function EligibilityInner() {
     }
   }
 
-  if (loading) return <p>Loading...</p>
+  if (loading) return <Spinner />
 
   return (
     <div className="space-y-8 max-w-3xl">

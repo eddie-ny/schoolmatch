@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useCatalog, isLocal } from '../hooks/useCatalog'
-import { Gate, PageTitle, Segmented } from '../components/ui'
+import { Gate, PageTitle, Segmented, Spinner } from '../components/ui'
 import { ScholarshipCard } from '../components/Cards'
 import { SHOW_INTERNATIONAL } from '../lib/constants'
 
@@ -30,7 +30,7 @@ export default function Scholarships() {
         {SHOW_INTERNATIONAL && <div><Segmented value={where} onChange={setWhere} options={[{ value: 'all', label: 'All' }, { value: 'local', label: 'Local' }, { value: 'intl', label: 'International' }]} /></div>}
       </div>
       {!full && <div className="mb-5"><Gate /></div>}
-      {loading ? <p>Loading...</p> : (
+      {loading ? <Spinner /> : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {list.map((s) => <ScholarshipCard key={s.id} s={s} full={full} />)}
           {list.length === 0 && <p className="text-neutral-600">No scholarships match these filters yet.</p>}

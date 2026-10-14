@@ -116,7 +116,7 @@ export function Field({ label, children, hint }) {
 
 export function RequireAuth({ children, needProfile }) {
   const { user, loading, profileComplete } = useAuth()
-  if (loading) return <p>Loading...</p>
+  if (loading) return <Spinner />
   if (!user) {
     return (
       <div className="space-y-4 max-w-xl">
@@ -265,4 +265,14 @@ export function ConfirmDialog({ open, title, text, confirmLabel = 'Yes', cancelL
 // Small grey section heading with a rule under it (GoScholar-style).
 export function SectionLabel({ children }) {
   return <h2 className="text-xs font-bold tracking-widest uppercase text-neutral-600 border-b border-neutral-200 pb-2">{children}</h2>
+}
+
+// Loading indicator: a spinning ring with a label for screen readers.
+export function Spinner({ label = 'Loading', className = '' }) {
+  return (
+    <div role="status" className={`flex flex-col items-center justify-center gap-3 py-16 ${className}`}>
+      <span aria-hidden="true" className="w-10 h-10 rounded-full border-4 border-brand-green-soft border-t-brand-orange animate-spin" />
+      <span className="text-sm text-neutral-600">{label}...</span>
+    </div>
+  )
 }

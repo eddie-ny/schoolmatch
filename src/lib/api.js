@@ -552,6 +552,12 @@ export async function setStaffRole(email, role) {
   const { error } = await supabase.rpc('admin_set_staff_role', { p_email: email, p_role: role })
   fail(error, 'Could not change the role.')
 }
+// Super admin: removes a student or staff account for good (a private copy goes to the archive). Needs the database function admin_delete_account.
+export async function deleteAccount(userId) {
+  const { data, error } = await supabase.rpc('admin_delete_account', { p_user: userId })
+  fail(error, 'Could not delete this account.')
+  return data
+}
 export async function deleteStaff(userId) {
   const { data, error } = await supabase.rpc('admin_delete_staff', { p_user: userId })
   fail(error, 'Could not delete this staff account.')

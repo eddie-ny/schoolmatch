@@ -155,7 +155,7 @@ export default function StaffArea({ base }) {
       />
       <Routes>
         <Route index element={<Overview base={base} isAdmin={isAdminArea} users={users} pending={pending} log={log} canSeeAll={canSeeAll} />} />
-        <Route path="people" element={<SignupsSection users={users} canDisable={isAdminArea} onToggle={isAdminArea ? setTarget : () => {}} err={err} reload={load} canEditStaff={isAdminArea} />} />
+        <Route path="people" element={<SignupsSection users={users} canDisable={isAdminArea} onToggle={isAdminArea ? setTarget : () => {}} err={err} reload={load} canEditStaff={isAdminArea} canDelete={owner && isAdminArea} />} />
         <Route path="parents" element={<ParentsSection pending={pending} canAccept={isAdminArea} reload={load} />} />
         {owner && isAdminArea && <Route path="team" element={<TeamSection />} />}
         <Route path="activity" element={<ActivityPage log={log} users={users} canSeeAll={canSeeAll} />} />

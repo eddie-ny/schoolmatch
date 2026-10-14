@@ -1,7 +1,7 @@
 // Pieces shared by the Admin page and the Support page.
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { acceptParent, createParentLink, cancelInvite, deleteStaff, getAdminStats, inviteStaff, listInvites, listStaff, setStaffRole, staffCreateStudent, staffUpdateProfile } from '../lib/api'
+import { acceptParent, createParentLink, cancelInvite, deleteAccount, deleteStaff, getAdminStats, inviteStaff, listInvites, listStaff, setStaffRole, staffCreateStudent, staffUpdateProfile } from '../lib/api'
 import { Badge, ConfirmDialog, Field } from './ui'
 
 const ROLE_LABEL = { owner: 'Super admin', admin: 'Admin', support: 'Support' }
@@ -171,8 +171,16 @@ function EditStudent({ u, onClose, onSaved }) {
   )
 }
 
-export function SignupsSection({ users: allUsers, canDisable, onToggle, err, reload, canEditStaff }) {
+export function SignupsSection({ users: allUsers, canDisable, onToggle, err, reload, canEditStaff, canDelete }) {
   const [editing, setEditing] = useState(null)
+  const [delTarget, setDelTarget] = useState(null)
+  const [delErr, setDelErr] = useState('')
+  const runDelete = async () => {
+    const t = delTarget
+    setDelTarget(null)
+    setDelErr('')
+    try { await deleteAccount(t.id); reload && reload() } catch (e) { setDelErr(e.message) }
+  }
   const [q, setQ] = useState('')
   const needle = q.trim().toLowerCase()
   const found = needle ? allUsers.filter((u) => `${u.fullName || ''} ${u.email || ''}`.toLowerCase().includes(needle)) : allUsers
@@ -181,14 +189,23 @@ export function SignupsSection({ users: allUsers, canDisable, onToggle, err, rel
   const users = found.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
   const canEdit = (u) => !!reload && (!u.staffRole || canEditStaff)
   const canToggle = (u) => canDisable && !u.staffRole
+  const canRemove = (u) => canDelete && u.staffRole !== 'owner'
   const done = () => { setEditing(null); reload && reload() }
   return (
     <section className="space-y-3">
       <h2 className="text-xl font-bold">People ({found.length}{needle ? ` of ${allUsers.length}` : ''})</h2>
       <p className="text-sm text-neutral-600">
-        {canDisable ? 'Student accounts are never deleted. Disabling blocks sign-in and keeps every record.' : 'You can see, add and edit students. Only admins can disable accounts.'}
+        {canDelete ? 'Disabling blocks sign-in and keeps the account. Deleting removes it for good from the site; a private copy is kept in the archive.' : canDisable ? 'Disabling blocks sign-in and keeps the account.' : 'You can see, add and edit students. Only admins can disable accounts.'}
       </p>
-      {err && <p className="text-red-700 text-sm" role="alert">{err}</p>}
+      {(err || delErr) && <p className="text-red-700 text-sm" role="alert">{err || delErr}</p>}
+      <ConfirmDialog
+        open={!!delTarget}
+        title="Delete this account?"
+        text={delTarget ? `${delTarget.fullName} (${delTarget.email}) will be removed from the site and signed out. If they sign up again with the same details they start fresh with a new account. A private copy is kept in the archive.` : ''}
+        confirmLabel="Delete"
+        onConfirm={runDelete}
+        onCancel={() => setDelTarget(null)}
+      />
       <input className="input max-w-xl" type="search" placeholder="Search students and staff by name or email" aria-label="Search people" value={q} onChange={(e) => setQ(e.target.value)} />
       {reload && <AddStudent onDone={done} />}
       {editing && <EditStudent u={editing} onClose={() => setEditing(null)} onSaved={done} />}
@@ -202,11 +219,12 @@ export function SignupsSection({ users: allUsers, canDisable, onToggle, err, rel
               <p>{u.phone}</p>
               <p className="flex flex-wrap items-center gap-2">
                 <Badge tone={subbed || trial ? 'green' : 'orange'}>{label}</Badge>
-                {u.disabled && <Badge tone="orange">Disabled</Badge>}
+                <Badge tone={u.disabled ? 'orange' : 'green'}>{u.disabled ? 'Inactive' : 'Active'}</Badge>
                 <span className="text-neutral-600">{u.profileComplete ? 'Profile complete' : 'Profile incomplete'}</span>
               </p>
               {canEdit(u) && <button className="btn btn-outline w-full" onClick={() => setEditing(u)}>Edit details</button>}
               {canToggle(u) && <button className="btn btn-outline w-full" onClick={() => onToggle(u)}>{u.disabled ? 'Reactivate account' : 'Disable account'}</button>}
+              {canRemove(u) && <button className="btn btn-outline w-full !border-red-300 text-red-700" onClick={() => setDelTarget(u)}>Delete account</button>}
             </li>
           )
         })}
@@ -215,7 +233,7 @@ export function SignupsSection({ users: allUsers, canDisable, onToggle, err, rel
       <div className="hidden md:block overflow-x-auto card !p-0">
         <table className="w-full text-sm">
           <thead className="text-left bg-neutral-50">
-            <tr><th className="p-3">Name</th><th className="p-3">Email</th><th className="p-3">Phone</th><th className="p-3">Access</th><th className="p-3">Profile</th><th className="p-3">Account</th></tr>
+            <tr><th className="p-3">Name</th><th className="p-3">Email</th><th className="p-3">Phone</th><th className="p-3">Access</th><th className="p-3">Profile</th><th className="p-3">Account</th><th className="p-3">Actions</th></tr>
           </thead>
           <tbody>
             {users.map((u) => {
@@ -227,15 +245,16 @@ export function SignupsSection({ users: allUsers, canDisable, onToggle, err, rel
                   <td className="p-3">{u.phone}</td>
                   <td className="p-3"><Badge tone={subbed || trial ? 'green' : 'orange'}>{label}</Badge></td>
                   <td className="p-3">{u.profileComplete ? 'Complete' : 'Incomplete'}</td>
+                  <td className="p-3"><Badge tone={u.disabled ? 'orange' : 'green'}>{u.disabled ? 'Inactive' : 'Active'}</Badge></td>
                   <td className="p-3 whitespace-nowrap space-x-2">
-                    {u.disabled && <Badge tone="orange">Disabled</Badge>}
                     {canEdit(u) && <button className="btn btn-outline !min-h-11 !py-1" onClick={() => setEditing(u)}>Edit</button>}
                     {canToggle(u) && <button className="btn btn-outline !min-h-11 !py-1" onClick={() => onToggle(u)}>{u.disabled ? 'Reactivate' : 'Disable'}</button>}
+                    {canRemove(u) && <button className="btn btn-outline !min-h-11 !py-1 !border-red-300 text-red-700" onClick={() => setDelTarget(u)}>Delete</button>}
                   </td>
                 </tr>
               )
             })}
-            {users.length === 0 && <tr><td className="p-3 text-neutral-500" colSpan={6}>No one found.</td></tr>}
+            {users.length === 0 && <tr><td className="p-3 text-neutral-500" colSpan={7}>No one found.</td></tr>}
           </tbody>
         </table>
       </div>

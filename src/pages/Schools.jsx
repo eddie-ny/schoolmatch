@@ -15,10 +15,12 @@ export function Schools() {
   const where = params.get('where') || 'all'
   const field = params.get('field') || ''
 
-  const setParam = (k, v) => {
+  // Change several query values in one go. Two separate calls would each start from the old values and the second would undo the first.
+  const setParam = (k, v, clear = []) => {
     const next = new URLSearchParams(params)
     if (v) next.set(k, v)
     else next.delete(k)
+    clear.forEach((c) => next.delete(c))
     setParams(next, { replace: true })
   }
 
@@ -118,7 +120,7 @@ export function SchoolDetail() {
         <>
           {school.website && <a href={school.website} target="_blank" rel="noreferrer" className="underline">{school.website}</a>}
           <h2 className="text-lg font-bold">Programs</h2>
-          <input className="input" placeholder="Search this school's programs (for example law)" value={q} onChange={(e) => { setParam('q', e.target.value); setParam('program', '') }} aria-label="Search programs at this school" />
+          <input className="input" placeholder="Search this school's programs (for example law)" value={q} onChange={(e) => setParam('q', e.target.value, ['program'])} aria-label="Search programs at this school" />
           <p className="text-sm text-neutral-600">
             {filtered ? `Showing ${progs.length} of ${allProgs.length} programs. ` : `${allProgs.length} programs. `}
             {filtered && <button type="button" className="underline" onClick={() => setParams({}, { replace: true })}>Show all programs</button>}

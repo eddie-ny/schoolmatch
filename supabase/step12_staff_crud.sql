@@ -48,3 +48,12 @@ begin
 end $$;
 revoke all on function public.admin_delete_staff(uuid) from public, anon;
 grant execute on function public.admin_delete_staff(uuid) to authenticated;
+
+-- Applied later: admins can edit staff (support cannot; only a super admin can edit a super admin) and staff can read who is staff.
+-- create or replace function public.staff_update_profile(...)  -- see live database for the final version
+create or replace function public.list_staff_roles() returns table(user_id uuid, role text) language plpgsql stable security definer set search_path = '' as $$
+begin
+  if not public.is_staff() then raise exception 'Staff only'; end if;
+  return query select a.user_id, a.role from public.admin_users a;
+end $$;
+revoke all on function public.list_staff_roles() from public, anon;

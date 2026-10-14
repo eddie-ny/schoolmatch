@@ -4,6 +4,8 @@ import { Link } from 'react-router-dom'
 import { acceptParent, createParentLink, deleteStaff, getAdminStats, listStaff, setStaffRole, staffCreateStudent, staffUpdateProfile } from '../lib/api'
 import { Badge, ConfirmDialog, Field } from './ui'
 
+const ROLE_LABEL = { owner: 'Super admin', admin: 'Admin', support: 'Support' }
+
 export function accessLabel(u) {
   const now = Date.now()
   const subbed = u.subscription?.status === 'active' && new Date(u.subscription.expiresAt).getTime() > now
@@ -155,16 +157,22 @@ function EditStudent({ u, onClose, onSaved }) {
   )
 }
 
-export function SignupsSection({ users, canDisable, onToggle, err, reload }) {
+export function SignupsSection({ users: allUsers, canDisable, onToggle, err, reload, canEditStaff }) {
   const [editing, setEditing] = useState(null)
+  const [q, setQ] = useState('')
+  const needle = q.trim().toLowerCase()
+  const users = needle ? allUsers.filter((u) => `${u.fullName || ''} ${u.email || ''}`.toLowerCase().includes(needle)) : allUsers
+  const canEdit = (u) => !!reload && (!u.staffRole || canEditStaff)
+  const canToggle = (u) => canDisable && !u.staffRole
   const done = () => { setEditing(null); reload && reload() }
   return (
     <section className="space-y-3">
-      <h2 className="text-xl font-bold">Sign-ups ({users.length})</h2>
+      <h2 className="text-xl font-bold">People ({users.length}{needle ? ` of ${allUsers.length}` : ''})</h2>
       <p className="text-sm text-neutral-600">
         {canDisable ? 'Student accounts are never deleted. Disabling blocks sign-in and keeps every record.' : 'You can see, add and edit students. Only admins can disable accounts.'}
       </p>
       {err && <p className="text-red-700 text-sm" role="alert">{err}</p>}
+      <input className="input max-w-xl" type="search" placeholder="Search students and staff by name or email" aria-label="Search people" value={q} onChange={(e) => setQ(e.target.value)} />
       {reload && <AddStudent onDone={done} />}
       {editing && <EditStudent u={editing} onClose={() => setEditing(null)} onSaved={done} />}
       <ul className="md:hidden space-y-3" aria-label="Sign-ups">
@@ -172,7 +180,7 @@ export function SignupsSection({ users, canDisable, onToggle, err, reload }) {
           const { subbed, trial, label } = accessLabel(u)
           return (
             <li key={u.id} className="card space-y-1 text-sm">
-              <p className="font-semibold break-words">{u.fullName}{u.isMinor && ' (under 18)'}</p>
+              <p className="font-semibold break-words">{u.fullName}{u.isMinor && ' (under 18)'} {u.staffRole && <Badge tone="green">{ROLE_LABEL[u.staffRole]}</Badge>}</p>
               <p className="break-all">{u.email}</p>
               <p>{u.phone}</p>
               <p className="flex flex-wrap items-center gap-2">
@@ -180,12 +188,12 @@ export function SignupsSection({ users, canDisable, onToggle, err, reload }) {
                 {u.disabled && <Badge tone="orange">Disabled</Badge>}
                 <span className="text-neutral-600">{u.profileComplete ? 'Profile complete' : 'Profile incomplete'}</span>
               </p>
-              {reload && <button className="btn btn-outline w-full" onClick={() => setEditing(u)}>Edit details</button>}
-              {canDisable && <button className="btn btn-outline w-full" onClick={() => onToggle(u)}>{u.disabled ? 'Reactivate account' : 'Disable account'}</button>}
+              {canEdit(u) && <button className="btn btn-outline w-full" onClick={() => setEditing(u)}>Edit details</button>}
+              {canToggle(u) && <button className="btn btn-outline w-full" onClick={() => onToggle(u)}>{u.disabled ? 'Reactivate account' : 'Disable account'}</button>}
             </li>
           )
         })}
-        {users.length === 0 && <li className="card text-sm text-neutral-500">No sign-ups yet.</li>}
+        {users.length === 0 && <li className="card text-sm text-neutral-500">No one found.</li>}
       </ul>
       <div className="hidden md:block overflow-x-auto card !p-0">
         <table className="w-full text-sm">
@@ -197,20 +205,20 @@ export function SignupsSection({ users, canDisable, onToggle, err, reload }) {
               const { subbed, trial, label } = accessLabel(u)
               return (
                 <tr key={u.id} className="border-t border-neutral-200">
-                  <td className="p-3">{u.fullName}{u.isMinor && ' (under 18)'}</td>
+                  <td className="p-3">{u.fullName}{u.isMinor && ' (under 18)'} {u.staffRole && <Badge tone="green">{ROLE_LABEL[u.staffRole]}</Badge>}</td>
                   <td className="p-3">{u.email}</td>
                   <td className="p-3">{u.phone}</td>
                   <td className="p-3"><Badge tone={subbed || trial ? 'green' : 'orange'}>{label}</Badge></td>
                   <td className="p-3">{u.profileComplete ? 'Complete' : 'Incomplete'}</td>
                   <td className="p-3 whitespace-nowrap space-x-2">
                     {u.disabled && <Badge tone="orange">Disabled</Badge>}
-                    {reload && <button className="btn btn-outline !min-h-11 !py-1" onClick={() => setEditing(u)}>Edit</button>}
-                    {canDisable && <button className="btn btn-outline !min-h-11 !py-1" onClick={() => onToggle(u)}>{u.disabled ? 'Reactivate' : 'Disable'}</button>}
+                    {canEdit(u) && <button className="btn btn-outline !min-h-11 !py-1" onClick={() => setEditing(u)}>Edit</button>}
+                    {canToggle(u) && <button className="btn btn-outline !min-h-11 !py-1" onClick={() => onToggle(u)}>{u.disabled ? 'Reactivate' : 'Disable'}</button>}
                   </td>
                 </tr>
               )
             })}
-            {users.length === 0 && <tr><td className="p-3 text-neutral-500" colSpan={6}>No sign-ups yet.</td></tr>}
+            {users.length === 0 && <tr><td className="p-3 text-neutral-500" colSpan={6}>No one found.</td></tr>}
           </tbody>
         </table>
       </div>
@@ -365,7 +373,6 @@ export function ActivityLog({ log: all, users, canSeeAll = true }) {
 }
 
 // ---------- Team (super admin only) ----------
-const ROLE_LABEL = { owner: 'Super admin', admin: 'Admin', support: 'Support' }
 
 export function TeamSection() {
   const [team, setTeam] = useState([])

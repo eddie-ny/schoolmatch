@@ -582,10 +582,12 @@ export async function listAuditLog(limit = 200) {
 }
 
 export async function listUsers() {
-  const [p, s] = await Promise.all([
+  const [p, s, r] = await Promise.all([
     supabase.from('profiles').select('id, full_name, email, phone, is_minor, trial_ends_at, created_at, profile_complete, disabled_at').order('created_at', { ascending: false }),
     supabase.from('subscriptions').select('user_id, plan, status, expires_at'),
+    supabase.rpc('list_staff_roles'),
   ])
+  const roles = Object.fromEntries((r.data || []).map((x) => [x.user_id, x.role]))
   fail(p.error, 'Could not load users.')
   const subs = Object.fromEntries((s.data || []).map((x) => [x.user_id, x]))
   return (p.data || []).map((u) => ({
@@ -595,6 +597,7 @@ export async function listUsers() {
     phone: u.phone,
     isMinor: u.is_minor,
     role: 'student',
+    staffRole: roles[u.id] || null,
     createdAt: u.created_at,
     trialEndsAt: u.trial_ends_at,
     profileComplete: u.profile_complete,

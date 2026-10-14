@@ -86,7 +86,7 @@ export default function Admin() {
         onConfirm={toggle}
         onCancel={() => setTarget(null)}
       />
-      <SignupsSection users={users} canDisable onToggle={setTarget} err={err} reload={load} />
+      <SignupsSection users={users} canDisable onToggle={setTarget} err={err} reload={load} canEditStaff />
 
       <ParentsSection pending={pending} canAccept reload={load} />
 

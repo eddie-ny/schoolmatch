@@ -75,6 +75,20 @@ export function StatsPanel() {
   )
 }
 
+// ---------- Paging ----------
+export const PAGE_SIZE = 25
+export function Pager({ page, total, size = PAGE_SIZE, onPage }) {
+  const pages = Math.max(1, Math.ceil(total / size))
+  if (pages <= 1) return null
+  return (
+    <nav className="flex items-center justify-between gap-3 text-sm" aria-label="Pages">
+      <button className="btn btn-outline !min-h-11" disabled={page <= 1} onClick={() => onPage(page - 1)}>Previous</button>
+      <span>Page {page} of {pages}</span>
+      <button className="btn btn-outline !min-h-11" disabled={page >= pages} onClick={() => onPage(page + 1)}>Next</button>
+    </nav>
+  )
+}
+
 // ---------- Sign-ups ----------
 function AddStudent({ onDone }) {
   const empty = { fullName: '', phone: '', email: '', dateOfBirth: '', parentName: '', parentPhone: '', parentEmail: '' }
@@ -161,13 +175,16 @@ export function SignupsSection({ users: allUsers, canDisable, onToggle, err, rel
   const [editing, setEditing] = useState(null)
   const [q, setQ] = useState('')
   const needle = q.trim().toLowerCase()
-  const users = needle ? allUsers.filter((u) => `${u.fullName || ''} ${u.email || ''}`.toLowerCase().includes(needle)) : allUsers
+  const found = needle ? allUsers.filter((u) => `${u.fullName || ''} ${u.email || ''}`.toLowerCase().includes(needle)) : allUsers
+  const [page, setPage] = useState(1)
+  useEffect(() => { setPage(1) }, [needle])
+  const users = found.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
   const canEdit = (u) => !!reload && (!u.staffRole || canEditStaff)
   const canToggle = (u) => canDisable && !u.staffRole
   const done = () => { setEditing(null); reload && reload() }
   return (
     <section className="space-y-3">
-      <h2 className="text-xl font-bold">People ({users.length}{needle ? ` of ${allUsers.length}` : ''})</h2>
+      <h2 className="text-xl font-bold">People ({found.length}{needle ? ` of ${allUsers.length}` : ''})</h2>
       <p className="text-sm text-neutral-600">
         {canDisable ? 'Student accounts are never deleted. Disabling blocks sign-in and keeps every record.' : 'You can see, add and edit students. Only admins can disable accounts.'}
       </p>
@@ -222,13 +239,16 @@ export function SignupsSection({ users: allUsers, canDisable, onToggle, err, rel
           </tbody>
         </table>
       </div>
+      <Pager page={page} total={found.length} onPage={setPage} />
     </section>
   )
 }
 
 // ---------- Waiting for a parent or guardian ----------
 // Support: create link and send link. Admins and super admins also get Accept.
-export function ParentsSection({ pending, canAccept, reload }) {
+export function ParentsSection({ pending: allPending, canAccept, reload }) {
+  const [pg, setPg] = useState(1)
+  const pending = allPending.slice((pg - 1) * PAGE_SIZE, pg * PAGE_SIZE)
   const [link, setLink] = useState(null) // { name, url, phone, email }
   const [err, setErr] = useState('')
   const [acceptTarget, setAcceptTarget] = useState(null)
@@ -318,14 +338,14 @@ export function ParentsSection({ pending, canAccept, reload }) {
           </tbody>
         </table>
       </div>
+      <Pager page={pg} total={allPending.length} onPage={setPg} />
     </section>
   )
 }
 
 // ---------- Activity log ----------
-export function ActivityLog({ log: all, users, canSeeAll = true }) {
-  const [showAll, setShowAll] = useState(false)
-  const log = showAll ? all : all.slice(0, 3)
+export function ActivityLog({ log: all, users, canSeeAll = true, allLink }) {
+  const log = all.slice(0, 3)
   return (
     <section className="space-y-3">
       <h2 className="text-xl font-bold">Activity log</h2>
@@ -365,9 +385,67 @@ export function ActivityLog({ log: all, users, canSeeAll = true }) {
           </tbody>
         </table>
       </div>
-      {all.length > 3 && (
-        <button className="btn btn-outline" onClick={() => setShowAll(!showAll)}>{showAll ? 'Show fewer' : `See all activities (${all.length})`}</button>
-      )}
+      {allLink && <Link to={allLink} className="btn btn-outline">See all activities</Link>}
+    </section>
+  )
+}
+
+// ---------- Activity page with filters ----------
+export function ActivityPage({ log, users, canSeeAll }) {
+  const [from, setFrom] = useState('')
+  const [to, setTo] = useState('')
+  const [person, setPerson] = useState('')
+  const [action, setAction] = useState('')
+  const [page, setPage] = useState(1)
+  const nameOf = (id) => users.find((u) => u.id === id)?.email || (id ? id.slice(0, 8) : 'system')
+  const people = [...new Set(log.map((e) => e.actor_id || ''))]
+  const actions = [...new Set(log.map((e) => e.action))].sort()
+  const list = log.filter((e) => {
+    const t = new Date(e.at).getTime()
+    if (from && t < new Date(`${from}T00:00:00`).getTime()) return false
+    if (to && t > new Date(`${to}T23:59:59.999`).getTime()) return false
+    if (person && (e.actor_id || '') !== person) return false
+    if (action && e.action !== action) return false
+    return true
+  })
+  useEffect(() => { setPage(1) }, [from, to, person, action])
+  const shown = list.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+  const clear = () => { setFrom(''); setTo(''); setPerson(''); setAction('') }
+  return (
+    <section className="space-y-3">
+      <h2 className="text-xl font-bold">Activities ({list.length})</h2>
+      <p className="text-sm text-neutral-600">{canSeeAll ? 'Staff actions and payments, newest first.' : 'Your own actions, newest first.'} It cannot be edited or deleted. It never holds passwords or card details.</p>
+      <div className="card grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <Field label="From date"><input className="input" type="date" value={from} onChange={(e) => setFrom(e.target.value)} /></Field>
+        <Field label="To date"><input className="input" type="date" value={to} onChange={(e) => setTo(e.target.value)} /></Field>
+        {canSeeAll && (
+          <Field label="Person">
+            <select className="input" value={person} onChange={(e) => setPerson(e.target.value)}>
+              <option value="">Everyone</option>
+              {people.map((id) => <option key={id || 'system'} value={id}>{nameOf(id)}</option>)}
+            </select>
+          </Field>
+        )}
+        <Field label="Activity">
+          <select className="input" value={action} onChange={(e) => setAction(e.target.value)}>
+            <option value="">All activities</option>
+            {actions.map((a) => <option key={a} value={a}>{a.replaceAll('_', ' ')}</option>)}
+          </select>
+        </Field>
+        <div className="sm:col-span-2 lg:col-span-4"><button className="btn btn-outline !min-h-11" onClick={clear}>Clear filters</button></div>
+      </div>
+      <ul className="space-y-2" aria-label="Activities">
+        {shown.map((e) => (
+          <li key={e.id} className="card !p-4 text-sm grid gap-1 md:grid-cols-4 md:gap-3">
+            <p className="text-neutral-600">{new Date(e.at).toLocaleString()}</p>
+            <p className="break-all">{nameOf(e.actor_id)}{e.actor_role ? ` (${e.actor_role})` : ''}</p>
+            <p className="font-semibold">{e.action.replaceAll('_', ' ')}</p>
+            <p className="break-all">{e.target_user ? nameOf(e.target_user) : ''}</p>
+          </li>
+        ))}
+        {shown.length === 0 && <li className="card text-sm text-neutral-500">Nothing matches these filters.</li>}
+      </ul>
+      <Pager page={page} total={list.length} onPage={setPage} />
     </section>
   )
 }

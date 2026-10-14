@@ -42,8 +42,8 @@ export default function App() {
         <Route path="/profile" element={<Profile />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/pricing" element={<Pricing />} />
-        <Route path="/admin" element={<Admin />} />
-        <Route path="/support" element={<Support />} />
+        <Route path="/admin/*" element={<Admin />} />
+        <Route path="/support/*" element={<Support />} />
         <Route path="/complaints" element={<Complaints />} />
         <Route path="/interested" element={<Interested />} />
         <Route path="/programs" element={<Programs />} />

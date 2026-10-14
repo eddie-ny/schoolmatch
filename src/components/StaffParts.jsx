@@ -1,7 +1,7 @@
 // Pieces shared by the Admin page and the Support page.
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { acceptParent, createParentLink, deleteStaff, getAdminStats, listStaff, setStaffRole, staffCreateStudent, staffUpdateProfile } from '../lib/api'
+import { acceptParent, createParentLink, cancelInvite, deleteStaff, getAdminStats, inviteStaff, listInvites, listStaff, setStaffRole, staffCreateStudent, staffUpdateProfile } from '../lib/api'
 import { Badge, ConfirmDialog, Field } from './ui'
 
 const ROLE_LABEL = { owner: 'Super admin', admin: 'Admin', support: 'Support' }
@@ -380,15 +380,21 @@ export function TeamSection() {
   const [role, setRole] = useState('support')
   const [msg, setMsg] = useState({ ok: '', err: '' })
   const [removeTarget, setRemoveTarget] = useState(null)
-  const load = () => listStaff().then(setTeam).catch((e) => setMsg({ ok: '', err: e.message }))
+  const [invites, setInvites] = useState([])
+  const load = () => Promise.all([
+    listStaff().then(setTeam),
+    listInvites().then(setInvites),
+  ]).catch((e) => setMsg({ ok: '', err: e.message }))
   useEffect(() => { load() }, [])
 
   const save = async (e) => {
     e.preventDefault()
     setMsg({ ok: '', err: '' })
     try {
-      await setStaffRole(email, role)
-      setMsg({ ok: `${email} is now ${ROLE_LABEL[role]}. They must sign out and in again, and turn on two-step verification.`, err: '' })
+      const r = await inviteStaff(email, role)
+      setMsg({ ok: r === 'invited'
+        ? `${email} is invited as ${ROLE_LABEL[role]}. Tell them to sign up at ${window.location.origin}/signup with this email and confirm it. They choose their own name and password, then turn on two-step verification.`
+        : `${email} already had an account and is now ${ROLE_LABEL[role]}. They must sign out and in again, and turn on two-step verification.`, err: '' })
       setEmail('')
       load()
     } catch (err) { setMsg({ ok: '', err: err.message }) }
@@ -414,7 +420,6 @@ export function TeamSection() {
       <h2 className="text-xl font-bold">Team</h2>
       <p className="text-sm text-neutral-600">
         Only super admins can add, remove or delete staff. Admin: manages sign-ups, parent confirmations and data. Support: can see sign-ups and parents waiting, and create and send links. Neither can change roles.
-        The person must already have an account on the site.
       </p>
       <ConfirmDialog
         open={!!removeTarget}
@@ -453,8 +458,22 @@ export function TeamSection() {
           </li>
         ))}
       </ul>
+      {invites.length > 0 && (
+        <div className="card !p-4 space-y-2">
+          <p className="font-semibold">Invited, waiting to sign up ({invites.length})</p>
+          <ul className="space-y-2">
+            {invites.map((i) => (
+              <li key={i.email} className="flex flex-wrap items-center justify-between gap-2 text-sm">
+                <span className="break-all">{i.email} <Badge tone="orange">{ROLE_LABEL[i.role]}</Badge></span>
+                <button className="btn btn-outline !min-h-11 !py-1" onClick={async () => { try { await cancelInvite(i.email); load() } catch (e) { setMsg({ ok: '', err: e.message }) } }}>Cancel invite</button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
       <form onSubmit={save} className="card space-y-3 max-w-xl">
         <h3 className="font-bold">Add or change a team member</h3>
+        <p className="text-sm text-neutral-600">Type their email. If they have no account yet, they are invited: they sign up on the normal sign-up page with this email, choose their own name and password, and get the role when their email is confirmed.</p>
         <Field label="Their email"><input className="input" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} /></Field>
         <Field label="Role">
           <select className="input" value={role} onChange={(e) => setRole(e.target.value)}>
@@ -464,7 +483,7 @@ export function TeamSection() {
         </Field>
         {msg.err && <p className="text-red-700 text-sm" role="alert">{msg.err}</p>}
         {msg.ok && <p className="text-sm font-semibold text-green-800" role="status">{msg.ok}</p>}
-        <button className="btn btn-orange">Save role</button>
+        <button className="btn btn-orange">Add or update</button>
       </form>
     </section>
   )

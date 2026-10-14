@@ -57,3 +57,9 @@ begin
   return query select a.user_id, a.role from public.admin_users a;
 end $$;
 revoke all on function public.list_staff_roles() from public, anon;
+
+-- Staff invites: a super admin adds an email; that person signs up themselves (own name and password)
+-- and gets the role once their email is confirmed (claim_staff_invite runs after sign-in).
+-- Table staff_invites(email pk, role, invited_by, created_at, claimed_at, cancelled_at), RLS on, no policies.
+-- Functions (applied to the live database): admin_invite_staff(email, role), claim_staff_invite(),
+-- admin_list_invites(), admin_cancel_invite(email). All execute only for authenticated users and check the caller inside.

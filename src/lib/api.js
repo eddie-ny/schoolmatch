@@ -131,6 +131,9 @@ export async function getCurrentUser() {
   const uid = sess.session?.user?.id
   if (!uid) return null
 
+  // If a super admin invited this email as staff, this gives them the role (needs a confirmed email).
+  try { await supabase.rpc('claim_staff_invite') } catch { /* not an invited person */ }
+
   const [prof, parent, sub, docs, res, adm] = await Promise.all([
     supabase.from('profiles').select('*').eq('id', uid).maybeSingle(),
     supabase.from('parent_contacts').select('name, phone, email, confirmed_at').eq('student_id', uid).maybeSingle(),
@@ -568,6 +571,20 @@ export async function staffCreateStudent(form) {
     throw new Error(msg || 'Could not create the account.')
   }
   return data
+}
+export async function inviteStaff(email, role) {
+  const { data, error } = await supabase.rpc('admin_invite_staff', { p_email: email, p_role: role })
+  fail(error, 'Could not add this person.')
+  return data // 'invited' (no account yet) or 'role_set' (already had an account)
+}
+export async function listInvites() {
+  const { data, error } = await supabase.rpc('admin_list_invites')
+  fail(error, 'Could not load invites.')
+  return data || []
+}
+export async function cancelInvite(email) {
+  const { error } = await supabase.rpc('admin_cancel_invite', { p_email: email })
+  fail(error, 'Could not cancel the invite.')
 }
 export async function getAdminStats() {
   const { data, error } = await supabase.rpc('admin_stats')

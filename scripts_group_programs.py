@@ -1,55 +1,89 @@
-"""Build a common programme name ("group") for every programme so Eligibility can list each programme once.
+"""Build a common programme name ("group") for every programme, with the degree shown once.
+"BSc Midwifery", "B.Sc. in Midwifery" and "Bachelor of Midwifery" all become "BSc Midwifery".
 Reads data/ghana-public-universities/*_programs.csv, writes data/ghana-public-universities/program_groups.csv.
 Run: python3 scripts_group_programs.py"""
 import csv, glob, re
 from collections import Counter, defaultdict
 
 DIR = 'data/ghana-public-universities/'
-SPECIAL = [  # (regex on whole name, group)
-    (r'^(llb|bachelor of laws.*|llb law.*)$', 'Law'),
-    (r'^(mbchb|bachelor of medicine and bachelor of surgery.*|bachelor of medicine.*surgery.*)$', 'Medicine'),
-    (r'^doctor of pharmacy.*$', 'Pharmacy'),
-    (r'^doctor of optometry.*$', 'Optometry'),
-    (r'^bachelor of business administration$', 'Business Administration'),
-    (r'^bachelor of arts$', 'Arts'),
+SPECIAL = [  # (regex on the name without a trailing bracket, group)
+    (r'^(llb|bachelor of laws|llb law)$', 'LLB Law'),
+    (r'^(mbchb|bachelor of medicine and bachelor of surgery|bachelor of medicine, bachelor of surgery)$', 'MBChB Medicine'),
+    (r'^doctor of pharmacy$', 'PharmD Pharmacy'),
+    (r'^bachelor of arts$', 'BA Arts'),
 ]
-PREFIX = re.compile(
-    r'^(?:\d-year\s+)?(?:bachelor\s+of\s+(?:(?:science|arts|education|commerce|technology|engineering)\s+in\s+|(?:science|arts|education|commerce|technology|engineering)\s*|)'
-    r'|b\.?\s?(?:sc|a|ed|com|tech|eng)\.?(?=[\s(]|$)\s*(?:in\s+)?)', re.I)
+# degree word at the start -> short form. Longer forms first.
+DEGREES = [
+    (r'(?:\d-year\s+)?bachelor\s+of\s+science(?:\s+in)?', 'BSc'),
+    (r'(?:\d-year\s+)?bachelor\s+of\s+arts(?:\s+in)?', 'BA'),
+    (r'(?:\d-year\s+)?bachelor\s+of\s+education(?:\s+in)?', 'BEd'),
+    (r'(?:\d-year\s+)?bachelor\s+of\s+commerce(?:\s+in)?', 'BCom'),
+    (r'(?:\d-year\s+)?bachelor\s+of\s+business\s+administration(?:\s+in)?', 'BBA'),
+    (r'(?:\d-year\s+)?bachelor\s+of\s+technology(?:\s+in)?', 'BTech'),
+    (r'(?:\d-year\s+)?bachelor\s+of\s+engineering(?:\s+in)?', 'BEng'),
+    (r'b\.?\s?sc\.?(?:\s+in)?', 'BSc'),
+    (r'b\.?\s?a\.?(?:\s+in)?', 'BA'),
+    (r'b\.?\s?ed\.?(?:\s+in)?', 'BEd'),
+    (r'b\.?\s?com\.?(?:\s+in)?', 'BCom'),
+    (r'b\.?\s?b\.?\s?a\.?(?:\s+in)?', 'BBA'),
+    (r'b\.?\s?tech\.?(?:\s+in)?', 'BTech'),
+    (r'b\.?\s?eng\.?(?:\s+in)?', 'BEng'),
+    (r'bachelor\s+of(?:\s+in)?', ''),          # "Bachelor of Midwifery": degree not stated
+]
+DEG_RX = [(re.compile(r'^' + rx + r'(?=[\s(]|$)\s*', re.I), d) for rx, d in DEGREES]
+KEEP_EDU = re.compile(r'basic|early|childhood|grade|primary|special|upper', re.I)
 
-def group(name):
+def split(name):
     n = re.sub(r'\s+', ' ', name.strip())
     for rx, g in SPECIAL:
-        if re.match(rx, re.sub(r'\s*\(.*?\)\s*$', '', n) if 'Doctor' in n or 'Bachelor of Medicine' in n or 'Bachelor of Laws' in n else n, re.I):
-            return g
-    edu = bool(re.match(r'^(?:\d-year\s+)?(?:bachelor\s+of\s+education|b\.?\s?ed\.?)(?=[\s(]|$)', n, re.I))
-    m = PREFIX.match(n)
-    rest = n[m.end():].strip() if m else n
+        if re.match(rx, re.sub(r'\s*\(.*?\)\s*$', '', n), re.I):
+            return g, None
+    deg, rest, generic = None, n, False
+    for rx, d in DEG_RX:
+        m = rx.match(n)
+        if m:
+            deg, rest = (d or None), n[m.end():].strip()
+            generic = not d
+            break
     if rest.startswith('(') and ')' in rest:           # "(Chemistry Education)" or "(Finance)": the subject is inside
         rest = rest[1:rest.index(')')].strip()
     rest = re.sub(r'\s*\([^)]*\)', '', rest)           # campus, years, minor lists
     rest = re.sub(r'\s+with$', '', rest, flags=re.I).strip(' -:,.')
     rest = re.sub(r'\s+(JHS|Specialism)$', '', rest).strip()
-    if edu and 'education' not in rest.lower():
-        rest = f'{rest} Education'
-    rest = re.sub(r'^(?:b\.?\s?b\.?\s?a\.?)(?:\s+|$)', '', rest, flags=re.I) or 'Business Administration'
-    rest = re.sub(r'^doctor of\s+', '', rest, flags=re.I)
-    rest = re.sub(r'(?i)medical laboratory sciences$', 'Medical Laboratory Science', rest)
-    rest = re.sub(r'(?i)veterinary medicine$', 'Veterinary Medicine', rest)
     rest = re.sub(r'(?i)-with-', ' with ', rest)
     rest = rest.replace('Electrical/Electronic', 'Electrical and Electronic').replace('Agri-Business', 'Agribusiness')
-    return rest or n
+    rest = re.sub(r'(?i)medical laboratory sciences$', 'Medical Laboratory Science', rest)
+    if re.match(r'^doctor of\s+', rest, re.I):
+        return rest, None                              # doctorates keep their own name
+    # teacher-education degrees are all BEd, whatever the school calls the degree letters
+    if deg == 'BEd' or (re.search(r'education$', rest, re.I) and deg in ('BSc', 'BA', None) and ' with ' not in rest.lower()):
+        deg = 'BEd'
+        if not KEEP_EDU.search(rest):
+            rest = re.sub(r'\s+education$', '', rest, flags=re.I).strip() or rest
+    if deg is None and generic and rest:
+        return rest, 'Bachelor of'   # degree not stated and not known from other schools
+    return rest or n, deg
 
 def main():
-    rows = []
+    parsed = []
     for f in sorted(glob.glob(DIR + '*_programs.csv')):
         for r in csv.DictReader(open(f, encoding='utf-8')):
-            rows.append((r['school_name'], r['program_name'], group(r['program_name'])))
-    # one spelling per group, case-insensitively: use the most common
+            subj, deg = split(r['program_name'])
+            parsed.append([r['school_name'], r['program_name'], subj, deg])
+    # one spelling per subject (case-insensitive): the most common
     spell = defaultdict(Counter)
-    for _, _, g in rows: spell[g.lower()][g] += 1
+    for _, _, s, _ in parsed: spell[s.lower()][s] += 1
     best = {k: v.most_common(1)[0][0] for k, v in spell.items()}
-    out = [(s, p, best[g.lower()]) for s, p, g in rows]
+    # a name with no degree word takes the degree most other schools use for that subject, if any
+    degs = defaultdict(Counter)
+    for _, _, s, d in parsed:
+        if d and d != 'Bachelor of': degs[best[s.lower()].lower()][d] += 1
+    out = []
+    for school, prog, s, d in parsed:
+        s = best[s.lower()]
+        if d in (None, 'Bachelor of') and s.lower() in degs and not re.match(r'^(LLB|MBChB|PharmD|BA) ', s) and not s.lower().startswith('doctor of'):
+            d = degs[s.lower()].most_common(1)[0][0]
+        out.append((school, prog, f'{d} {s}' if d and not re.match(r'^(LLB|MBChB|PharmD|BA) ', s) else s))
     with open(DIR + 'program_groups.csv', 'w', newline='', encoding='utf-8') as fh:
         w = csv.writer(fh); w.writerow(['school_name', 'program_name', 'group_name']); w.writerows(out)
     return out

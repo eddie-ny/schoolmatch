@@ -572,6 +572,16 @@ export async function deleteAccount(userId) {
   }
   return data
 }
+export async function activateAccount(userId) {
+  // Staff confirm the email for someone whose confirmation link failed. Goes through an edge function.
+  const { data, error } = await supabase.functions.invoke('staff-users/activate-account', { body: { userId } })
+  if (error) {
+    let msg = ''
+    try { msg = (await error.context.json()).error } catch { /* none */ }
+    throw new Error(msg || 'Could not activate this account.')
+  }
+  return data
+}
 export async function listArchive() {
   const { data, error } = await supabase.rpc('admin_list_archive')
   fail(error, 'Could not load the archive.')
@@ -624,12 +634,14 @@ export async function listAuditLog(limit = 200) {
 }
 
 export async function listUsers() {
-  const [p, s, r] = await Promise.all([
+  const [p, s, r, un] = await Promise.all([
     supabase.from('profiles').select('id, full_name, email, phone, is_minor, trial_ends_at, created_at, profile_complete, disabled_at').order('created_at', { ascending: false }),
     supabase.from('subscriptions').select('user_id, plan, status, expires_at'),
     supabase.rpc('list_staff_roles'),
+    supabase.rpc('list_unconfirmed_users'),
   ])
   const roles = Object.fromEntries((r.data || []).map((x) => [x.user_id, x.role]))
+  const unconfirmed = new Set((un.data || []).map((x) => x.user_id)) // empty if the database function is not installed yet
   fail(p.error, 'Could not load users.')
   const subs = Object.fromEntries((s.data || []).map((x) => [x.user_id, x]))
   return (p.data || []).map((u) => ({
@@ -644,6 +656,7 @@ export async function listUsers() {
     trialEndsAt: u.trial_ends_at,
     profileComplete: u.profile_complete,
     disabled: !!u.disabled_at,
+    unconfirmed: unconfirmed.has(u.id),
     subscription: subs[u.id] ? { plan: subs[u.id].plan, status: subs[u.id].status, expiresAt: subs[u.id].expires_at } : null,
   }))
 }

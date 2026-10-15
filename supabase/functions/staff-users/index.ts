@@ -1,6 +1,7 @@
 // Staff-created student accounts.
 //   POST /staff-users/create-student { fullName, phone, email, dateOfBirth, parentName?, parentPhone?, parentEmail? }
 //   POST /staff-users/delete-account { userId }   super admin only: archives and erases the account, then removes their uploaded files from storage
+//   POST /staff-users/activate-account { userId }  any staff: confirms the email of a student whose link failed
 // Allowed for any staff member (owner, admin, support) who finished the authenticator step.
 // The account is created with a one-time temporary password that is shown once to the staff member.
 // No subscription is created or changed here. Staff cannot assign subscriptions.
@@ -65,6 +66,20 @@ Deno.serve(async (req) => {
         actor_id: user.id, actor_role: staff.role, action: 'student_created_by_staff', target_user: data.user.id, detail: {},
       })
       return json({ email, password })
+    }
+    if (path.endsWith('/activate-account')) {
+      // Any staff member can confirm the email of a student whose confirmation link failed.
+      const userId = String(body.userId ?? '')
+      if (!/^[0-9a-f-]{36}$/i.test(userId)) return json({ error: 'Bad account id.' }, 400)
+      const { data: target, error: getErr } = await admin.auth.admin.getUserById(userId)
+      if (getErr || !target?.user) return json({ error: 'Account not found.' }, 404)
+      if (target.user.email_confirmed_at) return json({ error: 'This account is already confirmed.' }, 400)
+      const { error: upErr } = await admin.auth.admin.updateUserById(userId, { email_confirm: true })
+      if (upErr) { console.error(upErr); return json({ error: 'Could not activate the account.' }, 400) }
+      await admin.from('audit_log').insert({
+        actor_id: user.id, actor_role: staff.role, action: 'account_activated_by_staff', target_user: userId, detail: {},
+      })
+      return json({ ok: true })
     }
     if (path.endsWith('/delete-account')) {
       if (staff.role !== 'owner') return json({ error: 'Only a super admin can delete accounts.' }, 403)

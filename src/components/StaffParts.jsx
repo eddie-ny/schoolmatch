@@ -1,7 +1,7 @@
 // Pieces shared by the Admin page and the Support page.
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { acceptParent, createParentLink, cancelInvite, deleteAccount, listArchive, getAdminStats, inviteStaff, listInvites, listStaff, setStaffRole, staffCreateStudent, staffUpdateProfile } from '../lib/api'
+import { activateAccount, acceptParent, createParentLink, cancelInvite, deleteAccount, listArchive, getAdminStats, inviteStaff, listInvites, listStaff, setStaffRole, staffCreateStudent, staffUpdateProfile } from '../lib/api'
 import { Badge, ConfirmDialog, Field, Spinner } from './ui'
 
 const ROLE_LABEL = { owner: 'Super admin', admin: 'Admin', support: 'Support' }
@@ -173,6 +173,19 @@ function EditStudent({ u, onClose, onSaved }) {
 
 export function SignupsSection({ users: allUsers, canDisable, onToggle, err, reload, canEditStaff, canDelete }) {
   const [editing, setEditing] = useState(null)
+  const [actTarget, setActTarget] = useState(null)
+  const [actErr, setActErr] = useState('')
+  const runActivate = async () => {
+    const t = actTarget
+    setActTarget(null)
+    setActErr('')
+    try { await activateAccount(t.id); reload && reload() } catch (e) { setActErr(e.message) }
+  }
+  // Someone who never confirmed their email cannot sign in, so they are not "Active". Staff can activate them.
+  const canActivate = (u) => !!reload && u.unconfirmed && !u.staffRole
+  const accountBadge = (u) => (u.unconfirmed
+    ? <Badge tone="orange">Unconfirmed</Badge>
+    : <Badge tone={u.disabled ? 'orange' : 'green'}>{u.disabled ? 'Inactive' : 'Active'}</Badge>)
   const [delTarget, setDelTarget] = useState(null)
   const [delErr, setDelErr] = useState('')
   const runDelete = async () => {
@@ -197,7 +210,15 @@ export function SignupsSection({ users: allUsers, canDisable, onToggle, err, rel
       <p className="text-sm text-neutral-600">
         {canDelete ? 'Disabling blocks sign-in and keeps the account. Deleting removes it for good from the site; a private copy is kept in the archive.' : canDisable ? 'Disabling blocks sign-in and keeps the account.' : 'You can see, add and edit students. Only admins can disable accounts.'}
       </p>
-      {(err || delErr) && <p className="text-red-700 text-sm" role="alert">{err || delErr}</p>}
+      {(err || delErr || actErr) && <p className="text-red-700 text-sm" role="alert">{err || delErr || actErr}</p>}
+      <ConfirmDialog
+        open={!!actTarget}
+        title="Activate this account?"
+        text={actTarget ? `${actTarget.fullName} (${actTarget.email}) has not confirmed their email. Activating confirms it for them so they can sign in with the password they chose. Only do this if you know the email address belongs to them.` : ''}
+        confirmLabel="Activate"
+        onConfirm={runActivate}
+        onCancel={() => setActTarget(null)}
+      />
       <ConfirmDialog
         open={!!delTarget}
         title="Delete this account?"
@@ -219,11 +240,12 @@ export function SignupsSection({ users: allUsers, canDisable, onToggle, err, rel
               <p>{u.phone}</p>
               <p className="flex flex-wrap items-center gap-2">
                 <Badge tone={subbed || trial ? 'green' : 'orange'}>{label}</Badge>
-                <Badge tone={u.disabled ? 'orange' : 'green'}>{u.disabled ? 'Inactive' : 'Active'}</Badge>
+                {accountBadge(u)}
                 <span className="text-neutral-600">{u.profileComplete ? 'Profile complete' : 'Profile incomplete'}</span>
               </p>
               {canEdit(u) && <button className="btn btn-outline w-full" onClick={() => setEditing(u)}>Edit details</button>}
-              {canToggle(u) && <button className="btn btn-outline w-full" onClick={() => onToggle(u)}>{u.disabled ? 'Reactivate account' : 'Disable account'}</button>}
+              {canActivate(u) && <button className="btn btn-primary w-full" onClick={() => setActTarget(u)}>Activate account</button>}
+              {canToggle(u) && !u.unconfirmed && <button className="btn btn-outline w-full" onClick={() => onToggle(u)}>{u.disabled ? 'Reactivate account' : 'Disable account'}</button>}
               {canRemove(u) && <button className="btn btn-outline w-full !border-red-300 text-red-700" onClick={() => setDelTarget(u)}>Delete account</button>}
             </li>
           )
@@ -245,10 +267,11 @@ export function SignupsSection({ users: allUsers, canDisable, onToggle, err, rel
                   <td className="p-3">{u.phone}</td>
                   <td className="p-3"><Badge tone={subbed || trial ? 'green' : 'orange'}>{label}</Badge></td>
                   <td className="p-3">{u.profileComplete ? 'Complete' : 'Incomplete'}</td>
-                  <td className="p-3"><Badge tone={u.disabled ? 'orange' : 'green'}>{u.disabled ? 'Inactive' : 'Active'}</Badge></td>
+                  <td className="p-3">{accountBadge(u)}</td>
                   <td className="p-3 whitespace-nowrap space-x-2">
                     {canEdit(u) && <button className="btn btn-outline !min-h-11 !py-1" onClick={() => setEditing(u)}>Edit</button>}
-                    {canToggle(u) && <button className="btn btn-outline !min-h-11 !py-1" onClick={() => onToggle(u)}>{u.disabled ? 'Reactivate' : 'Disable'}</button>}
+                    {canActivate(u) && <button className="btn btn-primary !min-h-11 !py-1" onClick={() => setActTarget(u)}>Activate</button>}
+                    {canToggle(u) && !u.unconfirmed && <button className="btn btn-outline !min-h-11 !py-1" onClick={() => onToggle(u)}>{u.disabled ? 'Reactivate' : 'Disable'}</button>}
                     {canRemove(u) && <button className="btn btn-outline !min-h-11 !py-1 !border-red-300 text-red-700" onClick={() => setDelTarget(u)}>Delete</button>}
                   </td>
                 </tr>

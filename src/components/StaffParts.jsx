@@ -309,9 +309,9 @@ export function ParentsSection({ pending: allPending, canAccept, reload }) {
     try { await acceptParent(t.studentId); reload() } catch (e) { setErr(e.message) }
   }
 
-  const message = link ? `Hello ${link.parent || ''}. ${link.name} signed up on SchoolMatch and needs a parent or guardian to confirm. Please open this link once to confirm. It expires in 7 days: ${link.url}` : ''
+  const message = link ? `Hello ${link.parent || ''}. ${link.name} signed up on WEMK and needs a parent or guardian to confirm. Please open this link once to confirm. It expires in 7 days: ${link.url}` : ''
   const mail = link
-    ? `mailto:${link.email}?subject=${encodeURIComponent('Please confirm your child\'s SchoolMatch account')}&body=${encodeURIComponent(message)}`
+    ? `mailto:${link.email}?subject=${encodeURIComponent('Please confirm your child\'s WEMK account')}&body=${encodeURIComponent(message)}`
     : ''
 
   const Buttons = ({ x, full }) => (

@@ -1,4 +1,4 @@
-# SchoolMatch (placeholder name) - front end
+# WEMK - front end
 
 Vite + React (JavaScript) + Tailwind. The backend is Supabase (hosted online), so there is no
 separate server to run. Start the front end with `npm run dev` and it talks to Supabase.

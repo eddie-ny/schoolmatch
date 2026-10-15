@@ -63,7 +63,7 @@ export default function MfaSettings() {
             <li>Open your authenticator app and scan this picture.</li>
             <li>Type the 6-digit code the app shows.</li>
           </ol>
-          <img src={setup.qr} alt="QR code to add SchoolMatch to your authenticator app" width="180" height="180" className="bg-white p-2 rounded-xl border border-neutral-200" />
+          <img src={setup.qr} alt="QR code to add WEMK to your authenticator app" width="180" height="180" className="bg-white p-2 rounded-xl border border-neutral-200" />
           <p className="text-xs text-neutral-700 break-all">Cannot scan? Type this setup key into the app instead: <b>{setup.secret}</b></p>
           <Field label="6-digit code">
             <input className="input" inputMode="numeric" autoComplete="one-time-code" maxLength={7} value={code} onChange={(e) => setCode(e.target.value)} />

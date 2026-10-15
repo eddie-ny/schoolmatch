@@ -1,6 +1,6 @@
 # Staff guide: the Admin page
 
-For support staff and admins. Keep this private. Replace "SchoolMatch" with the real name when it is chosen.
+For support staff and admins. Keep this private.
 
 ## Before you start
 

@@ -78,7 +78,7 @@ Schools show their initials until a logo is added. Add logos by putting image fi
 ## 7. Content and legal
 
 - Real schools, programs, cut-offs, requirements, scholarships and plan prices imported. Sample (demo) data deleted from the Admin page.
-- Real name, logo and colours in place. Replace "SchoolMatch (placeholder name)" everywhere.
+- Real name, logo and colours in place. The name is now WEMK. Logo and colours are still to be confirmed.
 - Business details added to the footer, Terms, Privacy and Refund pages.
 - A lawyer has reviewed Terms, Privacy, Refunds and Cookies against Ghana law, including the Data Protection Act and the rule that closed accounts are disabled, not deleted.
 - Support email address added where the site says "contact support".

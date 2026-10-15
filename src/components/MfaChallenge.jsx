@@ -27,7 +27,7 @@ export default function MfaChallenge() {
 
   return (
     <div className="max-w-md mx-auto">
-      <PageTitle title="Enter your code" sub="Open your authenticator app and type the 6-digit code for SchoolMatch." />
+      <PageTitle title="Enter your code" sub="Open your authenticator app and type the 6-digit code for WEMK." />
       <form onSubmit={submit} className="card space-y-4">
         <Field label="6-digit code">
           <input className="input" inputMode="numeric" autoComplete="one-time-code" autoFocus maxLength={7} value={code} onChange={(e) => setCode(e.target.value)} />

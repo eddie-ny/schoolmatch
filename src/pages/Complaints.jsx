@@ -19,7 +19,7 @@ export default function Complaints() {
       const res = await fetch(`https://formspree.io/f/${FORM_ID}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-        body: JSON.stringify({ name: f.name, email: f.email, message: f.message, page: 'SchoolMatch complaint box' }),
+        body: JSON.stringify({ name: f.name, email: f.email, message: f.message, page: 'WEMK complaint box' }),
       })
       setState(res.ok ? 'sent' : 'error')
     } catch { setState('error') }

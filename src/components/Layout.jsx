@@ -6,7 +6,7 @@ import MfaChallenge from './MfaChallenge'
 import { ConfirmDialog, Spinner } from './ui'
 import { SHOW_INTERNATIONAL } from '../lib/constants'
 
-export const APP_NAME = 'SchoolMatch' // placeholder name
+export const APP_NAME = 'WEMK'
 
 const links = [
   { to: '/schools', label: 'Find a School' },
@@ -96,8 +96,8 @@ export default function Layout() {
       <header className="border-b border-neutral-200/70 bg-white/90 backdrop-blur sticky top-0 z-20">
         <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
           <Link to="/" className="font-heading font-bold text-xl inline-flex items-center min-h-11">
-            <span className="text-brand-orange">School</span>
-            <span className="text-brand-green">Match</span>
+            <span className="text-brand-orange">WE</span>
+            <span className="text-brand-green">MK</span>
           </Link>
 
           <nav className="hidden lg:flex items-center gap-5 text-sm font-medium whitespace-nowrap">
@@ -189,7 +189,7 @@ export default function Layout() {
 
       <footer className="border-t border-neutral-200 text-sm text-neutral-600">
         <div className="max-w-5xl mx-auto px-4 py-6 flex flex-col gap-2">
-          <p>{APP_NAME} is a placeholder name. Starter data is unverified. Results are guidance, not a guarantee of admission.</p>
+          <p>Starter data is unverified. Results are guidance, not a guarantee of admission.</p>
           <div className="flex flex-wrap gap-x-4 gap-y-1">
             <Link to="/pricing" className="underline inline-flex items-center min-h-11">Plans</Link>
             <Link to="/privacy" className="underline inline-flex items-center min-h-11">Privacy</Link>

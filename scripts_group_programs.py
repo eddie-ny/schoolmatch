@@ -14,7 +14,7 @@ SPECIAL = [  # (regex on whole name, group)
     (r'^bachelor of arts$', 'Arts'),
 ]
 PREFIX = re.compile(
-    r'^(?:\d-year\s+)?(?:bachelor\s+of\s+(?:science|arts|education|commerce|technology|engineering)\s*(?:in\s+)?'
+    r'^(?:\d-year\s+)?(?:bachelor\s+of\s+(?:(?:science|arts|education|commerce|technology|engineering)\s+in\s+|(?:science|arts|education|commerce|technology|engineering)\s*|)'
     r'|b\.?\s?(?:sc|a|ed|com|tech|eng)\.?(?=[\s(]|$)\s*(?:in\s+)?)', re.I)
 
 def group(name):
@@ -32,6 +32,12 @@ def group(name):
     rest = re.sub(r'\s+(JHS|Specialism)$', '', rest).strip()
     if edu and 'education' not in rest.lower():
         rest = f'{rest} Education'
+    rest = re.sub(r'^(?:b\.?\s?b\.?\s?a\.?)(?:\s+|$)', '', rest, flags=re.I) or 'Business Administration'
+    rest = re.sub(r'^doctor of\s+', '', rest, flags=re.I)
+    rest = re.sub(r'(?i)medical laboratory sciences$', 'Medical Laboratory Science', rest)
+    rest = re.sub(r'(?i)veterinary medicine$', 'Veterinary Medicine', rest)
+    rest = re.sub(r'(?i)-with-', ' with ', rest)
+    rest = rest.replace('Electrical/Electronic', 'Electrical and Electronic').replace('Agri-Business', 'Agribusiness')
     return rest or n
 
 def main():

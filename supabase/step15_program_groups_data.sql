@@ -2,8 +2,8 @@
 
 update public.programs p set group_name = v.g
   from public.schools s, (values
-  ('BBA Human Resource Management', 'BBA Human Resource Management'),
-  ('BBA Management', 'BBA Management'),
+  ('BBA Human Resource Management', 'Human Resource Management'),
+  ('BBA Management', 'Management'),
   ('BEd Agricultural Science', 'Agricultural Science Education'),
   ('BEd Applied Technology (Automotive and Mechanical)', 'Applied Technology Education'),
   ('BEd Applied Technology (Building Construction and Wood)', 'Applied Technology Education'),
@@ -82,7 +82,7 @@ update public.programs p set group_name = v.g
   ('B.Sc. in Applied Physics', 'Applied Physics'),
   ('B.Sc. in Biochemistry', 'Biochemistry'),
   ('B.Sc. in Computer Science', 'Computer Science'),
-  ('B.Sc. in Computing-With-Accounting', 'Computing-With-Accounting'),
+  ('B.Sc. in Computing-With-Accounting', 'Computing with Accounting'),
   ('B.Sc. in Cyber Security', 'Cyber Security'),
   ('B.Sc. in Data Science', 'Data Science'),
   ('B.Sc. in Environment and Sustainable Development', 'Environment and Sustainable Development'),
@@ -97,16 +97,16 @@ update public.programs p set group_name = v.g
   ('B.Sc. in Information Systems', 'Information Systems'),
   ('B.Sc. in Information Technology', 'Information Technology'),
   ('B.Sc. in Mathematics', 'Mathematics'),
-  ('B.Sc. in Mathematics-With-Economics', 'Mathematics-With-Economics'),
-  ('B.Sc. in Mathematics-With-Finance', 'Mathematics-With-Finance'),
+  ('B.Sc. in Mathematics-With-Economics', 'Mathematics with Economics'),
+  ('B.Sc. in Mathematics-With-Finance', 'Mathematics with Finance'),
   ('B.Sc. in Midwifery', 'Midwifery'),
   ('B.Sc. in Network Science', 'Network Science'),
   ('B.Sc. in Nursing', 'Nursing'),
   ('B.Sc. in Pharmaceutical Technology', 'Pharmaceutical Technology'),
   ('B.Sc. in Software Engineering', 'Software Engineering'),
   ('B.Sc. in Statistics', 'Statistics'),
-  ('Bachelor of Public Health in Disease Control', 'Bachelor of Public Health in Disease Control'),
-  ('Bachelor of Public Health in Health Promotion', 'Bachelor of Public Health in Health Promotion')
+  ('Bachelor of Public Health in Disease Control', 'Public Health in Disease Control'),
+  ('Bachelor of Public Health in Health Promotion', 'Public Health in Health Promotion')
   ) as v(n, g)
  where s.id = p.school_id and s.name = 'C.K. Tedam University of Technology and Applied Sciences' and p.name = v.n;
 
@@ -193,7 +193,7 @@ update public.programs p set group_name = v.g
   ('BSc Development Planning', 'Development Planning'),
   ('BSc Dietetics', 'Dietetics'),
   ('BSc Disability and Rehabilitation Studies', 'Disability and Rehabilitation Studies'),
-  ('BSc Electrical/Electronic Engineering', 'Electrical/Electronic Engineering'),
+  ('BSc Electrical/Electronic Engineering', 'Electrical and Electronic Engineering'),
   ('BSc Environmental Sciences', 'Environmental Sciences'),
   ('BSc Fashion Design', 'Fashion Design'),
   ('BSc Food Science and Technology', 'Food Science and Technology'),
@@ -230,12 +230,12 @@ update public.programs p set group_name = v.g
   ('BSc Statistics', 'Statistics'),
   ('BSc Telecommunication Engineering', 'Telecommunication Engineering'),
   ('BSc Textile Design and Technology', 'Textile Design and Technology'),
-  ('Bachelor of Dental Surgery', 'Bachelor of Dental Surgery'),
-  ('Bachelor of Herbal Medicine', 'Bachelor of Herbal Medicine'),
-  ('Bachelor of Public Administration', 'Bachelor of Public Administration'),
+  ('Bachelor of Dental Surgery', 'Dental Surgery'),
+  ('Bachelor of Herbal Medicine', 'Herbal Medicine'),
+  ('Bachelor of Public Administration', 'Public Administration'),
   ('Doctor of Optometry', 'Optometry'),
   ('Doctor of Pharmacy (Pharm D)', 'Pharmacy'),
-  ('Doctor of Veterinary Medicine', 'Doctor of Veterinary Medicine'),
+  ('Doctor of Veterinary Medicine', 'Veterinary Medicine'),
   ('LLB', 'Law')
   ) as v(n, g)
  where s.id = p.school_id and s.name = 'Kwame Nkrumah University of Science and Technology' and p.name = v.n;
@@ -360,9 +360,9 @@ update public.programs p set group_name = v.g
   ('BSc Social Change Communication', 'Social Change Communication'),
   ('BSc Statistics', 'Statistics'),
   ('BSc Sustainable Development Studies', 'Sustainable Development Studies'),
-  ('Bachelor of Dental Surgery (BDS)', 'Bachelor of Dental Surgery'),
-  ('Bachelor of Public Health (BPH)', 'Bachelor of Public Health'),
-  ('Doctor of Medical Laboratory Sciences', 'Doctor of Medical Laboratory Sciences'),
+  ('Bachelor of Dental Surgery (BDS)', 'Dental Surgery'),
+  ('Bachelor of Public Health (BPH)', 'Public Health'),
+  ('Doctor of Medical Laboratory Sciences', 'Medical Laboratory Science'),
   ('Doctor of Pharmacy (PharmD)', 'Pharmacy'),
   ('LLB Law (4-year, full-time)', 'Law'),
   ('MBChB (Medicine)', 'MBChB')
@@ -395,7 +395,7 @@ update public.programs p set group_name = v.g
   ('BEd Social Sciences (Geography, Economics, History)', 'Social Sciences Education'),
   ('BEd Social Studies', 'Social Studies Education'),
   ('BSc Actuarial Science', 'Actuarial Science'),
-  ('BSc Agri-Business', 'Agri-Business'),
+  ('BSc Agri-Business', 'Agribusiness'),
   ('BSc Agricultural Extension and Community Development', 'Agricultural Extension and Community Development'),
   ('BSc Agriculture', 'Agriculture'),
   ('BSc Agro-Processing', 'Agro-Processing'),
@@ -433,7 +433,7 @@ update public.programs p set group_name = v.g
   ('Bachelor of Commerce (Marketing)', 'Marketing'),
   ('Bachelor of Commerce (Procurement and Supply Chain Management)', 'Procurement and Supply Chain Management'),
   ('Bachelor of Medicine and Bachelor of Surgery', 'Medicine'),
-  ('Bachelor of Music', 'Bachelor of Music')
+  ('Bachelor of Music', 'Music')
   ) as v(n, g)
  where s.id = p.school_id and s.name = 'University of Cape Coast' and p.name = v.n;
 
@@ -451,9 +451,9 @@ update public.programs p set group_name = v.g
   ('B. A. (Theatre Arts)', 'Theatre Arts'),
   ('B. A. Fashion Design and Textile Education', 'Fashion Design and Textile Education'),
   ('B. A. French Education (Winneba/Ajumako Campus)', 'French Education'),
-  ('B. B. A. (Accounting)', 'B. B. A'),
-  ('B. B. A. (Banking and Finance)', 'B. B. A'),
-  ('B. B. A. Procurement and Supply Chain Management', 'B. B. A. Procurement and Supply Chain Management'),
+  ('B. B. A. (Accounting)', 'Business Administration'),
+  ('B. B. A. (Banking and Finance)', 'Business Administration'),
+  ('B. B. A. Procurement and Supply Chain Management', 'Procurement and Supply Chain Management'),
   ('B. Ed. Early Grade Education', 'Early Grade Education'),
   ('B. Sc. (Chemistry Education)', 'Chemistry Education'),
   ('B. Sc. (Integrated Science Education)', 'Integrated Science Education'),
@@ -591,7 +591,7 @@ update public.programs p set group_name = v.g
   ('BSc Information Technology', 'Information Technology'),
   ('BSc Materials Science and Engineering (Engineering Sciences)', 'Materials Science and Engineering'),
   ('BSc Mathematical Sciences', 'Mathematical Sciences'),
-  ('BSc Medical Laboratory Sciences', 'Medical Laboratory Sciences'),
+  ('BSc Medical Laboratory Sciences', 'Medical Laboratory Science'),
   ('BSc Midwifery', 'Midwifery'),
   ('BSc Nursing', 'Nursing'),
   ('BSc Nutrition and Dietetics', 'Nutrition and Dietetics'),
@@ -601,7 +601,7 @@ update public.programs p set group_name = v.g
   ('BSc Psychology', 'Psychology'),
   ('BSc Respiratory Therapy', 'Respiratory Therapy'),
   ('Bachelor of Arts', 'Arts'),
-  ('Bachelor of Dental Surgery', 'Bachelor of Dental Surgery'),
+  ('Bachelor of Dental Surgery', 'Dental Surgery'),
   ('Bachelor of Education (Early Grade Specialism)', 'Early Grade Education'),
   ('Bachelor of Education (JHS Specialism)', 'JHS Education'),
   ('Bachelor of Education (Upper Grade Specialism)', 'Upper Grade Education'),
@@ -620,37 +620,37 @@ update public.programs p set group_name = v.g
   ('Bachelor of Education in Science (Physics)', 'Science Education'),
   ('Bachelor of Education in Social Studies', 'Social Studies Education'),
   ('Bachelor of Education in Spanish', 'Spanish Education'),
-  ('Bachelor of Fine Arts', 'Bachelor of Fine Arts'),
+  ('Bachelor of Fine Arts', 'Fine Arts'),
   ('Bachelor of Laws (LLB)', 'Law'),
   ('Bachelor of Medicine and Bachelor of Surgery (MBChB)', 'Medicine'),
-  ('Bachelor of Music', 'Bachelor of Music'),
-  ('Bachelor of Public Health', 'Bachelor of Public Health'),
+  ('Bachelor of Music', 'Music'),
+  ('Bachelor of Public Health', 'Public Health'),
   ('Doctor of Pharmacy', 'Pharmacy'),
-  ('Doctor of Veterinary Medicine', 'Doctor of Veterinary Medicine')
+  ('Doctor of Veterinary Medicine', 'Veterinary Medicine')
   ) as v(n, g)
  where s.id = p.school_id and s.name = 'University of Ghana' and p.name = v.n;
 
 update public.programs p set group_name = v.g
   from public.schools s, (values
-  ('Bachelor of Dental Surgery', 'Bachelor of Dental Surgery'),
-  ('Bachelor of Diagnostic Imaging (Radiography)', 'Bachelor of Diagnostic Imaging'),
-  ('Bachelor of Dietetics', 'Bachelor of Dietetics'),
-  ('Bachelor of Health Services Administration', 'Bachelor of Health Services Administration'),
+  ('Bachelor of Dental Surgery', 'Dental Surgery'),
+  ('Bachelor of Diagnostic Imaging (Radiography)', 'Diagnostic Imaging'),
+  ('Bachelor of Dietetics', 'Dietetics'),
+  ('Bachelor of Health Services Administration', 'Health Services Administration'),
   ('Bachelor of Medicine, Bachelor of Surgery (MBChB)', 'Medicine'),
-  ('Bachelor of Midwifery', 'Bachelor of Midwifery'),
-  ('Bachelor of Nursing', 'Bachelor of Nursing'),
-  ('Bachelor of Orthotics and Prosthetics', 'Bachelor of Orthotics and Prosthetics'),
-  ('Bachelor of Physiotherapy', 'Bachelor of Physiotherapy'),
-  ('Bachelor of Public Health (Disease Control)', 'Bachelor of Public Health'),
-  ('Bachelor of Public Health (Health Information)', 'Bachelor of Public Health'),
-  ('Bachelor of Public Health (Health Promotion)', 'Bachelor of Public Health'),
-  ('Bachelor of Public Health (Nutrition)', 'Bachelor of Public Health'),
-  ('Bachelor of Public Health Nursing', 'Bachelor of Public Health Nursing'),
+  ('Bachelor of Midwifery', 'Midwifery'),
+  ('Bachelor of Nursing', 'Nursing'),
+  ('Bachelor of Orthotics and Prosthetics', 'Orthotics and Prosthetics'),
+  ('Bachelor of Physiotherapy', 'Physiotherapy'),
+  ('Bachelor of Public Health (Disease Control)', 'Public Health'),
+  ('Bachelor of Public Health (Health Information)', 'Public Health'),
+  ('Bachelor of Public Health (Health Promotion)', 'Public Health'),
+  ('Bachelor of Public Health (Nutrition)', 'Public Health'),
+  ('Bachelor of Public Health Nursing', 'Public Health Nursing'),
   ('Bachelor of Science in Biochemistry and Molecular Biology', 'Biochemistry and Molecular Biology'),
-  ('Bachelor of Speech, Language and Hearing Sciences', 'Bachelor of Speech, Language and Hearing Sciences'),
-  ('Bachelor of Sports and Exercise Medical Sciences', 'Bachelor of Sports and Exercise Medical Sciences'),
+  ('Bachelor of Speech, Language and Hearing Sciences', 'Speech, Language and Hearing Sciences'),
+  ('Bachelor of Sports and Exercise Medical Sciences', 'Sports and Exercise Medical Sciences'),
   ('Combined Bachelor and Master of Science in Psychology', 'Combined Bachelor and Master of Science in Psychology'),
-  ('Doctor of Medical Laboratory Science', 'Doctor of Medical Laboratory Science'),
+  ('Doctor of Medical Laboratory Science', 'Medical Laboratory Science'),
   ('Doctor of Pharmacy', 'Pharmacy')
   ) as v(n, g)
  where s.id = p.school_id and s.name = 'University of Health and Allied Sciences' and p.name = v.n;

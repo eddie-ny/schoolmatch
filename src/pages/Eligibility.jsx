@@ -69,9 +69,9 @@ function EligibilityInner() {
     [programs, scope]
   )
 
-  // Program names offered in the chosen field (a program can be offered by several schools).
+  // Programs offered in the chosen field, each listed once by its common name (many schools can offer it).
   const programNames = useMemo(
-    () => [...new Set(scoped.filter((p) => p.field === field).map((p) => p.name))].sort(),
+    () => [...new Set(scoped.filter((p) => p.field === field).map((p) => p.group))].sort(),
     [scoped, field]
   )
 
@@ -109,6 +109,9 @@ function EligibilityInner() {
       setError(`Your results were checked but could not be saved: ${err.message}`)
     }
   }
+
+  const qualified = (output?.targets || []).filter((r) => r.label !== 'Not yet eligible')
+  const notYet = (output?.targets || []).filter((r) => r.label === 'Not yet eligible')
 
   if (loading) return <Spinner />
 
@@ -192,11 +195,22 @@ function EligibilityInner() {
             : <p className="text-neutral-600">{output.reason}</p>}
           {output.mode === 'terminal' && <p className="text-sm font-semibold">These are projections based on terminal or mock grades.</p>}
 
-          <h3 className="font-semibold">Schools offering {output.programName}</h3>
+          <h3 className="font-semibold">Schools offering {output.programName} that you qualify for</h3>
           {output.targets.length === 0 && <p className="text-neutral-600">No schools offer this program yet.</p>}
+          {output.targets.length > 0 && qualified.length === 0 && (
+            <p className="text-neutral-600">You do not meet the entry requirements for any school offering this program yet. See below what is missing.</p>
+          )}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {output.targets.map((r) => <ResultCard key={r.programId} item={r} highlight />)}
+            {qualified.map((r) => <ResultCard key={r.programId} item={r} highlight />)}
           </div>
+          {notYet.length > 0 && (
+            <details className="card">
+              <summary className="font-semibold cursor-pointer">Schools offering {output.programName} that you do not qualify for yet ({notYet.length})</summary>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+                {notYet.map((r) => <ResultCard key={r.programId} item={r} />)}
+              </div>
+            </details>
+          )}
 
           <h3 className="font-semibold">Other programs you could consider, best first</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

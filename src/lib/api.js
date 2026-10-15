@@ -440,14 +440,16 @@ export async function deleteDemoData() {
 
 // Program names for the eligibility pickers. Only the teaser columns, which visitors may read.
 export async function listEligibilityPrograms() {
-  const [{ data: progs, error: e1 }, { data: schools, error: e2 }] = await Promise.all([
-    supabase.from('programs_summary').select('id, school_id, name, level, field, demo'),
-    supabase.from('schools_summary').select('id, name, country'),
-  ])
+  // group_name is the common programme name ("Law") shared by every school that offers it. Until the database has it,
+  // fall back to the programme's own name so the page keeps working.
+  let progsRes = await supabase.from('programs_summary').select('id, school_id, name, level, field, demo, group_name')
+  if (progsRes.error) progsRes = await supabase.from('programs_summary').select('id, school_id, name, level, field, demo')
+  const { data: progs, error: e1 } = progsRes
+  const { data: schools, error: e2 } = await supabase.from('schools_summary').select('id, name, country')
   fail(e1 || e2, 'Could not load programs.')
   const byId = Object.fromEntries(schools.map((x) => [x.id, x]))
   return progs.map((p) => ({
-    id: p.id, name: p.name, field: p.field, level: p.level, demo: p.demo,
+    id: p.id, name: p.name, group: p.group_name || p.name, field: p.field, level: p.level, demo: p.demo,
     schoolName: byId[p.school_id]?.name || '',
     international: (byId[p.school_id]?.country || '').toLowerCase() !== 'ghana',
   }))

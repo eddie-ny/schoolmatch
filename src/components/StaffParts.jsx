@@ -139,7 +139,7 @@ function AddStudent({ onDone }) {
           )}
           {err && <p className="text-red-700 text-sm" role="alert">{err}</p>}
           <div className="flex gap-3">
-            <button className="btn btn-primary" disabled={busy}>{busy ? 'Creating...' : 'Create account'}</button>
+            <button className="btn btn-orange" disabled={busy}>{busy ? 'Creating...' : 'Create account'}</button>
             <button type="button" className="btn btn-outline" onClick={() => setOpen(false)}>Cancel</button>
           </div>
         </form>
@@ -164,7 +164,7 @@ function EditStudent({ u, onClose, onSaved }) {
       <Field label="Phone"><input className="input" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} required /></Field>
       {err && <p className="text-red-700 text-sm" role="alert">{err}</p>}
       <div className="flex gap-3">
-        <button className="btn btn-primary">Save</button>
+        <button className="btn btn-orange">Save</button>
         <button type="button" className="btn btn-outline" onClick={onClose}>Cancel</button>
       </div>
     </form>
@@ -244,7 +244,7 @@ export function SignupsSection({ users: allUsers, canDisable, onToggle, err, rel
                 <span className="text-neutral-600">{u.profileComplete ? 'Profile complete' : 'Profile incomplete'}</span>
               </p>
               {canEdit(u) && <button className="btn btn-outline w-full" onClick={() => setEditing(u)}>Edit details</button>}
-              {canActivate(u) && <button className="btn btn-primary w-full" onClick={() => setActTarget(u)}>Activate account</button>}
+              {canActivate(u) && <button className="btn btn-outline w-full" onClick={() => setActTarget(u)}>Activate account</button>}
               {canToggle(u) && !u.unconfirmed && <button className="btn btn-outline w-full" onClick={() => onToggle(u)}>{u.disabled ? 'Reactivate account' : 'Disable account'}</button>}
               {canRemove(u) && <button className="btn btn-outline w-full !border-red-300 text-red-700" onClick={() => setDelTarget(u)}>Delete account</button>}
             </li>
@@ -270,7 +270,7 @@ export function SignupsSection({ users: allUsers, canDisable, onToggle, err, rel
                   <td className="p-3">{accountBadge(u)}</td>
                   <td className="p-3 whitespace-nowrap space-x-2">
                     {canEdit(u) && <button className="btn btn-outline !min-h-11 !py-1" onClick={() => setEditing(u)}>Edit</button>}
-                    {canActivate(u) && <button className="btn btn-primary !min-h-11 !py-1" onClick={() => setActTarget(u)}>Activate</button>}
+                    {canActivate(u) && <button className="btn btn-outline !min-h-11 !py-1" onClick={() => setActTarget(u)}>Activate</button>}
                     {canToggle(u) && !u.unconfirmed && <button className="btn btn-outline !min-h-11 !py-1" onClick={() => onToggle(u)}>{u.disabled ? 'Reactivate' : 'Disable'}</button>}
                     {canRemove(u) && <button className="btn btn-outline !min-h-11 !py-1 !border-red-300 text-red-700" onClick={() => setDelTarget(u)}>Delete</button>}
                   </td>

@@ -1,5 +1,6 @@
 import { lazy, Suspense } from 'react'
 import { Routes, Route } from 'react-router-dom'
+import { Analytics } from '@vercel/analytics/react'
 import Layout from './components/Layout'
 import Home from './pages/Home'
 import { SHOW_INTERNATIONAL } from './lib/constants'
@@ -25,8 +26,13 @@ const Legal = lazy(() => import('./pages/Legal'))
 const ParentConfirm = lazy(() => import('./pages/ParentConfirm'))
 const NotFound = lazy(() => import('./pages/NotFound'))
 
+// Visitor counts for the Vercel dashboard. Staff pages and the parent link page (which carries a token) are not counted.
+const skipAnalytics = (event) => (/\/(admin|support|parent-confirm|reset-password)(\/|\?|$)/.test(event.url) ? null : event)
+
 export default function App() {
   return (
+    <>
+    <Analytics beforeSend={skipAnalytics} />
     <Routes>
       <Route element={<Layout />}>
         <Route path="/" element={<Home />} />
@@ -55,5 +61,6 @@ export default function App() {
         <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>
+    </>
   )
 }

@@ -4,8 +4,8 @@
 -- 3) check_eligibility matches on the group name and returns groupName.
 -- 4) group_name filled for programmes loaded from data/ghana-public-universities (see program_groups.csv,
 --    built by scripts_group_programs.py). Programmes added later keep their own name until a group is set.
--- The degree is shown once: "BSc Midwifery", "B.Sc. in Midwifery" and "Bachelor of Midwifery" are one entry, "BSc Midwifery". Teacher-education degrees are BEd,
--- for example "BEd Mathematics". Grouping is automatic and should be reviewed by a person.
+-- The degree is shown once: "BSc Midwifery", "B.Sc. in Midwifery" and "Bachelor of Midwifery" are one entry, "BSc Midwifery". Teacher-education degrees read "Bachelor of Education in ...",
+-- for example "Bachelor of Education in Mathematics". BSc and BA stay short. Grouping is automatic and should be reviewed by a person.
 
 alter table public.programs add column if not exists group_name text;
 

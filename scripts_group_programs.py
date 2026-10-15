@@ -64,6 +64,21 @@ def split(name):
         return rest, 'Bachelor of'   # degree not stated and not known from other schools
     return rest or n, deg
 
+# Abbreviations that students may not recognise are written out. BSc and BA stay short.
+LONG_DEGREE = {
+    'BEd': 'Bachelor of Education in', 'BCom': 'Bachelor of Commerce in', 'BBA': 'Bachelor of Business Administration in',
+    'BTech': 'Bachelor of Technology in', 'BEng': 'Bachelor of Engineering in',
+}
+LONG_SPECIAL = {
+    'LLB Law': 'Bachelor of Laws (LLB)', 'MBChB Medicine': 'Bachelor of Medicine and Bachelor of Surgery (MBChB)',
+    'PharmD Pharmacy': 'Doctor of Pharmacy (PharmD)', 'BA Arts': 'Bachelor of Arts',
+}
+
+def longform(g):
+    if g in LONG_SPECIAL: return LONG_SPECIAL[g]
+    first, _, rest = g.partition(' ')
+    return f'{LONG_DEGREE[first]} {rest}' if first in LONG_DEGREE and rest else g
+
 def main():
     parsed = []
     for f in sorted(glob.glob(DIR + '*_programs.csv')):
@@ -83,7 +98,7 @@ def main():
         s = best[s.lower()]
         if d in (None, 'Bachelor of') and s.lower() in degs and not re.match(r'^(LLB|MBChB|PharmD|BA) ', s) and not s.lower().startswith('doctor of'):
             d = degs[s.lower()].most_common(1)[0][0]
-        out.append((school, prog, f'{d} {s}' if d and not re.match(r'^(LLB|MBChB|PharmD|BA) ', s) else s))
+        out.append((school, prog, longform(f'{d} {s}' if d and not re.match(r'^(LLB|MBChB|PharmD|BA) ', s) else s)))
     with open(DIR + 'program_groups.csv', 'w', newline='', encoding='utf-8') as fh:
         w = csv.writer(fh); w.writerow(['school_name', 'program_name', 'group_name']); w.writerows(out)
     return out

@@ -67,6 +67,15 @@ export async function signUp(form) {
   return { needsConfirm: !data.session }
 }
 
+export async function resendConfirmation(email) {
+  const { error } = await supabase.auth.resend({
+    type: 'signup',
+    email,
+    options: { emailRedirectTo: `${window.location.origin}/login` },
+  })
+  fail(error, 'Could not send the email. Please wait a minute and try again.')
+}
+
 export async function signIn(email, password) {
   const { error } = await supabase.auth.signInWithPassword({ email, password })
   fail(error, 'Could not sign in.')

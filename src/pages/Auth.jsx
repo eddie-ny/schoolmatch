@@ -32,6 +32,7 @@ export function Login() {
     setBusy(true)
     try {
       await signIn(email, password)
+      try { localStorage.removeItem('sm_pending_confirm') } catch { /* ignore */ }
       if (confirmed) nav('/')
     } catch (err) {
       setError(err.message)
@@ -58,8 +59,10 @@ export function Login() {
 }
 
 export function Signup() {
-  const { signUp, user } = useAuth()
+  const { signUp, resendConfirmation, user } = useAuth()
   const nav = useNavigate()
+  const [wait, setWait] = useState(0) // seconds until another confirmation email can be requested
+  const [resendMsg, setResendMsg] = useState('')
   const [f, setF] = useState({
     fullName: '', phone: '', email: '', password: '', confirm: '', dateOfBirth: '',
     parentName: '', parentPhone: '', parentEmail: '', consent: false,
@@ -72,6 +75,38 @@ export function Signup() {
 
   useEffect(() => { if (user) nav('/profile') }, [user, nav])
 
+  useEffect(() => {
+    if (wait <= 0) return
+    const t = setTimeout(() => setWait(wait - 1), 1000)
+    return () => clearTimeout(t)
+  }, [wait])
+
+  // Remember which address is waiting for confirmation. Signing up again with it would send a new
+  // link and kill the one already in the inbox, so we send the person to "resend" instead.
+  const PENDING_KEY = 'sm_pending_confirm'
+  const readPending = () => {
+    try { return JSON.parse(localStorage.getItem(PENDING_KEY) || 'null') } catch { return null }
+  }
+  const writePending = (email) => {
+    try { localStorage.setItem(PENDING_KEY, JSON.stringify({ email: email.trim().toLowerCase(), at: Date.now() })) } catch { /* storage blocked: fine */ }
+  }
+
+  const resend = async () => {
+    setResendMsg('')
+    setBusy(true)
+    try {
+      await resendConfirmation(sentTo)
+      writePending(sentTo)
+      setWait(60)
+      setResendMsg('Sent. Use only this newest email. Older links stop working.')
+    } catch (err) {
+      setResendMsg(err.message)
+      setWait(60)
+    } finally {
+      setBusy(false)
+    }
+  }
+
   const submit = async (e) => {
     e.preventDefault()
     setError('')
@@ -80,10 +115,20 @@ export function Signup() {
     if (f.password !== f.confirm) return setError('The two passwords do not match.')
     if (!f.consent) return setError('Please accept the privacy notice to continue.')
     if (minor && (!f.parentName || !f.parentPhone || !f.parentEmail)) return setError('A parent or guardian name, phone and email are required for under 18s.')
+    const pending = readPending()
+    if (pending && pending.email === f.email.trim().toLowerCase() && Date.now() - pending.at < 60 * 60 * 1000) {
+      setSentTo(f.email)
+      setWait(Math.max(0, 60 - Math.floor((Date.now() - pending.at) / 1000)))
+      return
+    }
     setBusy(true)
     try {
       const res = await signUp(f)
-      if (res.needsConfirm) setSentTo(f.email)
+      if (res.needsConfirm) {
+        writePending(f.email)
+        setWait(60)
+        setSentTo(f.email)
+      }
     } catch (err) {
       setError(err.message)
     } finally {
@@ -96,8 +141,15 @@ export function Signup() {
       <div className="max-w-md mx-auto card space-y-3">
         <h1 className="text-2xl font-bold">Check your email</h1>
         <p>We sent a confirmation link to <b>{sentTo}</b>. Click it to finish creating your account. Your 24-hour free trial starts when you sign up.</p>
-        <p className="text-sm text-neutral-600">Nothing arrived? Check your spam folder, then try again in a few minutes.</p>
-        <Link to="/login" className="btn btn-orange">Go to sign in</Link>
+        <p className="font-semibold">Use only the newest email. Older links stop working.</p>
+        <p className="text-sm text-neutral-600">Emails can take a few minutes. Check your spam folder first. Only ask for a new one if nothing has arrived after a few minutes.</p>
+        {resendMsg && <p role="status" className="text-sm">{resendMsg}</p>}
+        <div className="flex flex-wrap gap-3">
+          <button className="btn btn-outline" onClick={resend} disabled={busy || wait > 0}>
+            {wait > 0 ? `Resend confirmation email in ${wait}s` : busy ? 'Sending...' : 'Resend confirmation email'}
+          </button>
+          <Link to="/login" className="btn btn-orange">Go to sign in</Link>
+        </div>
       </div>
     )
   }

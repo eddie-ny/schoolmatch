@@ -92,6 +92,7 @@ export function AuthProvider({ children }) {
         user, loading, notice, clearNotice: () => setNotice(''), access, mfa, mfaNeeded: !!user?.mfaPending, profileComplete, parentPending, recovering,
         signUp, signIn, signOut, saveProfile, saveResults, addDocument, removeDocument, refresh,
         requestPasswordReset: api.requestPasswordReset,
+        resendConfirmation: api.resendConfirmation,
         setNewPassword: async (pw) => { await api.setNewPassword(pw); setRecovering(false) },
       }}
     >

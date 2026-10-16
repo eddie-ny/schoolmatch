@@ -1,4 +1,4 @@
--- STEP 17 (DRAFT, NOT APPLIED): store gender at sign-up, let students edit it, and show it on the scholarships summary view.
+-- STEP 17 (APPLIED 2026-10-16): store gender at sign-up, let students edit it, and show it on the scholarships summary view.
 -- Run the three statements one at a time (A, B, C).
 
 -- A. Sign-up trigger saves gender from the signup form (only 'female' or 'male').

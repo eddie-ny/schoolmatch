@@ -31,7 +31,7 @@ DEGREES = [
     (r'bachelor\s+of(?:\s+in)?', ''),          # "Bachelor of Midwifery": degree not stated
 ]
 DEG_RX = [(re.compile(r'^' + rx + r'(?=[\s(]|$)\s*', re.I), d) for rx, d in DEGREES]
-KEEP_EDU = re.compile(r'basic|early|childhood|grade|primary|special|upper', re.I)
+KEEP_EDU = re.compile(r'basic|early|childhood|grade|primary|special|upper|physical', re.I)
 
 def split(name):
     n = re.sub(r'\s+', ' ', name.strip())
@@ -53,6 +53,9 @@ def split(name):
     rest = re.sub(r'(?i)-with-', ' with ', rest)
     rest = rest.replace('Electrical/Electronic', 'Electrical and Electronic').replace('Agri-Business', 'Agribusiness')
     rest = re.sub(r'(?i)medical laboratory sciences$', 'Medical Laboratory Science', rest)
+    rest = re.sub(r'^(JHS|Junior High)(\s+School)?$', 'Junior High School', rest)
+    rest = re.sub(r'(?i)^early grade education$', 'Early Grade', rest)
+    rest = re.sub(r'(?i)^fashion design and textile$', 'Fashion Design and Textiles', rest)
     if re.match(r'^doctor of\s+', rest, re.I):
         return rest, None                              # doctorates keep their own name
     # teacher-education degrees are all BEd, whatever the school calls the degree letters
@@ -75,6 +78,7 @@ LONG_SPECIAL = {
 }
 
 def longform(g):
+    if g == 'BBA Bachelor of Business Administration': return 'Bachelor of Business Administration'
     if g in LONG_SPECIAL: return LONG_SPECIAL[g]
     first, _, rest = g.partition(' ')
     return f'{LONG_DEGREE[first]} {rest}' if first in LONG_DEGREE and rest else g
@@ -92,7 +96,7 @@ def main():
     # a name with no degree word takes the degree most other schools use for that subject, if any
     degs = defaultdict(Counter)
     for _, _, s, d in parsed:
-        if d and d != 'Bachelor of': degs[best[s.lower()].lower()][d] += 1
+        if d and d not in ('Bachelor of', 'BEd'): degs[best[s.lower()].lower()][d] += 1
     out = []
     for school, prog, s, d in parsed:
         s = best[s.lower()]

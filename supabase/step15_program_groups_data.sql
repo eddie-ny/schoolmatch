@@ -27,7 +27,7 @@ update public.programs p set group_name = v.g
   ('BEd Home Economics (Clothing and Textiles)', 'Bachelor of Education in Home Economics'),
   ('BEd Home Economics (Food and Nutrition)', 'Bachelor of Education in Home Economics'),
   ('BEd Information Technology', 'Bachelor of Education in Information Technology'),
-  ('BEd Junior High', 'Bachelor of Education in Junior High'),
+  ('BEd Junior High', 'Bachelor of Education in Junior High School'),
   ('BEd Mathematics', 'Bachelor of Education in Mathematics'),
   ('BEd Physical Education and Health', 'Bachelor of Education in Physical Education and Health'),
   ('BEd Physics', 'Bachelor of Education in Physics'),
@@ -309,7 +309,7 @@ update public.programs p set group_name = v.g
   ('BEd Dagbani', 'Bachelor of Education in Dagbani'),
   ('BEd Early Childhood Care and Education', 'Bachelor of Education in Early Childhood Care and Education'),
   ('BEd Family and Consumer Science', 'Bachelor of Education in Family and Consumer Science'),
-  ('BEd Health and Physical Education', 'Bachelor of Education in Health and Physical'),
+  ('BEd Health and Physical Education', 'Bachelor of Education in Health and Physical Education'),
   ('BEd ICT', 'Bachelor of Education in ICT'),
   ('BEd Mathematics', 'Bachelor of Education in Mathematics'),
   ('BEd Science Education', 'Bachelor of Education in Science'),
@@ -390,7 +390,7 @@ update public.programs p set group_name = v.g
   ('BEd Home Economics (Food and Nutrition)', 'Bachelor of Education in Home Economics'),
   ('BEd Management', 'Bachelor of Education in Management'),
   ('BEd Mathematics', 'Bachelor of Education in Mathematics'),
-  ('BEd Physical Education', 'Bachelor of Education in Physical'),
+  ('BEd Physical Education', 'Bachelor of Education in Physical Education'),
   ('BEd Science', 'Bachelor of Education in Science'),
   ('BEd Social Sciences (Geography, Economics, History)', 'Bachelor of Education in Social Sciences'),
   ('BEd Social Studies', 'Bachelor of Education in Social Studies'),
@@ -433,7 +433,7 @@ update public.programs p set group_name = v.g
   ('Bachelor of Commerce (Marketing)', 'Bachelor of Commerce in Marketing'),
   ('Bachelor of Commerce (Procurement and Supply Chain Management)', 'Bachelor of Commerce in Procurement and Supply Chain Management'),
   ('Bachelor of Medicine and Bachelor of Surgery', 'Bachelor of Medicine and Bachelor of Surgery (MBChB)'),
-  ('Bachelor of Music', 'Bachelor of Education in Music')
+  ('Bachelor of Music', 'Bachelor of Music')
   ) as v(n, g)
  where s.id = p.school_id and s.name = 'University of Cape Coast' and p.name = v.n;
 
@@ -454,7 +454,7 @@ update public.programs p set group_name = v.g
   ('B. B. A. (Accounting)', 'Bachelor of Business Administration in Accounting'),
   ('B. B. A. (Banking and Finance)', 'Bachelor of Business Administration in Banking and Finance'),
   ('B. B. A. Procurement and Supply Chain Management', 'Bachelor of Business Administration in Procurement and Supply Chain Management'),
-  ('B. Ed. Early Grade Education', 'Bachelor of Education in Early Grade Education'),
+  ('B. Ed. Early Grade Education', 'Bachelor of Education in Early Grade'),
   ('B. Sc. (Chemistry Education)', 'Bachelor of Education in Chemistry'),
   ('B. Sc. (Integrated Science Education)', 'Bachelor of Education in Integrated Science'),
   ('B. Sc. (Physics Education)', 'Bachelor of Education in Physics'),
@@ -603,7 +603,7 @@ update public.programs p set group_name = v.g
   ('Bachelor of Arts', 'Bachelor of Arts'),
   ('Bachelor of Dental Surgery', 'Bachelor of Dental Surgery'),
   ('Bachelor of Education (Early Grade Specialism)', 'Bachelor of Education in Early Grade'),
-  ('Bachelor of Education (JHS Specialism)', 'Bachelor of Education in JHS'),
+  ('Bachelor of Education (JHS Specialism)', 'Bachelor of Education in Junior High School'),
   ('Bachelor of Education (Upper Grade Specialism)', 'Bachelor of Education in Upper Grade'),
   ('Bachelor of Education in Arabic', 'Bachelor of Education in Arabic'),
   ('Bachelor of Education in Computer Science', 'Bachelor of Education in Computer Science'),
@@ -623,7 +623,7 @@ update public.programs p set group_name = v.g
   ('Bachelor of Fine Arts', 'Bachelor of Fine Arts'),
   ('Bachelor of Laws (LLB)', 'Bachelor of Laws (LLB)'),
   ('Bachelor of Medicine and Bachelor of Surgery (MBChB)', 'Bachelor of Medicine and Bachelor of Surgery (MBChB)'),
-  ('Bachelor of Music', 'Bachelor of Education in Music'),
+  ('Bachelor of Music', 'Bachelor of Music'),
   ('Bachelor of Public Health', 'BSc Public Health'),
   ('Doctor of Pharmacy', 'Doctor of Pharmacy (PharmD)'),
   ('Doctor of Veterinary Medicine', 'Doctor of Veterinary Medicine')
@@ -695,7 +695,7 @@ update public.programs p set group_name = v.g
   ('Bachelor of Arts in Applied French and Communications', 'BA Applied French and Communications'),
   ('Bachelor of Arts in Communication Studies', 'BA Communication Studies'),
   ('Bachelor of Arts in Public Relations Management', 'BA Public Relations Management'),
-  ('Bachelor of Business Administration', 'Bachelor of Business Administration in Bachelor of Business Administration'),
+  ('Bachelor of Business Administration', 'Bachelor of Business Administration'),
   ('Bachelor of Laws (LLB)', 'Bachelor of Laws (LLB)'),
   ('Bachelor of Science in Accounting', 'BSc Accounting'),
   ('Bachelor of Science in Accounting and Finance', 'BSc Accounting and Finance'),

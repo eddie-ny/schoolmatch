@@ -127,6 +127,7 @@ export function ScholarshipCard({ s, full }) {
         <h3 className="text-lg font-bold leading-snug break-words">{s.name}</h3>
         <div className="flex flex-wrap gap-2">
           <Badge tone="green">{s.fundingType} funding</Badge>
+          {s.gender && <Badge tone="orange">{s.gender === 'female' ? 'Women only' : 'Men only'}</Badge>}
         </div>
         <button className="btn btn-outline mt-auto" onClick={() => setOpen(true)} aria-haspopup="dialog">See details</button>
       </article>

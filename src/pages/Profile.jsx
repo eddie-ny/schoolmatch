@@ -96,6 +96,14 @@ function ProfileInner() {
           <input className="input bg-neutral-50 text-neutral-600" value={user.dateOfBirth || ''} readOnly disabled />
         </Field>
 
+        <Field label="Gender" hint="Used only to match you to scholarships. Some are open to one gender only.">
+          <select className="input" value={p.gender || ''} onChange={(e) => setP({ ...p, gender: e.target.value })}>
+            <option value="">Select</option>
+            <option value="female">Female</option>
+            <option value="male">Male</option>
+          </select>
+        </Field>
+
         <SectionLabel>School details</SectionLabel>
         <Field label="SHS attended *"><input className="input" value={p.shsAttended} onChange={(e) => setP({ ...p, shsAttended: e.target.value })} /></Field>
         <Field label="High school program studied *">

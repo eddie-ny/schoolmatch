@@ -52,6 +52,7 @@ export async function signUp(form) {
     full_name: form.fullName,
     phone: form.phone,
     date_of_birth: form.dateOfBirth,
+    gender: form.gender || '',
   }
   if (isMinorFromDob(form.dateOfBirth)) {
     meta.parent_name = form.parentName
@@ -190,6 +191,7 @@ export async function getCurrentUser() {
       shsProgram: p.shs_program || '',
       fundingType: p.funding_type || '',
       desiredPrograms: p.desired_programs || '',
+      gender: p.gender || '',
     },
     parent: parent.data ? { name: parent.data.name, phone: parent.data.phone, email: parent.data.email, confirmedAt: parent.data.confirmed_at } : null,
     subscription: sub.data ? { plan: sub.data.plan, status: sub.data.status, expiresAt: sub.data.expires_at, autoRenew: sub.data.auto_renew } : null,
@@ -207,6 +209,7 @@ export async function saveProfile(userId, profile) {
       shs_program: profile.shsProgram,
       funding_type: profile.fundingType || null,
       desired_programs: profile.desiredPrograms,
+      gender: profile.gender || null,
     })
     .eq('id', userId)
   fail(error, 'Could not save your profile.')
@@ -319,6 +322,7 @@ export async function loadCatalog() {
     const f = fullSch[x.id] || {}
     return {
       id: x.id, name: x.name, funder: x.funder, country: x.country, fundingType: x.funding_type, verified: x.verified, demo: x.demo,
+      gender: x.gender ?? f.gender ?? null, // 'female' or 'male' when only that gender can apply
       level: f.level || '', minAggregate: f.min_aggregate ?? null, minSat: f.min_sat ?? null,
       criteria: f.criteria || '', deadline: f.deadline || '', link: f.link || '',
     }

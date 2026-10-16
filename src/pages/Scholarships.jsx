@@ -7,7 +7,7 @@ import { ScholarshipCard } from '../components/Cards'
 import { SHOW_INTERNATIONAL } from '../lib/constants'
 
 export default function Scholarships() {
-  const { access } = useAuth()
+  const { access, user } = useAuth()
   const { scholarships, loading } = useCatalog()
   const [params] = useSearchParams()
   const [funding, setFunding] = useState(params.get('funding') || 'all')
@@ -17,9 +17,11 @@ export default function Scholarships() {
   const list = useMemo(
     () =>
       scholarships
+        // A scholarship for one gender is hidden from the other. Unknown gender (signed out, old accounts) sees everything.
+        .filter((s) => !s.gender || !user?.profile?.gender || s.gender === user.profile.gender)
         .filter((s) => funding === 'all' || s.fundingType.toLowerCase() === funding)
         .filter((s) => where === 'all' || (where === 'local' ? isLocal(s.country) : !isLocal(s.country))),
-    [scholarships, funding, where]
+    [scholarships, funding, where, user]
   )
 
   return (

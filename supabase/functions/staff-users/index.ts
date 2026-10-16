@@ -1,5 +1,5 @@
 // Staff-created student accounts.
-//   POST /staff-users/create-student { fullName, phone, email, dateOfBirth, parentName?, parentPhone?, parentEmail? }
+//   POST /staff-users/create-student { fullName, phone, email, dateOfBirth, gender?, parentName?, parentPhone?, parentEmail? }
 //   POST /staff-users/delete-account { userId }   super admin only: archives and erases the account, then removes their uploaded files from storage
 //   POST /staff-users/activate-account { userId }  any staff: confirms the email of a student whose link failed
 // Allowed for any staff member (owner, admin, support) who finished the authenticator step.
@@ -49,6 +49,8 @@ Deno.serve(async (req) => {
       if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email) || email.length > 200) return json({ error: 'Enter a valid email address.' }, 400)
       if (!/^\d{4}-\d{2}-\d{2}$/.test(dob) || Number.isNaN(Date.parse(dob))) return json({ error: 'Enter the date of birth.' }, 400)
       const meta: Record<string, string> = { full_name: fullName, phone, date_of_birth: dob }
+      const gender = String(body.gender ?? '')
+      if (gender === 'female' || gender === 'male') meta.gender = gender
       const cutoff = new Date(); cutoff.setFullYear(cutoff.getFullYear() - 18)
       if (new Date(dob) > cutoff) {
         meta.parent_name = String(body.parentName ?? '').trim()

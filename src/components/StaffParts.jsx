@@ -93,7 +93,7 @@ export function Pager({ page, total, size = PAGE_SIZE, onPage }) {
 
 // ---------- Sign-ups ----------
 function AddStudent({ onDone }) {
-  const empty = { fullName: '', phone: '', email: '', dateOfBirth: '', parentName: '', parentPhone: '', parentEmail: '' }
+  const empty = { fullName: '', phone: '', email: '', dateOfBirth: '', gender: '', parentName: '', parentPhone: '', parentEmail: '' }
   const [open, setOpen] = useState(false)
   const [f, setF] = useState(empty)
   const [busy, setBusy] = useState(false)
@@ -131,6 +131,13 @@ function AddStudent({ onDone }) {
           <Field label="Email"><input className="input" type="email" value={f.email} onChange={set('email')} required /></Field>
           <Field label="Phone"><input className="input" type="tel" value={f.phone} onChange={set('phone')} required /></Field>
           <Field label="Date of birth"><input className="input" type="date" value={f.dateOfBirth} onChange={set('dateOfBirth')} required /></Field>
+          <Field label="Gender">
+            <select className="input" value={f.gender} onChange={set('gender')} required>
+              <option value="">Select</option>
+              <option value="female">Female</option>
+              <option value="male">Male</option>
+            </select>
+          </Field>
           {minor && (
             <>
               <p className="text-sm text-neutral-600">Under 18: a parent or guardian must confirm before this student gets full access.</p>

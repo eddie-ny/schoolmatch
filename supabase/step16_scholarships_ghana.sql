@@ -1,5 +1,5 @@
--- STEP 16 (DRAFT, NOT APPLIED): gender field plus scholarships for Ghanaian students studying in Ghana.
--- Every row is unverified. Sources were read on 2026-10-16. Nothing here is applied until the owner says yes.
+-- STEP 16 (APPLIED 2026-10-16): gender field plus scholarships for Ghanaian students studying in Ghana.
+-- Every row is unverified. Sources were read on 2026-10-16.
 
 -- 1. Gender. Null means open to everyone.
 alter table public.profiles add column if not exists gender text check (gender in ('female','male'));

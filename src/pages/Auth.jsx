@@ -64,7 +64,7 @@ export function Signup() {
   const [wait, setWait] = useState(0) // seconds until another confirmation email can be requested
   const [resendMsg, setResendMsg] = useState('')
   const [f, setF] = useState({
-    fullName: '', phone: '', email: '', password: '', confirm: '', dateOfBirth: '',
+    fullName: '', phone: '', email: '', password: '', confirm: '', dateOfBirth: '', gender: '',
     parentName: '', parentPhone: '', parentEmail: '', consent: false,
   })
   const [error, setError] = useState('')
@@ -111,6 +111,7 @@ export function Signup() {
     e.preventDefault()
     setError('')
     if (!f.dateOfBirth) return setError('Please choose your full date of birth (day, month and year).')
+    if (!f.gender) return setError('Please choose your gender. Some scholarships are only for one gender.')
     if (passwordProblem(f.password)) return setError(PASSWORD_RULE)
     if (f.password !== f.confirm) return setError('The two passwords do not match.')
     if (!f.consent) return setError('Please accept the privacy notice to continue.')
@@ -164,6 +165,14 @@ export function Signup() {
         <Field label="Password" hint="At least 8 characters, with upper case, lower case and numbers."><PasswordInput required autoComplete="new-password" value={f.password} onChange={set('password')} /></Field>
         <Field label="Confirm password"><PasswordInput required autoComplete="new-password" value={f.confirm} onChange={set('confirm')} /></Field>
         <Field label="Date of birth"><DobPicker value={f.dateOfBirth} onChange={(v) => { setF((cur) => ({ ...cur, dateOfBirth: v })); setError('') }} /></Field>
+
+        <Field label="Gender" hint="Used only to match you to scholarships. Some are open to one gender only.">
+          <select className="input" required value={f.gender} onChange={set('gender')}>
+            <option value="">Select</option>
+            <option value="female">Female</option>
+            <option value="male">Male</option>
+          </select>
+        </Field>
 
         {minor && (
           <div className="rounded-xl border-2 border-brand-green p-4 space-y-4 bg-brand-green/10">

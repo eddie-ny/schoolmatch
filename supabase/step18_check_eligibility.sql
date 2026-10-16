@@ -1,4 +1,4 @@
--- STEP 18 (DRAFT, NOT APPLIED): undergraduate checker now ignores Masters rows, which have no WASSCE rules. Same as step 15 otherwise.
+-- STEP 18 (APPLIED 2026-10-16): undergraduate checker now ignores Masters rows, which have no WASSCE rules. Same as step 15 otherwise.
 create or replace function public.check_eligibility(
   p_program_name text, p_scope text, p_mode text, p_grades jsonb, p_electives jsonb, p_sat int default null
 ) returns jsonb

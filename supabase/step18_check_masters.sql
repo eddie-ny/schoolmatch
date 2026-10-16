@@ -1,4 +1,4 @@
--- STEP 18 (DRAFT, NOT APPLIED): masters checker. It compares the student's first-degree class with the class each school STATES.
+-- STEP 18 (APPLIED 2026-10-16): masters checker. It compares the student's first-degree class with the class each school STATES.
 -- No thresholds are guessed. If a school did not publish a class, the label says so instead of inventing a result.
 create or replace function public.check_masters_eligibility(p_program_name text, p_degree_class text)
 returns jsonb

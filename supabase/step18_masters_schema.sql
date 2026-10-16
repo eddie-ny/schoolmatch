@@ -1,5 +1,5 @@
--- STEP 18 (DRAFT, NOT APPLIED): masters programmes. Run these files one statement at a time, in this order:
---   1. step18_masters_schema.sql  (this file, two statements)
+-- STEP 18 (APPLIED 2026-10-16): masters programmes. Statements were run one at a time. Masters rows use level = 'Masters'.
+-- Files in order: step18_masters_schema.sql, step18_check_eligibility.sql, step18_check_masters.sql.
 --   2. step18_check_eligibility.sql  (undergraduate checker now ignores Masters rows)
 --   3. step18_check_masters.sql  (new masters checker)
 -- Masters rows use level = 'Masters'.

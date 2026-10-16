@@ -31,7 +31,7 @@ function DailyChart({ daily }) {
   const total = daily.reduce((s, d) => s + d.n, 0)
   return (
     <figure className="card space-y-2 min-w-0">
-      <figcaption className="font-semibold">New sign-ups, last 30 days ({total})</figcaption>
+      <figcaption className="font-semibold">New sign-ups per day, last 30 days (total {total}, busiest day {max})</figcaption>
       <svg viewBox={`0 0 ${w} ${h + 18}`} className="w-full h-auto" role="img" aria-label={`New sign-ups per day for the last 30 days. Total ${total}. Busiest day had ${max}.`}>
         <line x1="0" x2={w} y1={h} y2={h} stroke="currentColor" opacity="0.25" />
         {daily.map((d, i) => {
@@ -40,11 +40,13 @@ function DailyChart({ daily }) {
             <g key={d.day}>
               <title>{`${d.day}: ${d.n}`}</title>
               <rect x={pad + i * bw + 1} y={h - bh} width={Math.max(bw - 2, 1)} height={bh} rx="2" fill="#5E9E4E" />
+              {d.n > 0 && <text x={pad + i * bw + bw / 2} y={h - bh - 3} fontSize="11" fontWeight="600" textAnchor="middle" fill="currentColor">{d.n}</text>}
+              {i % 5 === 0 && i !== 0 && i !== daily.length - 1 && <text x={pad + i * bw + bw / 2} y={h + 14} fontSize="10" textAnchor="middle" fill="currentColor" opacity="0.6">{String(d.day).slice(5)}</text>}
             </g>
           )
         })}
-        <text x="0" y={h + 14} fontSize="11" fill="currentColor" opacity="0.7">{daily[0]?.day}</text>
-        <text x={w} y={h + 14} fontSize="11" textAnchor="end" fill="currentColor" opacity="0.7">{daily[daily.length - 1]?.day}</text>
+        <text x="0" y={h + 14} fontSize="10" fill="currentColor" opacity="0.7">{String(daily[0]?.day || '').slice(5)}</text>
+        <text x={w} y={h + 14} fontSize="10" textAnchor="end" fill="currentColor" opacity="0.7">{String(daily[daily.length - 1]?.day || '').slice(5)}</text>
       </svg>
     </figure>
   )

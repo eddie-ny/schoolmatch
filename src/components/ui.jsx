@@ -268,11 +268,20 @@ export function SectionLabel({ children }) {
 }
 
 // Loading indicator: a spinning ring with a label for screen readers.
+// Loading placeholder: grey blocks in the shape of a page (title, then cards) instead of a blank screen or a spinner.
 export function Spinner({ label = 'Loading', className = '' }) {
   return (
-    <div role="status" className={`flex flex-col items-center justify-center gap-3 py-16 ${className}`}>
-      <span aria-hidden="true" className="w-10 h-10 rounded-full border-4 border-brand-green-soft border-t-brand-orange animate-spin" />
-      <span className="text-sm text-neutral-600">{label}...</span>
+    <div role="status" aria-busy="true" className={`animate-pulse space-y-4 py-4 ${className}`}>
+      <span className="sr-only">{label}...</span>
+      <div aria-hidden="true" className="h-8 w-2/3 max-w-xs rounded-lg bg-neutral-200" />
+      <div aria-hidden="true" className="h-4 w-full max-w-md rounded bg-neutral-200/70" />
+      {[0, 1, 2].map((i) => (
+        <div key={i} aria-hidden="true" className="rounded-2xl border border-neutral-200 bg-white p-4 space-y-3">
+          <div className="h-5 w-1/2 rounded bg-neutral-200" />
+          <div className="h-4 w-1/3 rounded bg-neutral-200/70" />
+          <div className="h-4 w-4/5 rounded bg-neutral-200/70" />
+        </div>
+      ))}
     </div>
   )
 }

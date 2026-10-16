@@ -15,7 +15,22 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root"><!-- Shown until the app loads, so the page is never blank. React replaces it. -->
+      <div role="status" aria-label="Loading" style="min-height:100vh;background:#FBFAF1;font-family:Inter,system-ui,sans-serif">
+        <style>@keyframes sk{50%{opacity:.5}}.sk{animation:sk 1.6s ease-in-out infinite}.sk i{display:block;background:#e5e5e5;border-radius:8px}</style>
+        <div style="height:64px;border-bottom:1px solid #e5e5e5;background:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 16px;max-width:1024px;margin:0 auto;box-sizing:border-box">
+          <b style="font-family:Poppins,system-ui,sans-serif;font-size:20px"><span style="color:#FFB02E">WE</span><span style="color:#B2DE2B">MK</span></b>
+          <div class="sk" style="display:flex;gap:12px"><i style="width:72px;height:36px"></i><i style="width:72px;height:36px"></i></div>
+        </div>
+        <div class="sk" style="max-width:1024px;margin:0 auto;padding:24px 16px;box-sizing:border-box">
+          <i style="height:32px;width:60%;max-width:320px;margin-bottom:16px"></i>
+          <i style="height:16px;width:90%;max-width:420px;margin-bottom:24px;opacity:.7"></i>
+          <i style="height:96px;margin-bottom:12px;background:#fff;border:1px solid #e5e5e5"></i>
+          <i style="height:96px;margin-bottom:12px;background:#fff;border:1px solid #e5e5e5"></i>
+          <i style="height:96px;background:#fff;border:1px solid #e5e5e5"></i>
+        </div>
+      </div>
+    </div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

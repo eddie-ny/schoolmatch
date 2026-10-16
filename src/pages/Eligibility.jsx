@@ -47,6 +47,57 @@ function ResultCard({ item, highlight }) {
   )
 }
 
+
+// Type to search the programs, then pick one from the matches.
+function ProgramPicker({ options, value, onChange, disabled }) {
+  const [text, setText] = useState(value || '')
+  const [open, setOpen] = useState(false)
+  const [active, setActive] = useState(0)
+  useEffect(() => { setText(value || '') }, [value])
+
+  const words = text.trim().toLowerCase().split(/\s+/).filter(Boolean)
+  const matches = useMemo(
+    () => (words.length ? options.filter((n) => words.every((w) => n.toLowerCase().includes(w))) : options),
+    [options, text] // eslint-disable-line react-hooks/exhaustive-deps
+  )
+  const shown = matches.slice(0, 10)
+
+  const pick = (name) => { onChange(name); setText(name); setOpen(false) }
+  const onKey = (e) => {
+    if (e.key === 'ArrowDown') { e.preventDefault(); setOpen(true); setActive((a) => Math.min(a + 1, shown.length - 1)) }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); setActive((a) => Math.max(a - 1, 0)) }
+    else if (e.key === 'Enter' && open && shown[active]) { e.preventDefault(); pick(shown[active]) }
+    else if (e.key === 'Escape') setOpen(false)
+  }
+
+  return (
+    <div className="relative">
+      <input
+        className="input" type="text" role="combobox" aria-expanded={open} aria-controls="program-list" aria-autocomplete="list"
+        placeholder="Start typing, for example nursing or law" autoComplete="off" disabled={disabled}
+        value={text}
+        onChange={(e) => { setText(e.target.value); setActive(0); setOpen(true); if (value) onChange('') }}
+        onFocus={() => setOpen(true)}
+        onBlur={() => setTimeout(() => setOpen(false), 150)}
+        onKeyDown={onKey}
+      />
+      {open && !disabled && (
+        <ul id="program-list" role="listbox" className="absolute z-10 left-0 right-0 mt-1 max-h-72 overflow-auto rounded-xl border border-neutral-300 bg-white shadow-lg">
+          {shown.map((n, i) => (
+            <li key={n} role="option" aria-selected={i === active}
+              className={`px-4 py-3 cursor-pointer text-sm ${i === active ? 'bg-brand-green-soft' : ''}`}
+              onMouseDown={(e) => { e.preventDefault(); pick(n) }}>
+              {n}
+            </li>
+          ))}
+          {shown.length === 0 && <li className="px-4 py-3 text-sm text-neutral-500">No program matches. Try fewer letters.</li>}
+          {matches.length > shown.length && <li className="px-4 py-2 text-xs text-neutral-500">{matches.length - shown.length} more. Keep typing to narrow it down.</li>}
+        </ul>
+      )}
+    </div>
+  )
+}
+
 function EligibilityInner() {
   const { user, saveResults } = useAuth()
   const [programs, setPrograms] = useState([])
@@ -71,7 +122,7 @@ function EligibilityInner() {
 
   // Programs offered in the chosen field, each listed once by its common name (many schools can offer it).
   const programNames = useMemo(
-    () => [...new Set(scoped.filter((p) => p.field === field).map((p) => p.group))].sort(),
+    () => [...new Set(scoped.filter((p) => !field || p.field === field).map((p) => p.group))].sort((a, b) => a.localeCompare(b)),
     [scoped, field]
   )
 
@@ -87,7 +138,7 @@ function EligibilityInner() {
     setError('')
     const chosen = electives.filter(Boolean)
     if (new Set(chosen).size !== chosen.length) return setError('Each elective can only be picked once.')
-    if (!programName) return setError('Choose a field and the program you want to study.')
+    if (!programName) return setError('Type the program you want to study and choose it from the list.')
 
     const clean = {}
     ;[...CORE_SUBJECTS, ...chosen].forEach((s) => { if (grades[s]) clean[s] = grades[s] })
@@ -156,20 +207,15 @@ function EligibilityInner() {
         <div className="card space-y-4">
           <h2 className="font-bold text-lg">2. What do you want to study?</h2>
           {SHOW_INTERNATIONAL && <Segmented value={scope} onChange={(v) => { setScope(v); setProgramName('') }} options={[{ value: 'local', label: 'Local' }, { value: 'intl', label: 'International' }, { value: 'both', label: 'Both' }]} />}
-          <Field label="Field">
+          <Field label="Field (optional)" hint="Pick a field to shorten the list, or leave it and search all programs.">
             <select className="input" value={field} onChange={(e) => { setField(e.target.value); setProgramName('') }}>
-              <option value="">Select a field</option>
+              <option value="">All fields</option>
               {FIELDS.map((f) => <option key={f.id}>{f.id}</option>)}
             </select>
           </Field>
-          {field && (
-            <Field label="Program" hint={programNames.length === 0 ? 'No programs added for this field yet.' : ''}>
-              <select className="input" value={programName} onChange={(e) => setProgramName(e.target.value)} disabled={programNames.length === 0}>
-                <option value="">Select a program</option>
-                {programNames.map((n) => <option key={n}>{n}</option>)}
-              </select>
-            </Field>
-          )}
+          <Field label="Program" hint={programNames.length === 0 ? 'No programs added yet.' : 'Type part of the name, then choose from the list.'}>
+            <ProgramPicker key={field + scope} options={programNames} value={programName} onChange={setProgramName} disabled={programNames.length === 0} />
+          </Field>
         </div>
 
         {error && <p className="text-red-700 text-sm">{error}</p>}
@@ -198,13 +244,13 @@ function EligibilityInner() {
           <h3 className="font-semibold">Schools offering {output.programName} that you qualify for</h3>
           {output.targets.length === 0 && <p className="text-neutral-600">No schools offer this program yet.</p>}
           {output.targets.length > 0 && qualified.length === 0 && (
-            <p className="text-neutral-600">You do not meet the entry requirements for any school offering this program yet. See below what is missing.</p>
+            <p className="text-neutral-600">You do not meet the entry requirements for any school offering this program yet. What is missing for each school is listed below.</p>
           )}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {qualified.map((r) => <ResultCard key={r.programId} item={r} highlight />)}
           </div>
           {notYet.length > 0 && (
-            <details className="card">
+            <details className="card" open={qualified.length === 0}>
               <summary className="font-semibold cursor-pointer">Schools offering {output.programName} that you do not qualify for yet ({notYet.length})</summary>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
                 {notYet.map((r) => <ResultCard key={r.programId} item={r} />)}

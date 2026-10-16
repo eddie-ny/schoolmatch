@@ -1,6 +1,6 @@
 # University of Ghana masters programmes (collected 2026-10-16)
 
-Status: collected, NOT yet in the database. Every row is unverified (verified column blank).
+Status: loaded into the database on 2026-10-16 (139 rows, step19_ug_masters.sql). Every row is unverified (verified column blank).
 
 ## Sources (all official University of Ghana School of Graduate Studies pages)
 - Programme list, July 2026: https://sgs.ug.edu.gh/sites/sgs.ug.edu.gh/files/2026-07/UPDATED%20LIST%20OF%20MASTERS%27%20PROGRAMMES%20AVAILABLE.pdf (no title or date printed inside the file; the 2026-07 folder name is the only date clue)

@@ -1,5 +1,5 @@
 // Result cards shared by Home, Find a School, School pages, Scholarships and Interested.
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Badge, LockedRows, VerifiedBadges } from './ui'
 
@@ -113,31 +113,72 @@ export function SchoolCard({ s, count, matches = [], to, signedIn }) {
 }
 
 export function ScholarshipCard({ s, full }) {
+  const [open, setOpen] = useState(false)
   return (
-    <article className="card flex flex-col gap-3 hover:border-brand-orange transition-colors">
-      <div className="flex items-start gap-3">
-        <Monogram name={s.funder || s.name} />
-        <div className="min-w-0 flex-1">
-          <p className="font-semibold text-sm leading-tight break-words">{s.funder}</p>
-          <p className="text-sm text-neutral-600">{s.country}</p>
+    <>
+      <article className="card flex flex-col gap-3 hover:border-brand-orange transition-colors">
+        <div className="flex items-start gap-3">
+          <Monogram name={s.funder || s.name} />
+          <div className="min-w-0 flex-1">
+            <p className="font-semibold text-sm leading-tight break-words">{s.funder}</p>
+            <p className="text-sm text-neutral-600">{s.country}</p>
+          </div>
+        </div>
+        <h3 className="text-lg font-bold leading-snug break-words">{s.name}</h3>
+        <div className="flex flex-wrap gap-2">
+          <Badge tone="green">{s.fundingType} funding</Badge>
+        </div>
+        <button className="btn btn-outline mt-auto" onClick={() => setOpen(true)} aria-haspopup="dialog">See details</button>
+      </article>
+      {open && <ScholarshipDetails s={s} full={full} onClose={() => setOpen(false)} />}
+    </>
+  )
+}
+
+// Full details and the site link, opened from the card.
+function ScholarshipDetails({ s, full, onClose }) {
+  const box = useRef(null)
+  useEffect(() => {
+    const opener = document.activeElement
+    box.current?.focus()
+    const onKey = (e) => { if (e.key === 'Escape') onClose() }
+    window.addEventListener('keydown', onKey)
+    return () => { window.removeEventListener('keydown', onKey); if (opener && document.contains(opener)) opener.focus() }
+  }, [onClose])
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 p-4" onClick={onClose}>
+      <div
+        ref={box} tabIndex={-1} role="dialog" aria-modal="true" aria-label={s.name}
+        className="bg-white rounded-2xl w-full max-w-lg max-h-[85vh] overflow-auto p-5 space-y-4 outline-none"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-start gap-3">
+          <Monogram name={s.funder || s.name} />
+          <div className="min-w-0 flex-1">
+            <p className="font-semibold text-sm leading-tight break-words">{s.funder}</p>
+            <p className="text-sm text-neutral-600">{s.country}</p>
+          </div>
+        </div>
+        <h2 className="text-xl font-bold leading-snug break-words">{s.name}</h2>
+        <div className="flex flex-wrap gap-2">
+          <Badge tone="green">{s.fundingType} funding</Badge>
+          {s.level && full && <Badge>{s.level}</Badge>}
+        </div>
+        <VerifiedBadges item={s} />
+        {full ? (
+          <dl className="text-sm grid grid-cols-2 gap-x-4 gap-y-2">
+            <dt className="text-neutral-500">Best aggregate</dt><dd>{s.minAggregate ?? 'Not added yet'}</dd>
+            <dt className="text-neutral-500">Deadline</dt><dd>{s.deadline || 'Not added yet'}</dd>
+            <dt className="text-neutral-500">Who can apply</dt><dd className="break-words">{s.criteria || 'Not added yet'}</dd>
+          </dl>
+        ) : (
+          <LockedRows rows={['Who can apply', 'Deadline']} />
+        )}
+        <div className="flex flex-wrap gap-3">
+          {full && s.link && <a className="btn btn-orange" href={s.link} target="_blank" rel="noreferrer">Visit site</a>}
+          <button className="btn btn-outline" onClick={onClose}>Close</button>
         </div>
       </div>
-      <h3 className="text-lg font-bold leading-snug break-words">{s.name}</h3>
-      <div className="flex flex-wrap gap-2">
-        <Badge tone="green">{s.fundingType} funding</Badge>
-        {s.level && full && <Badge>{s.level}</Badge>}
-      </div>
-      <VerifiedBadges item={s} />
-      {full ? (
-        <dl className="text-sm grid grid-cols-2 gap-x-4 gap-y-1">
-          <dt className="text-neutral-500">Best aggregate</dt><dd>{s.minAggregate ?? 'Not added yet'}</dd>
-          <dt className="text-neutral-500">Deadline</dt><dd>{s.deadline || 'Not added yet'}</dd>
-          <dt className="text-neutral-500">Criteria</dt><dd className="break-words">{s.criteria || 'Not added yet'}</dd>
-        </dl>
-      ) : (
-        <LockedRows rows={['Who can apply', 'Deadline']} />
-      )}
-      {full && s.link && <a className="btn btn-outline mt-auto" href={s.link} target="_blank" rel="noreferrer">Visit site</a>}
-    </article>
+    </div>
   )
 }

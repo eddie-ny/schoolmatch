@@ -49,6 +49,7 @@ function UserMenu({ user, onSignOut }) {
             <p className="text-xs text-neutral-600 truncate">{user.email}</p>
           </div>
           <Link role="menuitem" to="/profile" className={item}>Profile</Link>
+          <Link role="menuitem" to="/invite" className={item}>Invite friends</Link>
           <Link role="menuitem" to="/settings" className={item}>Account Settings</Link>
           {user.role === 'admin' && <Link role="menuitem" to="/admin" className={item}>Admin</Link>}
           {user.role === 'support' && <Link role="menuitem" to="/support" className={item}>Support</Link>}
@@ -192,6 +193,7 @@ export default function Layout() {
           <p>Starter data is unverified. Results are guidance, not a guarantee of admission.</p>
           <div className="flex flex-wrap gap-x-4 gap-y-1">
             <Link to="/pricing" className="underline inline-flex items-center min-h-11">Pricing</Link>
+            <Link to="/invite" className="underline inline-flex items-center min-h-11">Invite friends</Link>
             <Link to="/privacy" className="underline inline-flex items-center min-h-11">Privacy</Link>
             <Link to="/terms" className="underline inline-flex items-center min-h-11">Terms</Link>
             <Link to="/refunds" className="underline inline-flex items-center min-h-11">Refunds</Link>

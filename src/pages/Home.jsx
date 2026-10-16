@@ -240,7 +240,7 @@ export default function Home() {
                     </p>
                     <div className="flex flex-wrap gap-3">
                       {user ? (
-                        <Link to="/pricing" className="btn btn-orange">See plans</Link>
+                        <Link to="/pricing" className="btn btn-orange">See pricing</Link>
                       ) : (
                         <>
                           <Link to="/signup" className="btn btn-orange">Sign up free</Link>

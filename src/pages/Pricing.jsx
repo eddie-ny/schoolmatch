@@ -52,7 +52,7 @@ export default function Pricing() {
 
   return (
     <div className="max-w-2xl">
-      <PageTitle title="Plans" sub="Start with the 24-hour free trial. Subscribe for full details." />
+      <PageTitle title="Pricing" sub="Start with the 24-hour free trial. Subscribe for full details." />
       <div className="grid grid-cols-2 gap-4 mb-5">
         {plans.map((p) => (
           <button

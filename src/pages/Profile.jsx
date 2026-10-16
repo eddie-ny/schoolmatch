@@ -136,7 +136,7 @@ function ProfileInner() {
       <div className="card space-y-2">
         <SectionLabel>Access</SectionLabel>
         <p className="text-sm">{access.detail}{access.expiresAt ? `, ${timeLeft(access.expiresAt)} left` : ''}</p>
-        <Link to="/pricing" className="btn btn-green">See plans</Link>
+        <Link to="/pricing" className="btn btn-green">See pricing</Link>
         <p className="text-sm text-neutral-600">Name, phone, password and closing your account are in <Link to="/settings" className="underline">Settings</Link>.</p>
       </div>
     </div>

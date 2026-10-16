@@ -55,7 +55,7 @@ function SettingsInner() {
           <p className="text-sm text-neutral-700">{user.email}</p>
           <p className="text-xs text-neutral-600 mt-1">Signed in with email and password</p>
         </div>
-        <p className="text-sm text-neutral-600">Phone, school details and documents are on your <Link to="/profile" className="underline">profile</Link>. Plans are on the <Link to="/pricing" className="underline">plans page</Link>.</p>
+        <p className="text-sm text-neutral-600">Phone, school details and documents are on your <Link to="/profile" className="underline">profile</Link>. Prices are on the <Link to="/pricing" className="underline">pricing page</Link>.</p>
       </section>
 
       <section className="space-y-3">

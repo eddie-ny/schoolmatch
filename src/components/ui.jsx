@@ -28,7 +28,7 @@ export function Gate({ text }) {
     <div className="rounded-xl border border-dashed border-brand-orange p-4 bg-brand-orange/10">
       <p className="text-sm mb-3">{text || (user ? 'Subscribe to see the full details.' : 'Sign in to see more.')}</p>
       {user ? (
-        <Link to="/pricing" className="btn btn-orange">See plans</Link>
+        <Link to="/pricing" className="btn btn-orange">See pricing</Link>
       ) : (
         <div className="flex gap-3">
           <Link to="/login" className="btn btn-outline">Sign in</Link>

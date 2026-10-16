@@ -14,7 +14,7 @@ const links = [
   ...(SHOW_INTERNATIONAL ? [{ to: '/abroad', label: 'Study Abroad' }] : []),
   { to: '/scholarships', label: 'Scholarships' },
   { to: '/eligibility', label: 'Check My Eligibility' },
-  { to: '/pricing', label: 'Plans' },
+  { to: '/pricing', label: 'Pricing' },
 ]
 
 // Name + chevron button that opens the account menu (GoScholar-style). Click, Enter or Space opens it;
@@ -148,7 +148,7 @@ export default function Layout() {
 
         {user && access.level === 'full' && access.trial && (
           <div className="bg-brand-green/20 text-sm text-center py-2 px-4">
-            Free trial: {timeLeft(access.expiresAt)} left. <Link to="/pricing" className="underline font-semibold inline-block py-2">See plans</Link>
+            Free trial: {timeLeft(access.expiresAt)} left. <Link to="/pricing" className="underline font-semibold inline-block py-2">See pricing</Link>
           </div>
         )}
         {user && access.level === 'summary' && (
@@ -191,7 +191,7 @@ export default function Layout() {
         <div className="max-w-5xl mx-auto px-4 py-6 flex flex-col gap-2">
           <p>Starter data is unverified. Results are guidance, not a guarantee of admission.</p>
           <div className="flex flex-wrap gap-x-4 gap-y-1">
-            <Link to="/pricing" className="underline inline-flex items-center min-h-11">Plans</Link>
+            <Link to="/pricing" className="underline inline-flex items-center min-h-11">Pricing</Link>
             <Link to="/privacy" className="underline inline-flex items-center min-h-11">Privacy</Link>
             <Link to="/terms" className="underline inline-flex items-center min-h-11">Terms</Link>
             <Link to="/refunds" className="underline inline-flex items-center min-h-11">Refunds</Link>

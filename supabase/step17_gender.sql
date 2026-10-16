@@ -1,5 +1,5 @@
--- STEP 17 (DRAFT, NOT APPLIED): store gender at sign-up and show it on the scholarships summary view.
--- Run these two statements one at a time.
+-- STEP 17 (DRAFT, NOT APPLIED): store gender at sign-up, let students edit it, and show it on the scholarships summary view.
+-- Run the three statements one at a time (A, B, C).
 
 -- A. Sign-up trigger saves gender from the signup form (only 'female' or 'male').
 create or replace function public.handle_new_user() returns trigger
@@ -45,3 +45,6 @@ $$;
 
 -- B. Summary view also exposes gender, so people without full access also do not see the other gender's scholarships.
 create or replace view public.scholarships_summary as select id, name, funder, country, funding_type, verified, demo, gender from public.scholarships;
+
+-- C. Students can edit their own gender on the Profile page. Without this grant the Profile save fails.
+grant update (gender) on public.profiles to authenticated;

@@ -76,3 +76,6 @@ export const FIELDS = [
 // Launch is local (Ghana) only. International schools and scholarships stay in the database and the code;
 // set this to true to bring them back everywhere (filters, Study Abroad page, eligibility scope).
 export const SHOW_INTERNATIONAL = false
+
+// First-degree classes, best first. Used by the masters checker.
+export const DEGREE_CLASSES = ['First Class', 'Second Class Upper', 'Second Class Lower', 'Third Class', 'Pass']

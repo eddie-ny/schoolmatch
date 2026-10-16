@@ -18,6 +18,7 @@ export default function Programs() {
   const [shown, setShown] = useState(PAGE)
   const q = params.get('q') || ''
   const field = params.get('field') || ''
+  const level = params.get('level') || ''
   const full = access.level === 'full'
 
   const setParam = (k, v) => {
@@ -32,16 +33,22 @@ export default function Programs() {
   const list = useMemo(() => {
     const needle = q.trim().toLowerCase()
     return programs
+      .filter((p) => !level || (p.level || 'Undergraduate').toLowerCase() === level.toLowerCase())
       .filter((p) => !field || (p.field || '').toLowerCase() === field.toLowerCase())
       .filter((p) => !needle || `${p.name} ${p.field || ''} ${p.schoolName}`.toLowerCase().includes(needle))
       .sort((a, b) => a.name.localeCompare(b.name) || a.schoolName.localeCompare(b.schoolName))
-  }, [programs, q, field])
+  }, [programs, q, field, level])
 
   return (
     <div>
       <PageTitle title="Programs" sub="Every program we have, at every university. Press the heart to keep one." />
       <div className="space-y-3 mb-6">
         <input className="input" placeholder="Search by program, field or university (for example law, nursing, KNUST)" value={q} onChange={(e) => setParam('q', e.target.value)} aria-label="Search programs" />
+        <select className="input !w-auto" value={level} onChange={(e) => setParam('level', e.target.value)} aria-label="Level of study">
+          <option value="">All levels</option>
+          <option>Undergraduate</option>
+          <option>Masters</option>
+        </select>{' '}
         <select className="input !w-auto" value={field} onChange={(e) => setParam('field', e.target.value)} aria-label="Field of study">
           <option value="">Any field</option>
           {FIELDS.map((f) => <option key={f.id}>{f.id}</option>)}

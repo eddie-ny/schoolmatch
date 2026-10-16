@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useEffect } from 'react'
-import { listEligibilityPrograms, checkEligibility } from '../lib/api'
-import { CORE_SUBJECTS, ELECTIVE_SUBJECTS, GRADES, DISCLAIMER, FIELDS, SHOW_INTERNATIONAL } from '../lib/constants'
+import { listEligibilityPrograms, checkEligibility, checkMastersEligibility } from '../lib/api'
+import { CORE_SUBJECTS, ELECTIVE_SUBJECTS, GRADES, DISCLAIMER, FIELDS, SHOW_INTERNATIONAL, DEGREE_CLASSES } from '../lib/constants'
 import { Badge, Field, Gate, PageTitle, RequireAuth, Segmented, Spinner } from '../components/ui'
 
 const labelTone = {
@@ -13,6 +13,9 @@ const labelTone = {
   'Long shot': 'orange',
   'No data yet': 'gray',
   'Not yet eligible': 'gray',
+  'Meets stated class': 'green',
+  'Class not published': 'gray',
+  'Below stated class': 'orange',
 }
 
 function GradeSelect({ value, onChange }) {
@@ -35,13 +38,17 @@ function ResultCard({ item, highlight }) {
       <h3 className="font-bold">{item.programName}</h3>
       <p className="text-sm text-neutral-600">{item.schoolName}</p>
       <div className="text-sm space-y-1">
+        {item.label === 'Meets stated class' || item.label === 'Below stated class' || item.label === 'Class not published' ? (
+          <p>{item.requiredClass ? `Lowest first-degree class the school states: ${item.requiredClass}` : 'The school does not publish a minimum class. Check with the school.'}</p>
+        ) : null}
+        {item.entryNote && <p className="text-neutral-600">{item.entryNote}</p>}
         {item.aggregate != null && (
           <p>Your aggregate: <b>{item.aggregate}</b>{item.cutoff != null ? ` · Usual cut-off: ${item.cutoff}` : ' · No cut-off data yet'}</p>
         )}
-        {item.failures.length > 0 && (
+        {item.failures && item.failures.length > 0 && (
           <ul className="list-disc ml-5 text-neutral-700">{item.failures.map((f) => <li key={f}>{f}</li>)}</ul>
         )}
-        {item.notes.map((n) => <p key={n} className="text-neutral-600">{n}</p>)}
+        {(item.notes || []).map((n) => <p key={n} className="text-neutral-600">{n}</p>)}
       </div>
     </div>
   )
@@ -105,6 +112,9 @@ function EligibilityInner() {
   const [busy, setBusy] = useState(false)
   useEffect(() => { listEligibilityPrograms().then(setPrograms).catch((e) => setError(e.message)).finally(() => setLoading(false)) }, [])
   const saved = user.results
+  const [level, setLevel] = useState('undergraduate')
+  const [degreeClass, setDegreeClass] = useState('')
+  const masters = level === 'masters'
   const [mode, setMode] = useState(saved?.mode || 'final')
   const [grades, setGrades] = useState(saved?.grades || {})
   const [electives, setElectives] = useState(saved?.electives || ['', '', ''])
@@ -116,8 +126,10 @@ function EligibilityInner() {
   const [error, setError] = useState('')
 
   const scoped = useMemo(
-    () => programs.filter((p) => scope === 'both' || (scope === 'local' ? !p.international : p.international)),
-    [programs, scope]
+    () => programs
+      .filter((p) => (masters ? p.level === 'Masters' : p.level !== 'Masters'))
+      .filter((p) => scope === 'both' || (scope === 'local' ? !p.international : p.international)),
+    [programs, scope, masters]
   )
 
   // Programs offered in the chosen field, each listed once by its common name (many schools can offer it).
@@ -136,6 +148,14 @@ function EligibilityInner() {
   const run = async (e) => {
     e.preventDefault()
     setError('')
+    if (masters) {
+      if (!degreeClass) return setError('Choose your first-degree class.')
+      if (!programName) return setError('Type the masters program you want and choose it from the list.')
+      setBusy(true)
+      try { setOutput(await checkMastersEligibility({ programName, degreeClass })) } catch (err) { setError(err.message) }
+      setBusy(false)
+      return
+    }
     const chosen = electives.filter(Boolean)
     if (new Set(chosen).size !== chosen.length) return setError('Each elective can only be picked once.')
     if (!programName) return setError('Type the program you want to study and choose it from the list.')
@@ -170,7 +190,21 @@ function EligibilityInner() {
     <div className="space-y-8 max-w-3xl">
       <PageTitle title="Check My Eligibility" sub="Choose what you want to study. We check it first, then show every school that offers it." />
 
+      <Segmented value={level} onChange={(v) => { setLevel(v); setProgramName(''); setField(''); setOutput(null); setError('') }}
+        options={[{ value: 'undergraduate', label: 'Undergraduate' }, { value: 'masters', label: 'Masters' }]} />
+
       <form onSubmit={run} className="space-y-6">
+        {masters ? (
+        <div className="card space-y-4">
+          <h2 className="font-bold text-lg">1. Your first degree</h2>
+          <Field label="Degree class" hint="Schools set their own minimum class. We compare yours with the class each school states, and we say so when a school does not publish one.">
+            <select className="input" value={degreeClass} onChange={(e) => setDegreeClass(e.target.value)}>
+              <option value="">Choose class</option>
+              {DEGREE_CLASSES.map((c) => <option key={c}>{c}</option>)}
+            </select>
+          </Field>
+        </div>
+        ) : (
         <div className="card space-y-4">
           <h2 className="font-bold text-lg">1. Your results</h2>
           <Segmented value={mode} onChange={setMode} options={[{ value: 'final', label: 'Final WASSCE results' }, { value: 'terminal', label: 'Terminal or mock' }]} />
@@ -203,6 +237,7 @@ function EligibilityInner() {
             <input className="input" type="number" inputMode="numeric" value={sat} onChange={(e) => setSat(e.target.value)} />
           </Field>)}
         </div>
+        )}
 
         <div className="card space-y-4">
           <h2 className="font-bold text-lg">2. What do you want to study?</h2>
@@ -213,7 +248,7 @@ function EligibilityInner() {
               {FIELDS.map((f) => <option key={f.id}>{f.id}</option>)}
             </select>
           </Field>
-          <Field label="Program" hint={programNames.length === 0 ? 'No programs added yet.' : 'Type part of the name, then choose from the list.'}>
+          <Field label="Program" hint={programNames.length === 0 ? (masters ? 'No masters programs added yet. We are adding them school by school.' : 'No programs added yet.') : 'Type part of the name, then choose from the list.'}>
             <ProgramPicker key={field + scope} options={programNames} value={programName} onChange={setProgramName} disabled={programNames.length === 0} />
           </Field>
         </div>
@@ -230,7 +265,23 @@ function EligibilityInner() {
         </section>
       )}
 
-      {output && !output.locked && (
+      {output && !output.locked && output.yourClass && (
+        <section className="space-y-4">
+          <h2 className="text-xl font-bold">Results</h2>
+          <p>Your first-degree class: <b>{output.yourClass}</b>. Each school sets its own entry rules, so confirm with the school before you apply.</p>
+          <h3 className="font-semibold">Schools offering {output.programName}</h3>
+          {output.targets.length === 0 && <p className="text-neutral-600">No schools offer this masters program yet.</p>}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {output.targets.map((r) => <ResultCard key={r.programId} item={r} highlight />)}
+          </div>
+          {output.others.length > 0 && <h3 className="font-semibold">Other masters programs</h3>}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {output.others.map((r) => <ResultCard key={r.programId} item={r} />)}
+          </div>
+        </section>
+      )}
+
+      {output && !output.locked && !output.yourClass && (
         <section className="space-y-4">
           <h2 className="text-xl font-bold">Results</h2>
           {output.aggregate != null

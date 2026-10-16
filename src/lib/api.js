@@ -469,6 +469,13 @@ export async function checkEligibility({ programName, scope, mode, grades, elect
   return data
 }
 
+// Masters: compares the student's first-degree class with the class each school states. No thresholds are guessed.
+export async function checkMastersEligibility({ programName, degreeClass }) {
+  const { data, error } = await supabase.rpc('check_masters_eligibility', { p_program_name: programName, p_degree_class: degreeClass })
+  fail(error, 'Could not check masters eligibility.')
+  return data
+}
+
 // ---------- Payments (Paystack, through the server function) ----------
 // Plan prices from a spreadsheet. The sheet has the price in normal money (for example 49.50); the database keeps
 // the smallest unit (pesewas), so we convert here. Existing plans are updated by id, new ids are added.

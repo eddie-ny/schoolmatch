@@ -1,4 +1,4 @@
--- STEP 21: UCC masters programmes (102 rows, all unverified). Source: data/ghana-public-universities/ucc_masters.csv
+-- STEP 21 (APPLIED 2026-10-18): UCC masters programmes (102 rows, all unverified). Source: data/ghana-public-universities/ucc_masters.csv
 -- Skips any programme already present. Run as one statement.
 insert into public.programs (school_id, name, level, field, min_degree_class, entry_note, verified)
 select s.id, v.name, 'Masters', v.field, 'Second Class Lower', v.note, false

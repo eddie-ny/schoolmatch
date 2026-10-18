@@ -1,0 +1,6 @@
+-- STEP 38 (APPLIED 2026-10-18): UDS BSc Nursing and BSc Midwifery stated maximum aggregate 10 (year 2025, science students; non-science 9). Official source.
+-- Source: https://uds.edu.gh/logmein/uploads/documents/Undergraduate_Programmes-2025-2026-Academic-Year.pdf and https://uds.edu.gh/admissions/cut-off-points (2023/2024 health-science cut-offs).
+with p as (select pr.id from public.programs pr join public.schools s on s.id = pr.school_id where s.name = 'University for Development Studies' and pr.name in ('BSc Nursing','BSc Midwifery') and coalesce(pr.level,'Undergraduate') <> 'Masters'),
+c as (insert into public.program_cutoffs (program_id, year, cutoff_aggregate) select id, 2025, 10 from p on conflict (program_id, year) do nothing returning 1),
+u as (update public.programs set entry_note = trim(both ' ' from coalesce(entry_note || ' ', '') || 'Aggregate 10 is the stated maximum for science students (non-science: 9) in the UDS 2025/2026 undergraduate programmes PDF. The 2023/2024 health-science cut-offs on the UDS site were science male 9, female 10; non-science male 7, female 8.') where id in (select id from p) returning 1)
+select (select count(*) from c) as cutoffs, (select count(*) from u) as updated;

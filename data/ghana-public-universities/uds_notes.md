@@ -23,3 +23,7 @@ Files: uds_school.csv (1 row), uds_programs.csv (68 programme rows). Left from a
 
 ## Needs a follow-up pass
 Re-read the rest of the PDF (Faculty of Agriculture, Natural Resources, Law) and the two web pages when fetch is available.
+
+## 2026-10-18 cut-offs
+- BSc Nursing and BSc Midwifery got stated maximum aggregate 10 (science students; non-science 9) from the official 2025/2026 undergraduate programmes PDF. The 2023/2024 official health-science cut-offs (science male 9, female 10; non-science male 7, female 8) are in the entry note.
+- Still blank because the official PDF prints no cut-off: Public Health, Land Administration, Planning, Development Education Studies, Basic Education, Social Science, Arabic, Dagbani, Law and the natural resources programmes. The 25 rows loaded earlier from another source (business, science, computing) have no cut-off figure either.

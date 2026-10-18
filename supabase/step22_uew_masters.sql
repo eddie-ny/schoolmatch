@@ -1,4 +1,4 @@
--- STEP 22: UEW masters programmes (109 rows, all unverified, class left blank). Source: data/ghana-public-universities/uew_masters.csv
+-- STEP 22 (APPLIED 2026-10-18): UEW masters programmes (109 rows, all unverified, class left blank). Source: data/ghana-public-universities/uew_masters.csv
 -- Skips any programme already present. Run as one statement.
 insert into public.programs (school_id, name, level, field, duration_years, entry_note, verified)
 select s.id, v.name, 'Masters', v.field, v.dur,

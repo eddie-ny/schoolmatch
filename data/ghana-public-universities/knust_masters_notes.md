@@ -1,6 +1,6 @@
 # KNUST masters programmes (collected 2026-10-18)
 
-Status: collected, NOT yet in the database. Every row is unverified (verified column blank). 218 rows.
+Status: loaded into the database on 2026-10-18 (218 rows, step20_knust_masters.sql). Every row is unverified (verified column blank). 218 rows.
 
 ## Sources (all official KNUST pages)
 - 2026/27 postgraduate admission requirements PDF (class and rule per programme): https://www.knust.edu.gh/sites/default/files/2026-06/POSTGRADUATE%20ADMISSION%20REQUIREMENTS%20-%202026-2027.pdf

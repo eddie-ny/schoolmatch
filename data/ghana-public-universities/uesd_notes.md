@@ -18,3 +18,6 @@ Development Administration, Gender and Development, Aquaculture Resources Manage
 - Fields are my classification, not stated by the university. Durations only where the page states four years.
 - The Programme list calls one programme "Physics and Mathematics"; its page title is "Physics and Mathematical Sciences" (page title used).
 - A 2022 news article (https://www.uesd.edu.gh/?p=9613) lists 20 programmes and a C6 core rule; older than the programme pages, not used for values.
+
+## 2026-10-18 stated maximum aggregate
+- Programmes without a cut-off now carry the school's stated maximum entry aggregate (cutoff_type stated_max_aggregate, year 2026) from its official entry-requirements page: GCTU 36 (24 for SSSCE), UESD 36 (24 for BSc Economics and BSc Development Economics), UMaT 36. This is an entry maximum, not a past cut-off. The earlier notes said these were deliberately not stored; they were added because the client wants blanks filled.

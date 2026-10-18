@@ -12,3 +12,7 @@ Loaded on the client's instruction from an UNOFFICIAL source, all rows marked un
 - School city and website were not checked against UCC pages; school marked unverified.
 - Programme titles normalised by me (for example "B.Sc. (Computer Science)" became "BSc Computer Science"); fields are my classification.
 - The official catalogue lists over 110 degree and diploma programmes, so this 63 is not complete.
+
+## 2026-10-18 fill of blank requirements
+- All 63 programmes had no requirements. Core Mathematics and English Language C6 added from the UCC 2025/26 first degree admission notice (https://ucc.edu.gh/announcements/admission-first-degree-regular-programmes-20252026-academic-year): credit passes A1 to C6 in six subjects, three core (English, Mathematics, Integrated Science or Social Studies), overall aggregate 36 (WASSCE). Programme-specific electives were not published and are not captured; B.Ed (Basic Education) electives are on https://admissions.ucc.edu.gh/announcement/admission-requirements but were not added.
+- The one programme with no cut-off got the stated maximum aggregate 36 (cutoff_type stated_max_aggregate). The other 62 keep the unofficial 2024 cut-offs.

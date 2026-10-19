@@ -6,3 +6,6 @@
 
 ## 2026-10-18 stated maximum aggregate
 - Programmes without a cut-off now carry the school's stated maximum entry aggregate (cutoff_type stated_max_aggregate, year 2026) from its official entry-requirements page: GCTU 36 (24 for SSSCE), UESD 36 (24 for BSc Economics and BSc Development Economics), UMaT 36. This is an entry maximum, not a past cut-off. The earlier notes said these were deliberately not stored; they were added because the client wants blanks filled.
+
+## 2026-10-19 fee-paying check
+The official notice at https://www.umat.edu.gh/media-press/news/undergraduate-admission-forms is dated 2010/2011 (marks BSc Petroleum Engineering as a fee-paying programme and a sponsored route with minimum aggregate 36). Too old to load as current data. No variant rows added.

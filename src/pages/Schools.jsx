@@ -84,6 +84,9 @@ export function SchoolDetail() {
   const q = params.get('q') || ''
   const field = params.get('field') || ''
   const only = params.get('program') || ''
+  const level = params.get('level') || ''
+  const mode = params.get('mode') || ''
+  const campus = params.get('campus') || ''
   const setParam = (k, v) => {
     const next = new URLSearchParams(params)
     if (v) next.set(k, v)
@@ -96,13 +99,22 @@ export function SchoolDetail() {
   if (!user) return <Gate />
 
   const allProgs = programs.filter((p) => p.schoolId === school.id)
+  // Filters appear only where they can do something at this school: levels if it has both, then modes and campuses of the chosen level.
+  const levelOf = (p) => p.level || 'Undergraduate'
+  const levels = ['Undergraduate', 'Masters'].filter((l) => allProgs.some((p) => levelOf(p) === l))
+  const inLevel = allProgs.filter((p) => !level || levelOf(p) === level)
+  const modes = ['Regular', 'Fee-paying', 'Distance', 'Evening', 'Weekend', 'Sandwich'].filter((m) => inLevel.some((p) => (p.mode || 'Regular') === m))
+  const campuses = [...new Set(inLevel.map((p) => p.campus).filter(Boolean))].sort()
   const needle = q.trim().toLowerCase()
   const progs = groupPrograms(allProgs.filter((p) =>
     (!only || p.id === only) &&
+    (!level || levelOf(p) === level) &&
+    (!mode || (p.mode || 'Regular') === mode) &&
+    (!campus || p.campus === campus) &&
     (!field || (p.field || '').toLowerCase() === field.toLowerCase()) &&
     (!needle || ((p.name || '') + ' ' + (p.field || '')).toLowerCase().includes(needle))
   ))
-  const filtered = !!(only || field || needle)
+  const filtered = !!(only || field || needle || level || mode || campus)
   const full = access.level === 'full'
 
   return (
@@ -122,8 +134,27 @@ export function SchoolDetail() {
           {school.website && <a href={school.website} target="_blank" rel="noreferrer" className="underline">{school.website}</a>}
           <h2 className="text-lg font-bold">Programs</h2>
           <input className="input" placeholder="Search this school's programs (for example law)" value={q} onChange={(e) => setParam('q', e.target.value, ['program'])} aria-label="Search programs at this school" />
+          {levels.length > 1 && (
+            <Segmented
+              value={level}
+              onChange={(v) => { const n = new URLSearchParams(params); n.delete('mode'); n.delete('campus'); n.delete('program'); if (v) n.set('level', v); else n.delete('level'); setParams(n, { replace: true }) }}
+              options={[{ value: '', label: 'All levels' }, ...levels.map((l) => ({ value: l, label: l }))]}
+            />
+          )}
+          {modes.length > 1 && (
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-sm text-neutral-600">Way of studying</span>
+              <Segmented value={mode} onChange={(v) => setParam('mode', v)} options={[{ value: '', label: 'All' }, ...modes.map((m) => ({ value: m, label: m }))]} />
+            </div>
+          )}
+          {campuses.length > 0 && (
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-sm text-neutral-600">Campus</span>
+              <Segmented value={campus} onChange={(v) => setParam('campus', v)} options={[{ value: '', label: 'All' }, ...campuses.map((c) => ({ value: c, label: c }))]} />
+            </div>
+          )}
           <p className="text-sm text-neutral-600">
-            {filtered ? `Showing ${progs.length} of ${allProgs.length} programs. ` : `${allProgs.length} programs. `}
+            {filtered ? `Showing ${progs.length} of ${new Set(allProgs.map((p) => `${p.name}|${p.level}`)).size} programs. ` : `${new Set(allProgs.map((p) => `${p.name}|${p.level}`)).size} programs. `}
             {filtered && <button type="button" className="underline" onClick={() => setParams({}, { replace: true })}>Show all programs</button>}
           </p>
           {allProgs.length === 0 && <p className="text-neutral-600">No programs added yet.</p>}

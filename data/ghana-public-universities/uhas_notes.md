@@ -4,3 +4,6 @@
 - Not filled: Dental Surgery, Psychology (combined), Health Services Administration (not in that table).
 - The Graphic Online article (https://www.graphic.com.gh/news/education/see-the-cut-off-grades-for-the-uhas-2024-2025-undergraduate-admissions.html) holds its figures only in an embedded slide, so none could be read.
 - A Graphic Online article (https://www.graphic.com.gh/news/education/see-the-cut-off-points-for-admission-at-the-university-for-development-studies.html) lists health-science cut-offs (MBChB 9, Pharmacy 12, Nursing, Midwifery and others). They match the official UDS page https://uds.edu.gh/admissions/cut-off-points (2023/2024), so they are UDS figures, not UHAS. Not used for UHAS.
+
+## 2026-10-19 fee-paying check
+The Graphic Online 2024/2025 UHAS cut-off article (https://www.graphic.com.gh/news/education/see-the-cut-off-grades-for-the-uhas-2024-2025-undergraduate-admissions.html) embeds the table as a SlideShare, so no figures could be read. No fee-paying data found for UHAS, AAMUSTED or CKT-UTAS in searches today.

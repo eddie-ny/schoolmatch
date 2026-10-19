@@ -4,3 +4,6 @@ Programmes: official list has 35 entries; 34 captured. Skipped: B.Sc. Paediatric
 Core grades: C6 in English and Core Mathematics stated for all degrees (general rule). Science core left blank (rule is Integrated Science or Social Studies). Aggregate 36 or better is a general rule, not a programme cut-off, so not entered.
 Cut-offs: only Nursing and Midwifery state "aggregate 14 or better" (entered as stated_max_aggregate, year blank as the page is undated). No cut-off list found. Electives are not listed per programme (departmental requirements are not published); Medical Laboratory Science and Nursing electives are given in source_note only.
 verified left blank because each row combines two pages. Prospectus and PDFs: none found. All pages loaded. Fees blank by rule.
+
+## 2026-10-19 stated maximum aggregate
+- Programmes without a cut-off got the stated entry maximum from https://utas.edu.gh/undergraduate-entry-requirements/: aggregate 36 or better in the best six subjects (three core, three electives); BSc Nursing and BSc Midwifery 14. Type stated_max_aggregate, year 2026. Not past cut-offs.

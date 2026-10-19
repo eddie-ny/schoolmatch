@@ -29,5 +29,14 @@ export function useSaved() {
     }
   }, [uid, ids, nav])
 
-  return { ids, toggle, error }
+  // A card stands for every way of studying a programme. It is kept if any of them is kept, and removing it removes them all.
+  const idsOf = (p) => (p.variants || [p]).map((v) => v.id)
+  const isSaved = (p) => idsOf(p).some((id) => ids.has(id))
+  const toggleProgram = (p) => {
+    const on = idsOf(p).filter((id) => ids.has(id))
+    if (on.length) on.forEach((id) => toggle(id))
+    else toggle(p.id)
+  }
+
+  return { ids, toggle, error, isSaved, toggleProgram }
 }

@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { useCatalog, isLocal } from '../hooks/useCatalog'
 import { Gate, PageTitle, Segmented, VerifiedBadges, Spinner } from '../components/ui'
 import { Monogram, ProgramCard, SchoolCard } from '../components/Cards'
+import { groupPrograms } from '../lib/variants'
 import { useSaved } from '../hooks/useSaved'
 import { FIELDS, SHOW_INTERNATIONAL } from '../lib/constants'
 
@@ -96,11 +97,11 @@ export function SchoolDetail() {
 
   const allProgs = programs.filter((p) => p.schoolId === school.id)
   const needle = q.trim().toLowerCase()
-  const progs = allProgs.filter((p) =>
+  const progs = groupPrograms(allProgs.filter((p) =>
     (!only || p.id === only) &&
     (!field || (p.field || '').toLowerCase() === field.toLowerCase()) &&
     (!needle || ((p.name || '') + ' ' + (p.field || '')).toLowerCase().includes(needle))
-  )
+  ))
   const filtered = !!(only || field || needle)
   const full = access.level === 'full'
 
@@ -129,7 +130,7 @@ export function SchoolDetail() {
           {allProgs.length > 0 && progs.length === 0 && <p className="text-neutral-600">No programs match. Clear the search to see them all.</p>}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {progs.map((p) => (
-              <ProgramCard key={p.id} p={p} school={school} full={full} saved={saved.ids.has(p.id)} onToggle={saved.toggle} hideSchool />
+              <ProgramCard key={p.id} p={p} school={school} full={full} saved={saved.isSaved(p)} onToggle={saved.toggleProgram} hideSchool />
             ))}
           </div>
         </>

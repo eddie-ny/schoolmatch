@@ -6,6 +6,7 @@ import { useSaved } from '../hooks/useSaved'
 import { PageTitle } from '../components/ui'
 import { ProgramCard } from '../components/Cards'
 import { FIELDS } from '../lib/constants'
+import { groupPrograms } from '../lib/variants'
 
 const PAGE = 24
 
@@ -35,12 +36,12 @@ export default function Programs() {
   const campuses = useMemo(() => [...new Set(programs.map((p) => p.campus).filter(Boolean))].sort(), [programs])
   const list = useMemo(() => {
     const needle = q.trim().toLowerCase()
-    return programs
+    return groupPrograms(programs
       .filter((p) => !level || (p.level || 'Undergraduate').toLowerCase() === level.toLowerCase())
       .filter((p) => !mode || (p.mode || 'Regular') === mode)
       .filter((p) => !campus || p.campus === campus)
       .filter((p) => !field || (p.field || '').toLowerCase() === field.toLowerCase())
-      .filter((p) => !needle || `${p.name} ${p.field || ''} ${p.schoolName}`.toLowerCase().includes(needle))
+      .filter((p) => !needle || `${p.name} ${p.field || ''} ${p.schoolName}`.toLowerCase().includes(needle)))
       .sort((a, b) => a.name.localeCompare(b.name) || a.schoolName.localeCompare(b.schoolName))
   }, [programs, q, field, level, mode, campus])
 
@@ -82,9 +83,8 @@ export default function Programs() {
                 p={p}
                 school={schoolById[p.schoolId]}
                 full={full}
-                saved={saved.ids.has(p.id)}
-                onToggle={saved.toggle}
-                to={full ? `/schools/${p.schoolId}?program=${p.id}` : null}
+                saved={saved.isSaved(p)}
+                onToggle={saved.toggleProgram}
               />
             ))}
           </div>

@@ -5,6 +5,7 @@ import { useCatalog } from '../hooks/useCatalog'
 import { useSaved } from '../hooks/useSaved'
 import { Gate, PageTitle, Spinner } from '../components/ui'
 import { ProgramCard } from '../components/Cards'
+import { groupPrograms } from '../lib/variants'
 
 // Programs the student hearted, grouped by university.
 export default function Interested() {
@@ -16,7 +17,7 @@ export default function Interested() {
   const groups = useMemo(() => {
     const byId = Object.fromEntries(schools.map((s) => [s.id, s]))
     const g = {}
-    programs.filter((p) => saved.ids.has(p.id)).forEach((p) => { (g[p.schoolId] ||= { school: byId[p.schoolId], items: [] }).items.push(p) })
+    groupPrograms(programs.filter((p) => saved.ids.has(p.id))).forEach((p) => { (g[p.schoolId] ||= { school: byId[p.schoolId], items: [] }).items.push(p) })
     return Object.values(g).sort((a, b) => (a.school?.name || '').localeCompare(b.school?.name || ''))
   }, [schools, programs, saved.ids])
 
@@ -40,7 +41,7 @@ export default function Interested() {
               <h2 className="text-lg font-bold">{school?.name}</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {items.map((p) => (
-                  <ProgramCard key={p.id} p={p} school={school} full={full} saved onToggle={saved.toggle} hideSchool to={`/schools/${p.schoolId}?program=${p.id}`} />
+                  <ProgramCard key={p.id} p={p} school={school} full={full} saved onToggle={saved.toggleProgram} hideSchool />
                 ))}
               </div>
             </section>

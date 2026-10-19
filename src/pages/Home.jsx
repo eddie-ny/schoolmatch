@@ -6,6 +6,7 @@ import { FIELDS, SHOW_INTERNATIONAL } from '../lib/constants'
 import { Segmented, Spinner } from '../components/ui'
 import { ProgramCard, SchoolCard, ScholarshipCard } from '../components/Cards'
 import { useSaved } from '../hooks/useSaved'
+import { groupPrograms } from '../lib/variants'
 
 const tasks = [
   { to: '/schools', title: 'Find a School', text: SHOW_INTERNATIONAL ? 'Search local and international schools and programs.' : 'Search Ghanaian universities and their programs.', bar: 'border-l-brand-orange' },
@@ -93,7 +94,7 @@ export default function Home() {
     return out.filter((r) => where === 'all' || (where === 'local' ? r.local : !r.local))
   }, [schools, scholarships, where, funding])
 
-  const fieldPrograms = useMemo(() => programs.filter((p) => p.field === field), [programs, field])
+  const fieldPrograms = useMemo(() => groupPrograms(programs.filter((p) => p.field === field)), [programs, field])
   const fieldSchoolCount = new Set(fieldPrograms.map((p) => p.schoolId)).size
   const full = access.level === 'full'
   const TEASE = 3 // how many programs a visitor sees before the rest are locked
@@ -221,9 +222,8 @@ export default function Home() {
                       p={p}
                       school={schoolById[p.schoolId]}
                       full={full}
-                      saved={saved.ids.has(p.id)}
-                      onToggle={saved.toggle}
-                      to={full ? `/schools/${p.schoolId}?program=${p.id}` : null}
+                      saved={saved.isSaved(p)}
+                      onToggle={saved.toggleProgram}
                     />
                   ))}
                   {!full && fieldPrograms.length > TEASE && (

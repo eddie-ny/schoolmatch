@@ -19,6 +19,8 @@ export default function Programs() {
   const q = params.get('q') || ''
   const field = params.get('field') || ''
   const level = params.get('level') || ''
+  const mode = params.get('mode') || ''
+  const campus = params.get('campus') || ''
   const full = access.level === 'full'
 
   const setParam = (k, v) => {
@@ -30,14 +32,17 @@ export default function Programs() {
   }
 
   const schoolById = useMemo(() => Object.fromEntries(schools.map((s) => [s.id, s])), [schools])
+  const campuses = useMemo(() => [...new Set(programs.map((p) => p.campus).filter(Boolean))].sort(), [programs])
   const list = useMemo(() => {
     const needle = q.trim().toLowerCase()
     return programs
       .filter((p) => !level || (p.level || 'Undergraduate').toLowerCase() === level.toLowerCase())
+      .filter((p) => !mode || (p.mode || 'Regular') === mode)
+      .filter((p) => !campus || p.campus === campus)
       .filter((p) => !field || (p.field || '').toLowerCase() === field.toLowerCase())
       .filter((p) => !needle || `${p.name} ${p.field || ''} ${p.schoolName}`.toLowerCase().includes(needle))
       .sort((a, b) => a.name.localeCompare(b.name) || a.schoolName.localeCompare(b.schoolName))
-  }, [programs, q, field, level])
+  }, [programs, q, field, level, mode, campus])
 
   return (
     <div>
@@ -49,6 +54,18 @@ export default function Programs() {
           <option>Undergraduate</option>
           <option>Masters</option>
         </select>{' '}
+        <select className="input !w-auto" value={mode} onChange={(e) => setParam('mode', e.target.value)} aria-label="Mode of study">
+          <option value="">Any mode</option>
+          {['Regular', 'Fee-paying', 'Distance', 'Evening', 'Weekend', 'Sandwich'].map((m) => <option key={m}>{m}</option>)}
+        </select>{' '}
+        {campuses.length > 0 && (
+          <>
+            <select className="input !w-auto" value={campus} onChange={(e) => setParam('campus', e.target.value)} aria-label="Campus">
+              <option value="">Any campus</option>
+              {campuses.map((c) => <option key={c}>{c}</option>)}
+            </select>{' '}
+          </>
+        )}
         <select className="input !w-auto" value={field} onChange={(e) => setParam('field', e.target.value)} aria-label="Field of study">
           <option value="">Any field</option>
           {FIELDS.map((f) => <option key={f.id}>{f.id}</option>)}

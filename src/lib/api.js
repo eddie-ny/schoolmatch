@@ -308,9 +308,9 @@ export async function loadCatalog() {
     const school = schoolById[x.school_id]
     const latest = [...(f?.program_cutoffs || [])].sort((a, b) => b.year - a.year)[0]
     return {
-      id: x.id, schoolId: x.school_id, schoolName: school?.name || '', name: x.name, level: x.level, field: x.field, demo: x.demo,
+      id: x.id, schoolId: x.school_id, schoolName: school?.name || '', name: x.name, level: x.level, field: x.field, demo: x.demo, mode: x.mode || 'Regular', campus: x.campus || '',
       international: school ? !isLocalCountry(school.country) : false,
-      feesUsd: f?.fees_usd ?? null, durationYears: f?.duration_years ?? null,
+      feesUsd: f?.fees_usd ?? null, feesGhs: f?.fees_ghs ?? null, durationYears: f?.duration_years ?? null,
       englishTestWaiver: !!f?.english_test_waiver, foundationAvailable: !!f?.foundation_available, verified: !!f?.verified,
       requirements: (f?.program_requirements || []).map((r) => ({ subject: r.subject, minGrade: r.min_grade })),
       cutoffAggregate: latest?.cutoff_aggregate ?? null, cutoffYear: latest?.year ?? null,
@@ -378,10 +378,10 @@ export async function importCatalog(kind, rows) {
       const sid = schoolId[(r.schoolName || '').toLowerCase()]
       if (!sid || !r.name) { out.skipped.push(`${r.name || '(no name)'} (school "${r.schoolName}" not found, import schools first)`); continue }
       const row = {
-        school_id: sid, name: r.name, level: clean(r.level), field: clean(r.field), fees_usd: r.feesUsd, duration_years: r.durationYears,
+        school_id: sid, name: r.name, level: clean(r.level), field: clean(r.field), mode: clean(r.mode) || 'Regular', campus: clean(r.campus), fees_usd: r.feesUsd, duration_years: r.durationYears,
         english_test_waiver: !!r.englishTestWaiver, foundation_available: !!r.foundationAvailable, verified: !!r.verified,
       }
-      const { data: found, error: e1 } = await supabase.from('programs').select('id').eq('school_id', sid).eq('name', r.name).maybeSingle()
+      const { data: found, error: e1 } = await supabase.from('programs').select('id').eq('school_id', sid).eq('name', r.name).eq('mode', clean(r.mode) || 'Regular').maybeSingle()
       fail(e1, 'Could not read programs.')
       let pid = found?.id
       if (pid) {
@@ -446,14 +446,15 @@ export async function deleteDemoData() {
 export async function listEligibilityPrograms() {
   // group_name is the common programme name ("Law") shared by every school that offers it. Until the database has it,
   // fall back to the programme's own name so the page keeps working.
-  let progsRes = await supabase.from('programs_summary').select('id, school_id, name, level, field, demo, group_name')
+  let progsRes = await supabase.from('programs_summary').select('id, school_id, name, level, field, demo, group_name, mode, campus')
+  if (progsRes.error) progsRes = await supabase.from('programs_summary').select('id, school_id, name, level, field, demo, group_name')
   if (progsRes.error) progsRes = await supabase.from('programs_summary').select('id, school_id, name, level, field, demo')
   const { data: progs, error: e1 } = progsRes
   const { data: schools, error: e2 } = await supabase.from('schools_summary').select('id, name, country')
   fail(e1 || e2, 'Could not load programs.')
   const byId = Object.fromEntries(schools.map((x) => [x.id, x]))
   return progs.map((p) => ({
-    id: p.id, name: p.name, group: p.group_name || p.name, field: p.field, level: p.level, demo: p.demo,
+    id: p.id, name: p.name, group: p.group_name || p.name, field: p.field, level: p.level, demo: p.demo, mode: p.mode || 'Regular', campus: p.campus || '',
     schoolName: byId[p.school_id]?.name || '',
     international: (byId[p.school_id]?.country || '').toLowerCase() !== 'ghana',
   }))

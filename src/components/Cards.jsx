@@ -61,6 +61,8 @@ export function ProgramCard({ p, school, full, saved, onToggle, to, showSchoolLi
       )}
       <div className="flex flex-wrap gap-2">
         {p.level && <Badge>{p.level}</Badge>}
+        {p.mode && p.mode !== 'Regular' && <Badge>{p.mode}</Badge>}
+        {p.campus && <Badge>{p.campus}</Badge>}
         {p.field && <Badge>{p.field}</Badge>}
         {p.durationYears != null && full && <Badge>{p.durationYears} years</Badge>}
         {p.demo && <Badge tone="orange">Sample data</Badge>}

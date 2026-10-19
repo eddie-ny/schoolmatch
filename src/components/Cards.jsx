@@ -43,6 +43,7 @@ export function ProgramCard({ p, school, full, saved, onToggle, hideSchool = fal
   const [open, setOpen] = useState(false)
   const variants = p.variants || [p]
   const many = variants.length > 1
+  const masters = p.level === 'Masters' // masters entry is by degree class, so there is no WASSCE cut-off or subject list
   const heart = <HeartButton active={saved} onClick={() => onToggle(p)} label={p.name} />
   return (
     <>
@@ -71,16 +72,25 @@ export function ProgramCard({ p, school, full, saved, onToggle, hideSchool = fal
           {p.demo && <Badge tone="orange">Sample data</Badge>}
         </div>
         {full ? (
-          <ul className="text-sm space-y-1">
-            {variants.map((v) => (
-              <li key={v.id} className="flex justify-between gap-3">
-                <span className="text-neutral-500 break-words">{many || v.mode !== 'Regular' || v.campus ? variantLabel(v) : 'Cut-off aggregate'}</span>
-                <span className="font-medium shrink-0">{v.cutoffAggregate != null ? v.cutoffAggregate : 'Not added yet'}</span>
-              </li>
-            ))}
-          </ul>
+          masters ? (
+            p.minDegreeClass && (
+              <dl className="text-sm grid grid-cols-2 gap-x-4 gap-y-1">
+                <dt className="text-neutral-500">Degree class needed</dt>
+                <dd>{p.minDegreeClass}</dd>
+              </dl>
+            )
+          ) : (
+            <ul className="text-sm space-y-1">
+              {variants.map((v) => (
+                <li key={v.id} className="flex justify-between gap-3">
+                  <span className="text-neutral-500 break-words">{many || v.mode !== 'Regular' || v.campus ? variantLabel(v) : 'Cut-off aggregate'}</span>
+                  <span className="font-medium shrink-0">{v.cutoffAggregate != null ? v.cutoffAggregate : 'Not added yet'}</span>
+                </li>
+              ))}
+            </ul>
+          )
         ) : (
-          <LockedRows rows={['Cut-off aggregate', 'Entry requirements', 'Your chances']} />
+          <LockedRows rows={masters ? ['Degree class needed', 'Your chances'] : ['Cut-off aggregate', 'Entry requirements', 'Your chances']} />
         )}
         {full
           ? <button type="button" className="btn btn-outline mt-auto" onClick={() => setOpen(true)} aria-haspopup="dialog">View details</button>
@@ -94,6 +104,7 @@ export function ProgramCard({ p, school, full, saved, onToggle, hideSchool = fal
 // Everything we know about the programme, with each way of studying it in its own block.
 function ProgramDetails({ p, variants, school, onClose }) {
   const box = useRef(null)
+  const masters = p.level === 'Masters'
   useEffect(() => {
     const opener = document.activeElement
     box.current?.focus()
@@ -128,10 +139,14 @@ function ProgramDetails({ p, variants, school, onClose }) {
               {v.verified === false && !v.demo && <Badge>Unverified</Badge>}
             </div>
             <dl className="text-sm grid grid-cols-2 gap-x-4 gap-y-1">
-              <dt className="text-neutral-500">Cut-off aggregate</dt>
-              <dd>{v.cutoffAggregate != null ? `${v.cutoffAggregate}${v.cutoffYear ? ` (${v.cutoffYear})` : ''}` : 'Not added yet'}</dd>
-              <dt className="text-neutral-500">Requirements</dt>
-              <dd className="break-words">{v.requirements?.length ? v.requirements.map((r) => `${r.subject}${r.minGrade ? ' ' + r.minGrade : ''}`).join(', ') : 'Not added yet'}</dd>
+              {!masters && (
+                <>
+                  <dt className="text-neutral-500">Cut-off aggregate</dt>
+                  <dd>{v.cutoffAggregate != null ? `${v.cutoffAggregate}${v.cutoffYear ? ` (${v.cutoffYear})` : ''}` : 'Not added yet'}</dd>
+                  <dt className="text-neutral-500">Requirements</dt>
+                  <dd className="break-words">{v.requirements?.length ? v.requirements.map((r) => `${r.subject}${r.minGrade ? ' ' + r.minGrade : ''}`).join(', ') : 'Not added yet'}</dd>
+                </>
+              )}
               {v.durationYears != null && (<><dt className="text-neutral-500">Duration</dt><dd>{v.durationYears} years</dd></>)}
               {v.minDegreeClass && (<><dt className="text-neutral-500">Degree class needed</dt><dd>{v.minDegreeClass}</dd></>)}
               {v.feesGhs != null && (<><dt className="text-neutral-500">Fees per year</dt><dd>GHS {Number(v.feesGhs).toLocaleString()}</dd></>)}

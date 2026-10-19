@@ -149,8 +149,8 @@ function ProgramDetails({ p, variants, school, onClose }) {
               )}
               {v.durationYears != null && (<><dt className="text-neutral-500">Duration</dt><dd>{v.durationYears} years</dd></>)}
               {v.minDegreeClass && (<><dt className="text-neutral-500">Degree class needed</dt><dd>{v.minDegreeClass}</dd></>)}
-              {v.feesGhs != null && (<><dt className="text-neutral-500">Fees per year</dt><dd>GHS {Number(v.feesGhs).toLocaleString()}</dd></>)}
-              {v.feesUsd != null && (<><dt className="text-neutral-500">Fees per year</dt><dd>USD {Number(v.feesUsd).toLocaleString()}</dd></>)}
+              {v.feesGhs != null && (<><dt className="text-neutral-500">Fees</dt><dd>GHS {Number(v.feesGhs).toLocaleString()}</dd></>)}
+              {v.feesUsd != null && (<><dt className="text-neutral-500">Fees</dt><dd>USD {Number(v.feesUsd).toLocaleString()}</dd></>)}
             </dl>
             {v.entryNote && <p className="text-sm text-neutral-700 break-words">{v.entryNote}</p>}
           </section>

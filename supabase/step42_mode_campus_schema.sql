@@ -1,4 +1,4 @@
--- STEP 42 (NOT YET APPLIED): programme variants. One row per way of studying a programme at a school.
+-- STEP 42 (APPLIED 2026-10-19): programme variants. One row per way of studying a programme at a school.
 -- mode: 'Regular' (default), 'Fee-paying', 'Distance', 'Evening', 'Weekend', 'Sandwich'. campus: null for the main campus, otherwise for example 'Accra City Campus'.
 -- Each variant row has its own cut-off, requirements and fees. fees_ghs is the yearly fee in cedis when a school publishes one.
 alter table public.programs add column if not exists mode text not null default 'Regular';

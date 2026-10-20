@@ -7,3 +7,5 @@ Source (official): https://cctu.edu.gh/site/cms/app/uploads/doc/6035312.pdf , th
 No aggregate or cut-off in the official notices. Another page, https://admissions.cctu.edu.gh/undergraduate , says "minimum aggregate score of 36" and lists 16 generic "BSc." programmes (Civil Engineering, Business Administration, Cybersecurity and so on) plus fees of GHS 2,500 to 4,500 a year. It does not match the notices (they list BTech programmes, no BSc), so it was not used. Needs a check with CCTU.
 
 Not loaded: BTech top-up (11 programmes, evening or weekend, HND holders), HND (12), diplomas, masters, and tuition fees (only the GHS 150 e-voucher is in the notices).
+
+HND (12, with Weekend and Evening variants) and 18 diplomas loaded 2026-10-20 as Diploma level, 37 rows (step56). No cut-off stated.

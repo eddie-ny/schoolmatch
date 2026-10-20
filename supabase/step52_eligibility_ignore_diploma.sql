@@ -1,4 +1,4 @@
--- STEP 52 (NOT YET APPLIED): undergraduate checker now also ignores Diploma rows (HND and diploma programmes have no WASSCE aggregate rules in the checker). Same as step 18 otherwise.
+-- STEP 52 (APPLIED 2026-10-20): undergraduate checker now also ignores Diploma rows (HND and diploma programmes have no WASSCE aggregate rules in the checker). Same as step 18 otherwise.
 create or replace function public.check_eligibility(
   p_program_name text, p_scope text, p_mode text, p_grades jsonb, p_electives jsonb, p_sat int default null
 ) returns jsonb

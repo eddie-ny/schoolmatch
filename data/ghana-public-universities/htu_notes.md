@@ -8,3 +8,5 @@ Not published: aggregates and cut-offs, modes, campuses, tuition fees (only the 
 
 ## Takoradi Technical University (not loaded)
 Could not reach an official programme list. The official domain ttu.edu.gh was not returned by search, and the portal page web.ttuportal.com listed no programmes (its undergraduate listing page could not be opened). An unofficial 2024 page (mabumbe.com) lists about 15 BTech programmes, which is not enough to load. To retry later when a link to the official undergraduate page turns up.
+
+HND (17) and two-year diploma (7) programmes loaded 2026-10-20 as Diploma level (step55) from the 2025/26 brochure; no cut-off stated.

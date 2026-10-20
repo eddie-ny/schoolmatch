@@ -18,3 +18,6 @@ Searches "nursing colleges cut off points 2026" (plain) returned Nigerian and In
 - GTEC suspended accreditation of NEW General Nursing programmes on 4 February 2026 (https://citinewsroom.com/2026/02/gtec-suspends-accreditation-of-new-general-nursing-programmes/). Existing programmes are not mentioned.
 - KNUST 2026/2027 top-up BSc Nursing, Midwifery, Emergency Nursing and Public Health Nursing for diploma holders (https://www.knust.edu.gh/node/5559), already in the catalogue as KNUST programmes.
 Per-college cut-offs are not published (admission to the Ministry of Health colleges is centralised), so no per-college data exists to load.
+
+## 2026-10-20 load (step53)
+Loaded as one combined, unverified entry "Public Nursing and Midwifery Training Colleges (Ministry of Health)": 20 Diploma programmes. The 4 clinical ones (RGN, RMN, RM, RCN) carry cut-off 36 (2026), stated by ghstudents.com and consistent with the unicheckgh average of 36; no official notice was reachable. The other 16 have no cut-off. Certificates (NAP, NAC and others) and post-basic BSc programmes were not loaded. Per-college entries are not possible until a per-college source exists.

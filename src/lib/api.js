@@ -281,14 +281,27 @@ export async function removeDocument(doc) {
 // also read the full tables, so the details come back only for them. Row level security decides, not the browser.
 const isLocalCountry = (c) => (c || '').toLowerCase() === 'ghana'
 
+// The API returns at most 1000 rows per request, so read big tables in pages (stable order by id) and join them.
+async function fetchAll(table, columns) {
+  const SIZE = 1000
+  const rows = []
+  for (let from = 0; ; ) {
+    const { data, error } = await supabase.from(table).select(columns).order('id').range(from, from + SIZE - 1)
+    if (error) return { data: rows, error }
+    rows.push(...data)
+    from += data.length
+    if (data.length === 0) return { data: rows, error: null } // stop on an empty page, in case the server cap is below SIZE
+  }
+}
+
 export async function loadCatalog() {
   const quiet = (q) => q.then((r) => (r.error ? { data: [] } : r)) // no access to the full tables is normal, not an error
   const [sS, sP, sC, fS, fP, fC] = await Promise.all([
     supabase.from('schools_summary').select('*'),
-    supabase.from('programs_summary').select('*'),
+    fetchAll('programs_summary', '*'),
     supabase.from('scholarships_summary').select('*'),
     quiet(supabase.from('schools').select('*')),
-    quiet(supabase.from('programs').select('*, program_requirements(subject, min_grade), program_cutoffs(year, cutoff_aggregate, sat_low, sat_high)')),
+    quiet(fetchAll('programs', '*, program_requirements(subject, min_grade), program_cutoffs(year, cutoff_aggregate, sat_low, sat_high)')),
     quiet(supabase.from('scholarships').select('*')),
   ])
   fail(sS.error || sP.error || sC.error, 'Could not load the catalogue.')
@@ -446,9 +459,9 @@ export async function deleteDemoData() {
 export async function listEligibilityPrograms() {
   // group_name is the common programme name ("Law") shared by every school that offers it. Until the database has it,
   // fall back to the programme's own name so the page keeps working.
-  let progsRes = await supabase.from('programs_summary').select('id, school_id, name, level, field, demo, group_name, mode, campus')
-  if (progsRes.error) progsRes = await supabase.from('programs_summary').select('id, school_id, name, level, field, demo, group_name')
-  if (progsRes.error) progsRes = await supabase.from('programs_summary').select('id, school_id, name, level, field, demo')
+  let progsRes = await fetchAll('programs_summary', 'id, school_id, name, level, field, demo, group_name, mode, campus')
+  if (progsRes.error) progsRes = await fetchAll('programs_summary', 'id, school_id, name, level, field, demo, group_name')
+  if (progsRes.error) progsRes = await fetchAll('programs_summary', 'id, school_id, name, level, field, demo')
   const { data: progs, error: e1 } = progsRes
   const { data: schools, error: e2 } = await supabase.from('schools_summary').select('id, name, country')
   fail(e1 || e2, 'Could not load programs.')

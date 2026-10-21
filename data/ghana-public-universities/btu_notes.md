@@ -5,3 +5,5 @@ Collected 2026-10-20. Sources (official, both undated): programmes https://bolga
 Entry rule: six credit passes (A1 to C6 for WASSCE) including English Language, Mathematics and Social Studies or Integrated Science, plus at least three relevant electives. Core Mathematics C6 and English Language C6 stored as requirements. No aggregate or cut-off or fees published.
 
 Not loaded: weekend top-up programmes (17, Sumbrungu Campus), HND (17 full-time, 4 evening at the Bukere Campus), diplomas, pre-engineering and access courses. The evening HND at Bukere Campus and the weekend top-ups are not degree entry, so no campus rows were made.
+
+Update 2026-10-21 (step 57): 17 full-time HND, 4 Evening HND at Bukere Campus and 21 diplomas loaded as Diploma level, all unverified. The page states no entry requirement, aggregate or fees for them. Weekend top-ups, pre-HND and access courses still not loaded.

@@ -71,6 +71,8 @@ export const FIELDS = [
   { id: 'Arts', blurb: 'Humanities, languages, design' },
   { id: 'Law', blurb: 'Law and public policy' },
   { id: 'Education', blurb: 'Teaching and development' },
+  { id: 'Agriculture', blurb: 'Farming, food and natural resources' },
+  { id: 'Social Sciences', blurb: 'Economics, development, policy' },
 ]
 
 // Launch is local (Ghana) only. International schools and scholarships stay in the database and the code;

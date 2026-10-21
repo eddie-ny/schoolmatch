@@ -285,3 +285,28 @@ export function Spinner({ label = 'Loading', className = '' }) {
     </div>
   )
 }
+
+// Numbered pages: Previous, 1 2 3 ... N, Next. Shows a window of pages around the current one.
+export function Pagination({ page, pages, onChange }) {
+  if (pages <= 1) return null
+  const nums = new Set([1, pages, page - 1, page, page + 1])
+  if (page <= 3) { nums.add(2); nums.add(3) }
+  if (page >= pages - 2) { nums.add(pages - 1); nums.add(pages - 2) }
+  const list = [...nums].filter((n) => n >= 1 && n <= pages).sort((a, b) => a - b)
+  const items = []
+  list.forEach((n, i) => {
+    if (i > 0 && n - list[i - 1] > 1) items.push({ gap: true, key: `g${n}` })
+    items.push({ n, key: `n${n}` })
+  })
+  const btn = 'min-h-11 min-w-11 px-3 rounded-full border-2 text-sm font-semibold'
+  return (
+    <nav className="flex flex-wrap items-center justify-center gap-2 mt-6" aria-label="Pages">
+      <button type="button" className={`${btn} bg-white border-neutral-300 disabled:opacity-40`} disabled={page <= 1} onClick={() => onChange(page - 1)}>Previous</button>
+      {items.map((it) => it.gap
+        ? <span key={it.key} className="px-1 text-neutral-500" aria-hidden="true">...</span>
+        : <button key={it.key} type="button" aria-label={`Page ${it.n}`} aria-current={it.n === page ? 'page' : undefined} onClick={() => onChange(it.n)}
+            className={`${btn} ${it.n === page ? 'bg-brand-green border-brand-green text-neutral-900' : 'bg-white border-neutral-300'}`}>{it.n}</button>)}
+      <button type="button" className={`${btn} bg-white border-neutral-300 disabled:opacity-40`} disabled={page >= pages} onClick={() => onChange(page + 1)}>Next</button>
+    </nav>
+  )
+}

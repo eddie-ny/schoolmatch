@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, NavLink, Route, Routes } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { clearCatalogCache } from '../hooks/useCatalog'
 import { listUsers, importCatalog, deleteDemoData, setAccountDisabled, listAuditLog, importPlans, listPendingParents } from '../lib/api'
 import { parseCsv, rowsToSchools, rowsToPrograms, rowsToScholarships } from '../lib/csv'
 import { ConfirmDialog, PageTitle, Spinner } from '../components/ui'
@@ -36,6 +37,7 @@ function Importer({ sheet }) {
     setMsg('Importing...')
     try {
       const res = await importCatalog(sheet.kind, converted)
+      clearCatalogCache()
       setMsg(`Added ${res.added}, updated ${res.updated}.${res.skipped.length ? ` Skipped ${res.skipped.length}: ${res.skipped.slice(0, 5).join('; ')}` : ''}`)
     } catch (err) {
       setMsg(`Import stopped: ${err.message}`)

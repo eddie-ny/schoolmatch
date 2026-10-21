@@ -251,9 +251,9 @@ function ScholarshipDetails({ s, full, onClose }) {
         <VerifiedBadges item={s} />
         {full ? (
           <dl className="text-sm grid grid-cols-2 gap-x-4 gap-y-2">
-            <dt className="text-neutral-500">Best aggregate</dt><dd>{s.minAggregate ?? 'Not added yet'}</dd>
-            <dt className="text-neutral-500">Deadline</dt><dd>{s.deadline || 'Not added yet'}</dd>
-            <dt className="text-neutral-500">Who can apply</dt><dd className="break-words">{s.criteria || 'Not added yet'}</dd>
+            {s.minAggregate != null && <><dt className="text-neutral-500">Best aggregate</dt><dd>{s.minAggregate}</dd></>}
+            {s.deadline && <><dt className="text-neutral-500">Deadline</dt><dd>{s.deadline}</dd></>}
+            {s.criteria && <><dt className="text-neutral-500">Who can apply</dt><dd className="break-words">{s.criteria}</dd></>}
           </dl>
         ) : (
           <LockedRows rows={['Who can apply', 'Deadline']} />

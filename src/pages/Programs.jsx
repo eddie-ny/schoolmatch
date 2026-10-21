@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useCatalog } from '../hooks/useCatalog'
 import { useSaved } from '../hooks/useSaved'
-import { PageTitle } from '../components/ui'
+import { PageTitle, Pagination } from '../components/ui'
 import { ProgramCard } from '../components/Cards'
 import { FIELDS } from '../lib/constants'
 import { groupPrograms } from '../lib/variants'
@@ -16,7 +16,7 @@ export default function Programs() {
   const { schools, programs, loading } = useCatalog()
   const saved = useSaved()
   const [params, setParams] = useSearchParams()
-  const [shown, setShown] = useState(PAGE)
+  const [page, setPage] = useState(1)
   const q = params.get('q') || ''
   const field = params.get('field') || ''
   const level = params.get('level') || ''
@@ -27,7 +27,7 @@ export default function Programs() {
     if (v) next.set(k, v)
     else next.delete(k)
     setParams(next, { replace: true })
-    setShown(PAGE)
+    setPage(1)
   }
 
   const schoolById = useMemo(() => Object.fromEntries(schools.map((s) => [s.id, s])), [schools])
@@ -62,7 +62,7 @@ export default function Programs() {
       {!loading && (
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {list.slice(0, shown).map((p) => (
+            {list.slice((page - 1) * PAGE, page * PAGE).map((p) => (
               <ProgramCard
                 key={p.id}
                 p={p}
@@ -74,11 +74,7 @@ export default function Programs() {
             ))}
           </div>
           {list.length === 0 && <p className="text-neutral-600">No programs match these filters yet.</p>}
-          {list.length > shown && (
-            <div className="mt-6 text-center">
-              <button className="btn btn-outline" onClick={() => setShown(shown + PAGE)}>Show more ({list.length - shown} left)</button>
-            </div>
-          )}
+          <Pagination page={page} pages={Math.ceil(list.length / PAGE)} onChange={(n) => { setPage(n); window.scrollTo({ top: 0, behavior: 'smooth' }) }} />
         </>
       )}
     </div>

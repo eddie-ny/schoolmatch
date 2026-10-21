@@ -281,17 +281,24 @@ export async function removeDocument(doc) {
 // also read the full tables, so the details come back only for them. Row level security decides, not the browser.
 const isLocalCountry = (c) => (c || '').toLowerCase() === 'ghana'
 
-// The API returns at most 1000 rows per request, so read big tables in pages (stable order by id) and join them.
+// The API returns at most 1000 rows per request. Read the first page (with the total count), then fetch the rest in parallel.
 async function fetchAll(table, columns) {
-  const SIZE = 1000
-  const rows = []
-  for (let from = 0; ; ) {
-    const { data, error } = await supabase.from(table).select(columns).order('id').range(from, from + SIZE - 1)
-    if (error) return { data: rows, error }
-    rows.push(...data)
-    from += data.length
-    if (data.length === 0) return { data: rows, error: null } // stop on an empty page, in case the server cap is below SIZE
+  const first = await supabase.from(table).select(columns, { count: 'exact' }).order('id').range(0, 999)
+  if (first.error) return { data: [], error: first.error }
+  const rows = first.data
+  const step = rows.length
+  const total = first.count ?? step
+  if (step === 0 || total <= step) return { data: rows, error: null }
+  const jobs = []
+  for (let from = step; from < total; from += step) {
+    jobs.push(supabase.from(table).select(columns).order('id').range(from, from + step - 1))
   }
+  const pages = await Promise.all(jobs)
+  for (const pg of pages) {
+    if (pg.error) return { data: rows, error: pg.error }
+    rows.push(...pg.data)
+  }
+  return { data: rows, error: null }
 }
 
 export async function loadCatalog() {

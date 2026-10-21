@@ -1,0 +1,3 @@
+# Takoradi Technical University notes
+
+Collected 2026-10-21 through a ChatGPT research report supplied by the user (not opened directly). Official site https://ttu.edu.gh, application portal https://apply.ttuportal.com (unreadable in the research browser). The catalogue reports 109 programmes but only the first entries were readable. Loaded (step 71): 6 diplomas of technology and 8 bachelor's programmes, all unverified. Not loaded: HND names from the 2020 Students' Handbook (out of date), certificates (none found), anything else. No entry rule, aggregate, fee or deadline found. A 2023/2024 admissions PDF returned 404.

@@ -54,6 +54,7 @@ export default function Programs() {
           <option value="">All levels</option>
           <option>Undergraduate</option>
           <option>Diploma</option>
+          <option>Certificate</option>
           <option>Masters</option>
         </select>{' '}
         <select className="input !w-auto" value={mode} onChange={(e) => setParam('mode', e.target.value)} aria-label="Mode of study">

@@ -127,7 +127,7 @@ function EligibilityInner() {
 
   const scoped = useMemo(
     () => programs
-      .filter((p) => (masters ? p.level === 'Masters' : p.level !== 'Masters' && p.level !== 'Diploma'))
+      .filter((p) => (masters ? p.level === 'Masters' : p.level !== 'Masters' && p.level !== 'Diploma' && p.level !== 'Certificate'))
       .filter((p) => scope === 'both' || (scope === 'local' ? !p.international : p.international)),
     [programs, scope, masters]
   )

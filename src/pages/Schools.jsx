@@ -101,7 +101,7 @@ export function SchoolDetail() {
   const allProgs = programs.filter((p) => p.schoolId === school.id)
   // Filters appear only where they can do something at this school: levels if it has both, then modes and campuses of the chosen level.
   const levelOf = (p) => p.level || 'Undergraduate'
-  const levels = ['Undergraduate', 'Diploma', 'Masters'].filter((l) => allProgs.some((p) => levelOf(p) === l))
+  const levels = ['Undergraduate', 'Diploma', 'Certificate', 'Masters'].filter((l) => allProgs.some((p) => levelOf(p) === l))
   const inLevel = allProgs.filter((p) => !level || levelOf(p) === level)
   const modes = ['Regular', 'Fee-paying', 'Distance', 'Evening', 'Weekend', 'Sandwich'].filter((m) => inLevel.some((p) => (p.mode || 'Regular') === m))
   const campuses = [...new Set(inLevel.map((p) => p.campus).filter(Boolean))].sort()

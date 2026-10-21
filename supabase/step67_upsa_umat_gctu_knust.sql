@@ -1,0 +1,6 @@
+-- STEP 67 (APPLIED 2026-10-21): diplomas and top-ups loaded through the SQL tool, all unverified.
+-- UPSA: 5 diplomas (Accounting, Marketing, Management, Public Relations, Information Technology Management) from https://admissions.upsa.edu.gh/admissions/undergraduate/ (2026/2027). Cut-offs 28 (Accounting), 30 (Marketing, Management, Public Relations) for 2026 are indicative figures from YEN.com.gh, 10 September 2026, not confirmed by UPSA. YEN also lists Diploma in Business Administration (28) but the official page does not, so it was not loaded.
+-- UMaT: Diploma in General Drilling from https://admissions.umat.edu.gh/available-programmes-undergraduates/ (undated, no details).
+-- GCTU: 12 two-year diplomas, each in Regular, Evening and Weekend (36 rows), from https://site.gctu.edu.gh/?p=23902 (2026/2027). Entry: WASSCE six passes A1 to D7 with three at C6 or better; English and Mathematics D7 stored.
+-- KNUST: 6 BSc top-up rows for diploma holders (Emergency Nursing, Nursing, Midwifery Regular; Nursing, Midwifery, Public Health Nursing Sandwich) from https://www.knust.edu.gh/node/5559 (2026/2027), level Undergraduate, English, Mathematics and Integrated Science C6.
+-- The full statements are in the SQL tool history; the patterns match steps 54 to 64.

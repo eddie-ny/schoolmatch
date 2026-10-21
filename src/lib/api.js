@@ -330,7 +330,7 @@ export async function loadCatalog() {
     return {
       id: x.id, schoolId: x.school_id, schoolName: school?.name || '', name: x.name, level: x.level, field: x.field, demo: x.demo, mode: x.mode || 'Regular', campus: x.campus || '',
       international: school ? !isLocalCountry(school.country) : false,
-      feesUsd: f?.fees_usd ?? null, feesGhs: f?.fees_ghs ?? null, entryNote: f?.entry_note || '', minDegreeClass: f?.min_degree_class || '', durationYears: f?.duration_years ?? null,
+      feesUsd: f?.fees_usd ?? null, feesGhs: f?.fees_ghs ?? null, entryNote: f?.entry_note || '', entryQualification: f?.entry_qualification || x.entry_qualification || '', minDegreeClass: f?.min_degree_class || '', durationYears: f?.duration_years ?? null,
       englishTestWaiver: !!f?.english_test_waiver, foundationAvailable: !!f?.foundation_available, verified: !!f?.verified,
       requirements: (f?.program_requirements || []).map((r) => ({ subject: r.subject, minGrade: r.min_grade })),
       cutoffAggregate: latest?.cutoff_aggregate ?? null, cutoffYear: latest?.year ?? null,
@@ -466,7 +466,8 @@ export async function deleteDemoData() {
 export async function listEligibilityPrograms() {
   // group_name is the common programme name ("Law") shared by every school that offers it. Until the database has it,
   // fall back to the programme's own name so the page keeps working.
-  let progsRes = await fetchAll('programs_summary', 'id, school_id, name, level, field, demo, group_name, mode, campus')
+  let progsRes = await fetchAll('programs_summary', 'id, school_id, name, level, field, demo, group_name, mode, campus, entry_qualification')
+  if (progsRes.error) progsRes = await fetchAll('programs_summary', 'id, school_id, name, level, field, demo, group_name, mode, campus')
   if (progsRes.error) progsRes = await fetchAll('programs_summary', 'id, school_id, name, level, field, demo, group_name')
   if (progsRes.error) progsRes = await fetchAll('programs_summary', 'id, school_id, name, level, field, demo')
   const { data: progs, error: e1 } = progsRes
@@ -474,7 +475,7 @@ export async function listEligibilityPrograms() {
   fail(e1 || e2, 'Could not load programs.')
   const byId = Object.fromEntries(schools.map((x) => [x.id, x]))
   return progs.map((p) => ({
-    id: p.id, name: p.name, group: p.group_name || p.name, field: p.field, level: p.level, demo: p.demo, mode: p.mode || 'Regular', campus: p.campus || '',
+    id: p.id, name: p.name, group: p.group_name || p.name, field: p.field, level: p.level, demo: p.demo, mode: p.mode || 'Regular', campus: p.campus || '', entryQualification: p.entry_qualification || '',
     schoolName: byId[p.school_id]?.name || '',
     international: (byId[p.school_id]?.country || '').toLowerCase() !== 'ghana',
   }))
@@ -494,6 +495,13 @@ export async function checkEligibility({ programName, scope, mode, grades, elect
 export async function checkMastersEligibility({ programName, degreeClass }) {
   const { data, error } = await supabase.rpc('check_masters_eligibility', { p_program_name: programName, p_degree_class: degreeClass })
   fail(error, 'Could not check masters eligibility.')
+  return data
+}
+
+// Top-up programmes: compares the qualification the student holds (a diploma or HND) with the one each school asks for.
+export async function checkTopupEligibility({ programName, qualification }) {
+  const { data, error } = await supabase.rpc('check_topup_eligibility', { p_program_name: programName, p_qualification: qualification })
+  fail(error, 'Could not check top-up eligibility.')
   return data
 }
 

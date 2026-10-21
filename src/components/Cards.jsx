@@ -79,6 +79,11 @@ export function ProgramCard({ p, school, full, saved, onToggle, hideSchool = fal
                 <dd>{p.minDegreeClass}</dd>
               </dl>
             )
+          ) : p.entryQualification ? (
+            <dl className="text-sm grid grid-cols-2 gap-x-4 gap-y-1">
+              <dt className="text-neutral-500">You need</dt>
+              <dd className="break-words">{p.entryQualification}</dd>
+            </dl>
           ) : (
             variants.some((v) => v.cutoffAggregate != null) && (
               <ul className="text-sm space-y-1">
@@ -141,6 +146,7 @@ function ProgramDetails({ p, variants, school, onClose }) {
               {v.verified === false && !v.demo && <Badge>Unverified</Badge>}
             </div>
             <dl className="text-sm grid grid-cols-2 gap-x-4 gap-y-1">
+              {v.entryQualification && (<><dt className="text-neutral-500">You need</dt><dd className="break-words">{v.entryQualification}</dd></>)}
               {!masters && (
                 <>
                   {v.cutoffAggregate != null && (<><dt className="text-neutral-500">Cut-off aggregate</dt><dd>{v.cutoffAggregate}{v.cutoffYear ? ` (${v.cutoffYear})` : ''}</dd></>)}

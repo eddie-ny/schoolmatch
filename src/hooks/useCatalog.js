@@ -8,12 +8,16 @@ import { SHOW_INTERNATIONAL } from '../lib/constants'
 const TTL = 5 * 60 * 1000
 let cached = null // { key, at, promise, value }
 
+// A scholarship whose deadline has passed is out of date, so it is not shown. No deadline means it is shown.
+const notExpired = (s) => !s.deadline || String(s.deadline).slice(0, 10) >= new Date().toISOString().slice(0, 10)
+
 function shape(c) {
-  return SHOW_INTERNATIONAL ? c : {
-    ...c,
-    schools: c.schools.filter((s) => isLocal(s.country)),
-    programs: c.programs.filter((p) => !p.international),
-    scholarships: c.scholarships.filter((s) => isLocal(s.country)),
+  const open = { ...c, scholarships: c.scholarships.filter(notExpired) }
+  return SHOW_INTERNATIONAL ? open : {
+    ...open,
+    schools: open.schools.filter((s) => isLocal(s.country)),
+    programs: open.programs.filter((p) => !p.international),
+    scholarships: open.scholarships.filter((s) => isLocal(s.country)),
   }
 }
 

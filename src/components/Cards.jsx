@@ -80,14 +80,16 @@ export function ProgramCard({ p, school, full, saved, onToggle, hideSchool = fal
               </dl>
             )
           ) : (
-            <ul className="text-sm space-y-1">
-              {variants.map((v) => (
-                <li key={v.id} className="flex justify-between gap-3">
-                  <span className="text-neutral-500 break-words">{many || v.mode !== 'Regular' || v.campus ? variantLabel(v) : 'Cut-off aggregate'}</span>
-                  <span className="font-medium shrink-0">{v.cutoffAggregate != null ? v.cutoffAggregate : 'Not added yet'}</span>
-                </li>
-              ))}
-            </ul>
+            variants.some((v) => v.cutoffAggregate != null) && (
+              <ul className="text-sm space-y-1">
+                {variants.filter((v) => v.cutoffAggregate != null).map((v) => (
+                  <li key={v.id} className="flex justify-between gap-3">
+                    <span className="text-neutral-500 break-words">{many || v.mode !== 'Regular' || v.campus ? variantLabel(v) : 'Cut-off aggregate'}</span>
+                    <span className="font-medium shrink-0">{v.cutoffAggregate}</span>
+                  </li>
+                ))}
+              </ul>
+            )
           )
         ) : (
           <LockedRows rows={masters ? ['Degree class needed', 'Your chances'] : ['Cut-off aggregate', 'Entry requirements', 'Your chances']} />
@@ -141,10 +143,8 @@ function ProgramDetails({ p, variants, school, onClose }) {
             <dl className="text-sm grid grid-cols-2 gap-x-4 gap-y-1">
               {!masters && (
                 <>
-                  <dt className="text-neutral-500">Cut-off aggregate</dt>
-                  <dd>{v.cutoffAggregate != null ? `${v.cutoffAggregate}${v.cutoffYear ? ` (${v.cutoffYear})` : ''}` : 'Not added yet'}</dd>
-                  <dt className="text-neutral-500">Requirements</dt>
-                  <dd className="break-words">{v.requirements?.length ? v.requirements.map((r) => `${r.subject}${r.minGrade ? ' ' + r.minGrade : ''}`).join(', ') : 'Not added yet'}</dd>
+                  {v.cutoffAggregate != null && (<><dt className="text-neutral-500">Cut-off aggregate</dt><dd>{v.cutoffAggregate}{v.cutoffYear ? ` (${v.cutoffYear})` : ''}</dd></>)}
+                  {v.requirements?.length > 0 && (<><dt className="text-neutral-500">Requirements</dt><dd className="break-words">{v.requirements.map((r) => `${r.subject}${r.minGrade ? ' ' + r.minGrade : ''}`).join(', ')}</dd></>)}
                 </>
               )}
               {v.durationYears != null && (<><dt className="text-neutral-500">Duration</dt><dd>{v.durationYears} years</dd></>)}

@@ -1,4 +1,4 @@
--- STEP 68 (NOT YET APPLIED): top-up programmes that need an earlier qualification (diploma, HND).
+-- STEP 68 (APPLIED 2026-10-21): top-up programmes that need an earlier qualification (diploma, HND).
 -- 1. programs.entry_qualification holds what the student must already have, for example 'Diploma in Nursing'. Null means normal school-leaver entry.
 -- 2. KNUST top-up rows get their qualification.
 -- 3. The school-leaver checker skips programmes with an entry qualification (they are not open to WASSCE holders alone).

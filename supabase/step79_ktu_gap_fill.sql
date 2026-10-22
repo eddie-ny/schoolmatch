@@ -1,0 +1,6 @@
+-- STEP 79 (APPLIED 2026-10-22): Koforidua Technical University gap fill, all unverified, one statement through the SQL tool. Source: two ChatGPT research reports of KTU official pages (programme catalogue https://www.ktu.edu.gh/programmes, certificate filter, 2026/2027 admissions notice published 8 May 2026).
+-- Certificates: 3 added (Electrical Engineering Technician Part II, Part III, Pre-HND), so KTU now has 11, matching the catalogue certificate filter (11). Mode not published, Regular assumed.
+-- Top-ups: 2 added (Bachelor of Business Studies (Top-up), BSc Information Technology (Top-up)), entry_qualification 'HND in a related programme', 2 years.
+-- Deadline note appended to 71 non-Masters rows that lacked it: 20 November 2026, not yet passed on 22 October 2026.
+-- Checked, nothing to add: all 19 HND, 10 diploma/DBS, 35 BTech/BSc and 13 Masters (Weekend) names already present. Catalogue lists "BSc. Computer Science (Top-up)"; we hold "BTech Computer Science (Top-up)" and left it as is.
+-- Open: 128 vs 115 catalogue totals unexplained; certificate duration conflict (catalogue 1 year, notice 2 years for Fashion Design and Textiles, Advanced Fashion Design and Catering II); top-up total unverified (6 seen, we hold more); no fees published.

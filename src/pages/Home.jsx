@@ -7,6 +7,7 @@ import { Segmented, Spinner } from '../components/ui'
 import { ProgramCard, SchoolCard, ScholarshipCard } from '../components/Cards'
 import { useSaved } from '../hooks/useSaved'
 import { groupPrograms } from '../lib/variants'
+import { SCHOOL_CATEGORIES, schoolCategory } from '../lib/schoolCategory'
 
 const tasks = [
   { to: '/schools', title: 'Find a School', text: SHOW_INTERNATIONAL ? 'Search local and international schools and programs.' : 'Search Ghanaian universities and their programs.', bar: 'border-l-brand-orange' },
@@ -74,25 +75,24 @@ export default function Home() {
   const progCount = useMemo(() => { const m = {}; programs.forEach((p) => { m[p.schoolId] = (m[p.schoolId] || 0) + 1 }); return m }, [programs])
   const [where, setWhere] = useState('all')
   const [funding, setFunding] = useState('all')
+  const [browse, setBrowse] = useState('schools')
+  const [kind, setKind] = useState('')
   const [showAll, setShowAll] = useState(false)
   const [field, setField] = useState('')
 
-  // One summary card per result. Schools count as self-funded options.
+  // One summary card per result: either schools (filtered by kind of school) or scholarships (filtered by how much they pay).
   const results = useMemo(() => {
     const out = []
-    if (funding === 'all' || funding === 'self') {
-      schools.forEach((x) => out.push({ kind: 'school', id: x.id, title: x.name, place: x.country, local: isLocal(x.country), tag: 'Self-funded', item: x }))
-    }
-    if (funding !== 'self') {
+    if (browse === 'schools') {
+      schools.filter((x) => !kind || schoolCategory(x) === kind).forEach((x) => out.push({ kind: 'school', id: x.id, local: isLocal(x.country), item: x }))
+    } else {
       scholarships.forEach((x) => {
         const ft = x.fundingType === 'Full' ? 'full' : 'partial'
-        if (funding === 'all' || funding === ft) {
-          out.push({ kind: 'scholarship', id: x.id, title: x.name, place: x.country, local: isLocal(x.country), tag: `${x.fundingType} funding`, item: x })
-        }
+        if (funding === 'all' || funding === ft) out.push({ kind: 'scholarship', id: x.id, local: isLocal(x.country), item: x })
       })
     }
     return out.filter((r) => where === 'all' || (where === 'local' ? r.local : !r.local))
-  }, [schools, scholarships, where, funding])
+  }, [schools, scholarships, where, funding, browse, kind])
 
   const fieldPrograms = useMemo(() => groupPrograms(programs.filter((p) => p.field === field)), [programs, field])
   const fieldSchoolCount = new Set(fieldPrograms.map((p) => p.schoolId)).size
@@ -151,17 +151,13 @@ export default function Home() {
               options={[{ value: 'all', label: 'All' }, { value: 'local', label: 'Local' }, { value: 'intl', label: 'International' }]}
             />
           )}
+          <Segmented value={browse} onChange={setBrowse} options={[{ value: 'schools', label: 'Schools' }, { value: 'scholarships', label: 'Scholarships' }]} />
           <div>
-            <Segmented
-              value={funding}
-              onChange={setFunding}
-              options={[
-                { value: 'all', label: 'Any funding' },
-                { value: 'self', label: 'Self-funded' },
-                { value: 'partial', label: 'Partial' },
-                { value: 'full', label: 'Fully funded' },
-              ]}
-            />
+            {browse === 'schools' ? (
+              <Segmented value={kind} onChange={setKind} options={[{ value: '', label: 'All schools' }, ...SCHOOL_CATEGORIES.map((c) => ({ value: c.id, label: c.label }))]} />
+            ) : (
+              <Segmented value={funding} onChange={setFunding} options={[{ value: 'all', label: 'Any scholarship' }, { value: 'partial', label: 'Covers part of the cost' }, { value: 'full', label: 'Covers all of the cost' }]} />
+            )}
           </div>
         </div>
         {!loading && <p className="text-sm text-neutral-600">{results.length} result{results.length === 1 ? '' : 's'}</p>}

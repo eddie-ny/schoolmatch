@@ -1,5 +1,6 @@
 // Result cards shared by Home, Find a School, School pages, Scholarships and Interested.
 import { useEffect, useRef, useState } from 'react'
+import { schoolCategoryLabel } from '../lib/schoolCategory'
 import { Link } from 'react-router-dom'
 import { Badge, LockedRows, VerifiedBadges } from './ui'
 import { variantLabel } from '../lib/variants'
@@ -181,6 +182,7 @@ export function SchoolCard({ s, count, matches = [], to, signedIn }) {
         </div>
       </div>
       <div className="flex flex-wrap gap-2">
+        <Badge>{schoolCategoryLabel(s)}</Badge>
         {s.type && <Badge>{s.type}</Badge>}
         <Badge>{count} program{count === 1 ? '' : 's'}</Badge>
       </div>

@@ -14,5 +14,18 @@ aamusted.png Akenten Appiah-Menka University (AAMUSTED)
 uesd.png    University of Environment and Sustainable Development (Somanya)
 cktutas.png C.K. Tedam University of Technology and Applied Sciences
 ubids.png   Simon Diedong Dombo University of Business and Integrated Development Studies
-ashesi.png  Ashesi University
 gctu.png    Ghana Communication Technology University
+
+Still needed (school has no logo yet):
+atu.png     Accra Technical University
+btu.png     Bolgatanga Technical University
+cctu.png    Cape Coast Technical University
+dhltu.png   Dr Hilla Limann Technical University (Wa)
+htu.png     Ho Technical University
+ktu.png     Koforidua Technical University
+kstu.png    Kumasi Technical University
+stu.png     Sunyani Technical University
+ttu.png     Takoradi Technical University
+tatu.png    Tamale Technical University
+gafcnm.png  Ghana Armed Forces College of Nursing and Midwifery
+(The public nursing and midwifery colleges have no single logo; they will get their own entries once each college is listed.)

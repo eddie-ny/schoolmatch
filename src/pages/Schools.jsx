@@ -7,6 +7,7 @@ import { Monogram, ProgramCard, SchoolCard } from '../components/Cards'
 import { groupPrograms } from '../lib/variants'
 import { useSaved } from '../hooks/useSaved'
 import { FIELDS, SHOW_INTERNATIONAL } from '../lib/constants'
+import { SCHOOL_CATEGORIES, schoolCategory } from '../lib/schoolCategory'
 
 export function Schools() {
   const { user } = useAuth()
@@ -15,6 +16,8 @@ export function Schools() {
   const q = params.get('q') || ''
   const where = params.get('where') || 'all'
   const field = params.get('field') || ''
+  const kind = params.get('kind') || ''
+  const offers = params.get('offers') || ''
 
   // Change several query values in one go. Two separate calls would each start from the old values and the second would undo the first.
   const setParam = (k, v, clear = []) => {
@@ -31,29 +34,38 @@ export function Schools() {
     const needle = q.trim().toLowerCase()
     return schools
       .filter((s) => where === 'all' || (where === 'local' ? isLocal(s.country) : !isLocal(s.country)))
+      .filter((s) => !kind || schoolCategory(s) === kind)
       .map((s) => {
         const own = programs.filter((p) => p.schoolId === s.id)
         const schoolHit = !needle || (s.name + ' ' + (s.city || '') + ' ' + s.country).toLowerCase().includes(needle)
         const inField = (p) => !field || (p.field || '').toLowerCase() === field.toLowerCase()
         const progHit = (p) => !needle || ((p.name || '') + ' ' + (p.field || '')).toLowerCase().includes(needle)
-        const matched = own.filter((p) => inField(p) && (schoolHit || progHit(p)))
+        const matched = own.filter((p) => inField(p) && (!offers || (p.level || 'Undergraduate') === offers) && (schoolHit || progHit(p)))
         // Program names show on the card only when a program search or a field is narrowing the list.
         const show = field ? matched : needle ? own.filter((p) => progHit(p)) : []
-        return { s, count: own.length, show, keep: matched.length > 0 || (!field && schoolHit) }
+        return { s, count: own.length, show, keep: matched.length > 0 || (!field && !offers && schoolHit) }
       })
       .filter((x) => x.keep)
-  }, [schools, programs, q, where, field])
+  }, [schools, programs, q, where, field, kind, offers])
 
   return (
     <div>
       <PageTitle title="Find a School" sub={SHOW_INTERNATIONAL ? 'Local and international schools and programs.' : 'Ghanaian universities and their programs.'} />
       <div className="space-y-3 mb-6">
         <input className="input" placeholder="Search by school, program (for example law), city or country" value={q} onChange={(e) => setParam('q', e.target.value)} />
+        <Segmented value={kind} onChange={(v) => setParam('kind', v)} options={[{ value: '', label: 'All schools' }, ...SCHOOL_CATEGORIES.map((c) => ({ value: c.id, label: c.label }))]} />
         <div className="flex flex-wrap items-center gap-3">
           {SHOW_INTERNATIONAL && <Segmented value={where} onChange={(v) => setParam('where', v === 'all' ? '' : v)} options={[{ value: 'all', label: 'All' }, { value: 'local', label: 'Local' }, { value: 'intl', label: 'International' }]} />}
           <select className="input !w-auto" value={field} onChange={(e) => setParam('field', e.target.value)} aria-label="Field of study">
             <option value="">Any field</option>
             {FIELDS.map((f) => <option key={f.id}>{f.id}</option>)}
+          </select>
+          <select className="input !w-auto" value={offers} onChange={(e) => setParam('offers', e.target.value)} aria-label="Level offered">
+            <option value="">Any level</option>
+            <option value="Undergraduate">Offers bachelor's degrees</option>
+            <option value="Diploma">Offers diplomas and HND</option>
+            <option value="Certificate">Offers certificates</option>
+            <option value="Masters">Offers Masters</option>
           </select>
         </div>
         <p className="text-sm text-neutral-600">{loading ? 'Loading...' : `${list.length} result${list.length === 1 ? '' : 's'}`}</p>

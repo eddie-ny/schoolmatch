@@ -1,0 +1,6 @@
+-- STEP 75 (APPLIED 2026-10-22): University of Health and Allied Sciences. Source: ChatGPT research report of official UHAS pages (checked 22 October 2026), all unverified.
+-- 19 cut-off rows (year 2026) from the official 2026/2027 cut-off guide. The page says they are a guide, not actual cut-offs; exam type not stated. Existing 2024 cut-offs kept. Entry note appended to each of the 19 programmes.
+-- Health Services Administration (16*/18*) NOT loaded: the page key is malformed and the two figures cannot be interpreted.
+-- 1 new row: Master of Public Health (General), Weekend mode (page lists MPH as Regular or Weekend, 1 year).
+-- NOT loaded: Diploma/HND/Certificate (UHAS publishes none), Doctor of Medical Laboratory Sciences (Top Up) (prerequisite not published), Psychology top-up (multi-route, no single qualification), PhD and GEMP (no such level in the app).
+-- Facts: application e-voucher GHS 230; WASSCE applicant deadlines 8 and 9 September 2026 passed; postgraduate closing date 14 August 2026 passed; only 2025/2026 fees exist (PDF returned 404). Awaiting-results applicants are not eligible. Social Studies C6 required but not counted in aggregate.

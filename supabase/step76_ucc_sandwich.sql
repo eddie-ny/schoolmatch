@@ -4,3 +4,6 @@
 -- 22 Sandwich Masters rows with fees (per Sandwich session) and min degree class where stated; "good first degree" left null.
 -- Deadlines passed: Sandwich undergraduate voucher 15 May 2026, documents 18 May 2026; Sandwich postgraduate 29 May 2026.
 -- NOT loaded: the Regular bachelor's list (report cut off at BSc Hospitality Management; names differ from stored names, to be reconciled once the full list arrives), cut-offs (only 12 of 103 retrievable), Distance and Evening lists, Part B details.
+
+-- STEP 77 (APPLIED 2026-10-22): UCC 47 more Sandwich Masters rows from the second part of the Sandwich postgraduate notice (updated 21 Oct 2026), unverified. "MA in X" stored as "MA X". Min degree class set only where stated (Second Class Lower for the oil and gas programmes, Peace Security and Development, Development Management, Religion and Human Values at CGPA 2.5). Fees are fresh-student fee per Sandwich session where published.
+-- NOT loaded: Postgraduate Diploma in Education (PGDE, not a Masters level in the app) and MEd Economics Education (row cut off in the pasted report). The report was cut off again after MEd Economics Education.

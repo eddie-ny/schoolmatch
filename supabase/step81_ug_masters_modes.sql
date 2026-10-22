@@ -1,0 +1,4 @@
+-- STEP 81 (APPLIED 2026-10-22): University of Ghana Masters modes, 21 new rows, unverified, one statement. Source: the School of Graduate Studies pages pasted by the user from the site on 22 October 2026 (Masters list updated July 2026, https://sgs.ug.edu.gh/sites/sgs.ug.edu.gh/files/2026-07/UPDATED%20LIST%20OF%20MASTERS%27%20PROGRAMMES%20AVAILABLE.pdf; Sandwich list is for 2025/2026).
+-- 6 Evening and Weekend rows: MA Economic Policy Management, MSc Applied Statistics, MSc/MPhil Computer Science (evening/weekend is MSc only). 15 Weekend rows from the UGBS Special Weekend / Executive MBA programmes list. Each copies field, degree class and duration from the Regular row.
+-- Checked, nothing to add: all 20 Sandwich programmes (loaded in step66) and every other Masters name in the list already exist. PhD list ignored (no PhD level in the app).
+-- Not loaded: MA International Affairs two-year Part-Time (the app has no Part-time mode).

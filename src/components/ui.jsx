@@ -49,7 +49,9 @@ export function PageTitle({ title, sub }) {
   )
 }
 
-export function Segmented({ options, value, onChange }) {
+// tone 'main' is the first row of filters (green); tone 'sub' narrows within it (orange), so the two rows look different.
+export function Segmented({ options, value, onChange, tone = 'main' }) {
+  const on = tone === 'sub' ? 'bg-brand-orange-soft border-brand-orange text-neutral-900' : 'bg-brand-green border-brand-green text-neutral-900'
   return (
     <div className="inline-flex flex-wrap gap-2">
       {options.map((o) => (
@@ -58,7 +60,7 @@ export function Segmented({ options, value, onChange }) {
           type="button"
           onClick={() => onChange(o.value)}
           className={`min-h-11 px-4 rounded-full border-2 text-sm font-semibold ${
-            value === o.value ? 'bg-brand-green border-brand-green text-neutral-900' : 'bg-white border-neutral-300'
+            value === o.value ? on : 'bg-white border-neutral-300'
           }`}
         >
           {o.label}

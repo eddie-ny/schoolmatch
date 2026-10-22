@@ -45,14 +45,14 @@ export default function Programs() {
       <PageTitle title="Programs" sub="Every program we have, at every university. Press the heart to keep one." />
       <div className="space-y-3 mb-6">
         <input className="input" placeholder="Search by program, field or university (for example law, nursing, KNUST)" value={q} onChange={(e) => setParam('q', e.target.value)} aria-label="Search programs" />
-        <select className="input !w-auto" value={level} onChange={(e) => setParam('level', e.target.value)} aria-label="Level of study">
+        <select className="input !w-auto !border-brand-green" value={level} onChange={(e) => setParam('level', e.target.value)} aria-label="Level of study">
           <option value="">All levels</option>
           <option>Undergraduate</option>
           <option>Diploma</option>
           <option>Certificate</option>
           <option>Masters</option>
         </select>{' '}
-        <select className="input !w-auto" value={field} onChange={(e) => setParam('field', e.target.value)} aria-label="Field of study">
+        <select className="input !w-auto !border-brand-orange" value={field} onChange={(e) => setParam('field', e.target.value)} aria-label="Field of study">
           <option value="">Any field</option>
           {FIELDS.map((f) => <option key={f.id}>{f.id}</option>)}
         </select>

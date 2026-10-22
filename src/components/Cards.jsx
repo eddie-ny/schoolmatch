@@ -184,7 +184,7 @@ export function SchoolCard({ s, count, matches = [], to, signedIn }) {
       <div className="flex flex-wrap gap-2">
         <Badge>{schoolCategoryLabel(s)}</Badge>
         {s.type && <Badge>{s.type}</Badge>}
-        <Badge>{count} program{count === 1 ? '' : 's'}</Badge>
+        <Badge>{count === 0 ? 'Programmes not listed yet' : `${count} program${count === 1 ? '' : 's'}`}</Badge>
       </div>
       <VerifiedBadges item={s} />
       {matches.length > 0 && (

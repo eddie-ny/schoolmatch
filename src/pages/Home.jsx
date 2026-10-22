@@ -154,9 +154,9 @@ export default function Home() {
           <Segmented value={browse} onChange={setBrowse} options={[{ value: 'schools', label: 'Schools' }, { value: 'scholarships', label: 'Scholarships' }]} />
           <div>
             {browse === 'schools' ? (
-              <Segmented value={kind} onChange={setKind} options={[{ value: '', label: 'All schools' }, ...SCHOOL_CATEGORIES.map((c) => ({ value: c.id, label: c.label }))]} />
+              <Segmented tone="sub" value={kind} onChange={setKind} options={[{ value: '', label: 'All schools' }, ...SCHOOL_CATEGORIES.map((c) => ({ value: c.id, label: c.label }))]} />
             ) : (
-              <Segmented value={funding} onChange={setFunding} options={[{ value: 'all', label: 'Any scholarship' }, { value: 'partial', label: 'Covers part of the cost' }, { value: 'full', label: 'Covers all of the cost' }]} />
+              <Segmented tone="sub" value={funding} onChange={setFunding} options={[{ value: 'all', label: 'Any scholarship' }, { value: 'partial', label: 'Covers part of the cost' }, { value: 'full', label: 'Covers all of the cost' }]} />
             )}
           </div>
         </div>

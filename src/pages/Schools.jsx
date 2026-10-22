@@ -56,11 +56,11 @@ export function Schools() {
         <Segmented value={kind} onChange={(v) => setParam('kind', v)} options={[{ value: '', label: 'All schools' }, ...SCHOOL_CATEGORIES.map((c) => ({ value: c.id, label: c.label }))]} />
         <div className="flex flex-wrap items-center gap-3">
           {SHOW_INTERNATIONAL && <Segmented value={where} onChange={(v) => setParam('where', v === 'all' ? '' : v)} options={[{ value: 'all', label: 'All' }, { value: 'local', label: 'Local' }, { value: 'intl', label: 'International' }]} />}
-          <select className="input !w-auto" value={field} onChange={(e) => setParam('field', e.target.value)} aria-label="Field of study">
+          <select className="input !w-auto !border-brand-orange" value={field} onChange={(e) => setParam('field', e.target.value)} aria-label="Field of study">
             <option value="">Any field</option>
             {FIELDS.map((f) => <option key={f.id}>{f.id}</option>)}
           </select>
-          <select className="input !w-auto" value={offers} onChange={(e) => setParam('offers', e.target.value)} aria-label="Level offered">
+          <select className="input !w-auto !border-brand-orange" value={offers} onChange={(e) => setParam('offers', e.target.value)} aria-label="Level offered">
             <option value="">Any level</option>
             <option value="Undergraduate">Offers bachelor's degrees</option>
             <option value="Diploma">Offers diplomas and HND</option>
@@ -156,13 +156,13 @@ export function SchoolDetail() {
           {modes.length > 1 && (
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-sm text-neutral-600">Way of studying</span>
-              <Segmented value={mode} onChange={(v) => setParam('mode', v)} options={[{ value: '', label: 'All' }, ...modes.map((m) => ({ value: m, label: m }))]} />
+              <Segmented tone="sub" value={mode} onChange={(v) => setParam('mode', v)} options={[{ value: '', label: 'All' }, ...modes.map((m) => ({ value: m, label: m }))]} />
             </div>
           )}
           {campuses.length > 0 && (
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-sm text-neutral-600">Campus</span>
-              <Segmented value={campus} onChange={(v) => setParam('campus', v)} options={[{ value: '', label: 'All' }, ...campuses.map((c) => ({ value: c, label: c }))]} />
+              <Segmented tone="sub" value={campus} onChange={(v) => setParam('campus', v)} options={[{ value: '', label: 'All' }, ...campuses.map((c) => ({ value: c, label: c }))]} />
             </div>
           )}
           <p className="text-sm text-neutral-600">

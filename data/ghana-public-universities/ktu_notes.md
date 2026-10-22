@@ -8,3 +8,5 @@ Four-year programmes seen so far: Bsc. Public Administration, BTech Accounting a
 
 ## Wa Technical University (not loaded)
 Search returned no official Wa Technical University site, only third-party pages, so nothing was collected. To retry with the official domain.
+
+Update 2026-10-22 (step 72): this file's earlier note is about Kumasi/KsTU; Koforidua Technical University (KTU) is now loaded as a new school from ChatGPT reports of the official 2026/2027 notice (8 May 2026): 60 undergraduate, 55 diploma and certificate, 16 top-up and 13 Masters rows, all unverified. Catalogue count conflicts (115 on the programmes page, 128 elsewhere), so the list is not proven complete. Certificate list in the report was cut off after 8 entries. Deadline reported 20 November 2026.

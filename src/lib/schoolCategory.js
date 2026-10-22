@@ -3,6 +3,7 @@ export const SCHOOL_CATEGORIES = [
   { id: 'University', label: 'Universities', one: 'University' },
   { id: 'Technical University', label: 'Technical universities', one: 'Technical university' },
   { id: 'Nursing college', label: 'Nursing and midwifery colleges', one: 'Nursing and midwifery college' },
+  { id: 'College of Education', label: 'Colleges of education', one: 'College of education' },
 ]
 
 export function schoolCategory(s) {
@@ -10,6 +11,7 @@ export function schoolCategory(s) {
   if (own) return own.id
   const name = s?.name || ''
   if (/nursing|midwifery/i.test(name)) return 'Nursing college'
+  if (/college of education/i.test(name)) return 'College of Education'
   if (/technical university/i.test(name)) return 'Technical University'
   return 'University'
 }

@@ -1,0 +1,7 @@
+-- Record only (already loaded inline on 2026-10-22). Source: GTEC institution directory, https://gtec.edu.gh/institutions/ , read by ChatGPT, unverified.
+-- Loaded: 48 public colleges of education (category 'College of Education'), 7 public nurses/health training colleges missing from the N&MC list
+-- (Adventist College of Health Sciences, Assinman N&M TC, College of Health and Well-Being Kintampo, College of Health Yamfo, CoNM Walewale, CoNM Tano Odumasi, St. John of God College of Health).
+-- Skipped: Ghana Muslim Mission College of Education (GTEC shows accreditation expired), Accra School of Hygiene (expired), SDA N&M TC Agona-Asamang (expired).
+-- Not loaded: Ghana Armed Forces Command and Staff College, Ghana Water Institute, Kofi Annan IPTC (professional, not applicant-facing); expired: Ghana School of Survey and Mapping, Institute of Local Government Studies, Rural Development College.
+-- GTEC totals vs retrieved: Traditional University 17 vs 12 (5 unretrieved, page 3 timed out); Public Technical University 10 vs 10 (all already loaded); Nurses/Health Training College 83 vs 17 (pages 3 to 13 unretrieved).
+-- College of education university affiliations (GTEC PDF) were only partly retrieved and are not stored.

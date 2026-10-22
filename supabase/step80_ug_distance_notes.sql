@@ -1,0 +1,5 @@
+-- STEP 80 (APPLIED 2026-10-22): University of Ghana, entry_note updates only (unverified), from a ChatGPT research report of UG official pages (coe.ug.edu.gh, admissions.ug.edu.gh cut-off and Distance pages).
+-- Distance Bachelor of Arts: appended the 9 subject combinations listed by the College of Education. BSc Information Technology (Distance): appended the cut-off 30 vs elective aggregate 24 discrepancy.
+-- All the cut-offs in the report (Distance 30; College of Education 24, ICT 11 and 14, Computer Science 9 and 12) were already loaded. No new programme rows.
+-- NOT loaded: 9 diploma-to-degree combinations (prior diploma not published; a null entry_qualification would put them in the school-leaver checker), BSc Business Administration (Distance), Sandwich and Evening lists (none published in the retrieved 2026/2027 material), fees (only a 2025/2026 schedule found).
+-- The report was cut off at section B3 (College of Humanities cut-offs); Parts C and D not received.

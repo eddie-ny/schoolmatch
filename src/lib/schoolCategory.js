@@ -2,7 +2,6 @@
 export const SCHOOL_CATEGORIES = [
   { id: 'University', label: 'Universities', one: 'University' },
   { id: 'Technical University', label: 'Technical universities', one: 'Technical university' },
-  { id: 'Private university', label: 'Private universities and university colleges', one: 'Private university' },
   { id: 'Nursing college', label: 'Nursing and midwifery colleges', one: 'Nursing and midwifery college' },
 ]
 
@@ -15,4 +14,5 @@ export function schoolCategory(s) {
   return 'University'
 }
 
+// Private schools are not listed on the site, so there is no private category to filter by.
 export const schoolCategoryLabel = (s) => SCHOOL_CATEGORIES.find((c) => c.id === schoolCategory(s))?.one || 'University'

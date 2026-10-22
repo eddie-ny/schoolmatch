@@ -11,8 +11,13 @@ let cached = null // { key, at, promise, value }
 // A scholarship whose deadline has passed is out of date, so it is not shown. No deadline means it is shown.
 const notExpired = (s) => !s.deadline || String(s.deadline).slice(0, 10) >= new Date().toISOString().slice(0, 10)
 
+// Only public schools are listed. A school whose type is Private (or anything but Public) is hidden, and so are its programs.
+const isPublic = (s) => String(s.type || 'Public').toLowerCase() === 'public'
+
 function shape(c) {
-  const open = { ...c, scholarships: c.scholarships.filter(notExpired) }
+  const publicSchools = c.schools.filter(isPublic)
+  const publicIds = new Set(publicSchools.map((s) => s.id))
+  const open = { ...c, schools: publicSchools, programs: c.programs.filter((p) => publicIds.has(p.schoolId)), scholarships: c.scholarships.filter(notExpired) }
   return SHOW_INTERNATIONAL ? open : {
     ...open,
     schools: open.schools.filter((s) => isLocal(s.country)),

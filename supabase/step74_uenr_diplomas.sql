@@ -1,0 +1,4 @@
+-- STEP 74 (APPLIED 2026-10-22): University of Energy and Natural Resources, 6 diplomas (7 rows: Statistics also Weekend), all unverified. Source: ChatGPT research report of the UENR 2026/2027 Diploma and Undergraduate guidelines PDF (dated June 2026, record updated 6 October 2026) and the CeDEEL page (Weekend Statistics). Loaded inline through the SQL tool as one statement.
+-- Diplomas: Fire, Safety and Disaster Management; Natural Resources Management; Geoinformation Science; Geomatics; Statistics (Regular + Weekend); Computer Science.
+-- Requirements stored: English, Core Mathematics, Integrated Science at C6. Closing date 6 November 2026. No aggregate, no 2026/2027 fees, no HND or Certificate programmes published.
+-- The pasted report was cut off in the bachelor's table (after BSc Resource Enterprise and Entrepreneurship); all UENR bachelor's programmes were already in the database.

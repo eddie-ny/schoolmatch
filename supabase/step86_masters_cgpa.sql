@@ -1,10 +1,10 @@
--- Adds an optional CGPA to the masters eligibility check. Run once in the Supabase SQL editor.
+-- ALREADY RUN on 2026-10-23 (record only). Adds an optional CGPA to the masters eligibility check. Run once in the Supabase SQL editor.
 -- 1. Programmes can state a minimum CGPA (for example UCC MA Religion and Human Values: 2.5).
 alter table public.programs add column if not exists min_cgpa numeric(3,2) check (min_cgpa is null or (min_cgpa >= 0 and min_cgpa <= 5));
 
 -- 2. The check takes the student's CGPA as an optional extra. Schools that do not ask for one ignore it.
-drop function if exists public.check_masters_eligibility(text, text);
-create or replace function public.check_masters_eligibility(p_program_name text, p_degree_class text, p_cgpa numeric default null)
+-- The new check has its own name, so the old check_masters_eligibility(text, text) is left in place and can be dropped later.
+create or replace function public.check_masters_eligibility_cgpa(p_program_name text, p_degree_class text, p_cgpa numeric default null)
  returns jsonb
  language plpgsql
  security definer
@@ -56,8 +56,8 @@ begin
     'others',  (select coalesce(jsonb_agg(e order by (e ->> 'ord')::int), '[]') from jsonb_array_elements(rows_o) e));
 end $function$;
 
-revoke all on function public.check_masters_eligibility(text, text, numeric) from public, anon;
-grant execute on function public.check_masters_eligibility(text, text, numeric) to authenticated;
+revoke all on function public.check_masters_eligibility_cgpa(text, text, numeric) from public, anon;
+grant execute on function public.check_masters_eligibility_cgpa(text, text, numeric) to authenticated;
 
 -- 3. First schools that state a CGPA.
 update public.programs p set min_cgpa = 2.5

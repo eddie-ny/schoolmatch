@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext'
 import { useEffect } from 'react'
 import { listEligibilityPrograms, checkEligibility, checkMastersEligibility, checkTopupEligibility } from '../lib/api'
 import { CORE_SUBJECTS, ELECTIVE_SUBJECTS, GRADES, DISCLAIMER, FIELDS, SHOW_INTERNATIONAL, DEGREE_CLASSES } from '../lib/constants'
-import { Badge, Field, Gate, PageTitle, RequireAuth, Segmented, Spinner } from '../components/ui'
+import { Badge, Field, Gate, PagedGrid, PageTitle, RequireAuth, Segmented, Spinner } from '../components/ui'
 
 const labelTone = {
   'Strong match': 'green',
@@ -295,13 +295,9 @@ function EligibilityInner() {
           <p>Your qualification: <b>{output.yourQualification}</b>. Each school sets its own entry rules, so confirm with the school before you apply.</p>
           <h3 className="font-semibold">Schools offering {output.programName}</h3>
           {output.targets.length === 0 && <p className="text-neutral-600">No schools offer this top-up program yet.</p>}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {output.targets.map((r) => <ResultCard key={r.programId} item={r} highlight />)}
-          </div>
+          <PagedGrid items={output.targets} render={(r) => <ResultCard key={r.programId} item={r} highlight />} />
           {output.others.length > 0 && <h3 className="font-semibold">Other top-up programs</h3>}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {output.others.map((r) => <ResultCard key={r.programId} item={r} />)}
-          </div>
+          <PagedGrid items={output.others} render={(r) => <ResultCard key={r.programId} item={r} />} />
         </section>
       )}
 
@@ -311,13 +307,9 @@ function EligibilityInner() {
           <p>Your first-degree class: <b>{output.yourClass}</b>. Each school sets its own entry rules, so confirm with the school before you apply.</p>
           <h3 className="font-semibold">Schools offering {output.programName}</h3>
           {output.targets.length === 0 && <p className="text-neutral-600">No schools offer this masters program yet.</p>}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {output.targets.map((r) => <ResultCard key={r.programId} item={r} highlight />)}
-          </div>
+          <PagedGrid items={output.targets} render={(r) => <ResultCard key={r.programId} item={r} highlight />} />
           {output.others.length > 0 && <h3 className="font-semibold">Other masters programs</h3>}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {output.others.map((r) => <ResultCard key={r.programId} item={r} />)}
-          </div>
+          <PagedGrid items={output.others} render={(r) => <ResultCard key={r.programId} item={r} />} />
         </section>
       )}
 
@@ -337,22 +329,16 @@ function EligibilityInner() {
           {output.targets.length > 0 && qualified.length === 0 && (
             <p className="text-neutral-600">You do not meet the entry requirements for any school offering this program yet. What is missing for each school is listed below.</p>
           )}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {qualified.map((r) => <ResultCard key={r.programId} item={r} highlight />)}
-          </div>
+          <PagedGrid items={qualified} render={(r) => <ResultCard key={r.programId} item={r} highlight />} />
           {notYet.length > 0 && (
             <details className="card" open={qualified.length === 0}>
               <summary className="font-semibold cursor-pointer">Schools offering {output.programName} that you do not qualify for yet ({notYet.length})</summary>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
-                {notYet.map((r) => <ResultCard key={r.programId} item={r} />)}
-              </div>
+              <PagedGrid items={notYet} render={(r) => <ResultCard key={r.programId} item={r} />} />
             </details>
           )}
 
           <h3 className="font-semibold">Other programs you could consider, best first</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {output.others.map((r) => <ResultCard key={r.programId} item={r} />)}
-          </div>
+          <PagedGrid items={output.others} render={(r) => <ResultCard key={r.programId} item={r} />} />
           <p className="text-xs text-neutral-500">{DISCLAIMER}</p>
         </section>
       )}

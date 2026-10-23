@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useCatalog } from '../hooks/useCatalog'
 import { useSaved } from '../hooks/useSaved'
-import { Gate, PageTitle, Spinner } from '../components/ui'
+import { Gate, PagedGrid, PageTitle, Spinner } from '../components/ui'
 import { ProgramCard } from '../components/Cards'
 import { groupPrograms } from '../lib/variants'
 
@@ -36,16 +36,21 @@ export default function Interested() {
       ) : (
         <>
           <p className="text-sm text-neutral-600">{total} program{total === 1 ? '' : 's'} at {groups.length} universit{groups.length === 1 ? 'y' : 'ies'}</p>
-          {groups.map(({ school, items }) => (
-            <section key={school?.id || items[0].schoolId} className="space-y-3">
-              <h2 className="text-lg font-bold">{school?.name}</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {items.map((p) => (
-                  <ProgramCard key={p.id} p={p} school={school} full={full} saved onToggle={saved.toggleProgram} hideSchool />
-                ))}
-              </div>
-            </section>
-          ))}
+          <PagedGrid
+            items={groups}
+            size={5}
+            className="space-y-6"
+            render={({ school, items }) => (
+              <section key={school?.id || items[0].schoolId} className="space-y-3">
+                <h2 className="text-lg font-bold">{school?.name}</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {items.map((p) => (
+                    <ProgramCard key={p.id} p={p} school={school} full={full} saved onToggle={saved.toggleProgram} hideSchool />
+                  ))}
+                </div>
+              </section>
+            )}
+          />
         </>
       )}
     </div>

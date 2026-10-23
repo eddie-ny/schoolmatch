@@ -312,3 +312,17 @@ export function Pagination({ page, pages, onChange }) {
     </nav>
   )
 }
+
+
+// A grid that shows one page of its items at a time, with page numbers underneath. It starts again at page 1 when the list changes.
+export function PagedGrid({ items, size = 10, render, className = 'grid grid-cols-1 sm:grid-cols-2 gap-4' }) {
+  const [page, setPage] = useState(1)
+  const pages = Math.max(1, Math.ceil(items.length / size))
+  const at = Math.min(page, pages)
+  return (
+    <>
+      <div className={className}>{items.slice((at - 1) * size, at * size).map(render)}</div>
+      <Pagination page={at} pages={pages} onChange={setPage} />
+    </>
+  )
+}

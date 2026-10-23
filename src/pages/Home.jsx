@@ -1,13 +1,6 @@
-import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { useCatalog, isLocal } from '../hooks/useCatalog'
 import { FIELDS, SHOW_INTERNATIONAL } from '../lib/constants'
-import { Segmented, Spinner } from '../components/ui'
-import { ProgramCard, SchoolCard, ScholarshipCard } from '../components/Cards'
-import { useSaved } from '../hooks/useSaved'
-import { groupPrograms } from '../lib/variants'
-import { SCHOOL_CATEGORIES, schoolCategory } from '../lib/schoolCategory'
 
 const tasks = [
   { to: '/schools', title: 'Find a School', text: SHOW_INTERNATIONAL ? 'Search local and international schools and programs.' : 'Search Ghanaian universities and their programs.', bar: 'border-l-brand-orange' },
@@ -68,36 +61,7 @@ function HeroArt() {
 }
 
 export default function Home() {
-  const { user, access } = useAuth()
-  const { schools, programs, scholarships, loading } = useCatalog()
-  const saved = useSaved()
-  const schoolById = useMemo(() => Object.fromEntries(schools.map((s) => [s.id, s])), [schools])
-  const progCount = useMemo(() => { const m = {}; programs.forEach((p) => { m[p.schoolId] = (m[p.schoolId] || 0) + 1 }); return m }, [programs])
-  const [where, setWhere] = useState('all')
-  const [funding, setFunding] = useState('all')
-  const [browse, setBrowse] = useState('schools')
-  const [kind, setKind] = useState('')
-  const [showAll, setShowAll] = useState(false)
-  const [field, setField] = useState('')
-
-  // One summary card per result: either schools (filtered by kind of school) or scholarships (filtered by how much they pay).
-  const results = useMemo(() => {
-    const out = []
-    if (browse === 'schools') {
-      schools.filter((x) => !kind || schoolCategory(x) === kind).forEach((x) => out.push({ kind: 'school', id: x.id, local: isLocal(x.country), item: x }))
-    } else {
-      scholarships.forEach((x) => {
-        const ft = x.fundingType === 'Full' ? 'full' : 'partial'
-        if (funding === 'all' || funding === ft) out.push({ kind: 'scholarship', id: x.id, local: isLocal(x.country), item: x })
-      })
-    }
-    return out.filter((r) => where === 'all' || (where === 'local' ? r.local : !r.local))
-  }, [schools, scholarships, where, funding, browse, kind])
-
-  const fieldPrograms = useMemo(() => groupPrograms(programs.filter((p) => p.field === field)), [programs, field])
-  const fieldSchoolCount = new Set(fieldPrograms.map((p) => p.schoolId)).size
-  const full = access.level === 'full'
-  const TEASE = 3 // how many programs a visitor sees before the rest are locked
+  const { user } = useAuth()
 
   return (
     <div className="space-y-16">
@@ -118,18 +82,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Illustration */}
-      <section className="grid md:grid-cols-2 gap-8 items-center max-w-4xl mx-auto w-full">
-        <div className="space-y-4 text-center md:text-left">
-          <h2 className="text-2xl md:text-4xl font-bold">Your results, matched to schools</h2>
-          <p className="text-neutral-600 text-lg">
-            Enter your grades, pick a program and see every school that offers it, labelled by your chances.
-          </p>
-          <Link to="/eligibility" className="btn btn-green">Try it now</Link>
-        </div>
-        <HeroArt />
-      </section>
-
       {/* Four task cards */}
       <section className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {tasks.map((t) => (
@@ -140,116 +92,22 @@ export default function Home() {
         ))}
       </section>
 
-      {/* Filters and one summary card per result */}
-      <section className="space-y-4">
-        <h2 className="text-2xl font-bold">Browse</h2>
-        <div className="space-y-3">
-          {SHOW_INTERNATIONAL && (
-            <Segmented
-              value={where}
-              onChange={setWhere}
-              options={[{ value: 'all', label: 'All' }, { value: 'local', label: 'Local' }, { value: 'intl', label: 'International' }]}
-            />
-          )}
-          <Segmented value={browse} onChange={setBrowse} options={[{ value: 'schools', label: 'Schools' }, { value: 'scholarships', label: 'Scholarships' }]} />
-          <div>
-            {browse === 'schools' ? (
-              <Segmented tone="sub" value={kind} onChange={setKind} options={[{ value: '', label: 'All schools' }, ...SCHOOL_CATEGORIES.map((c) => ({ value: c.id, label: c.label }))]} />
-            ) : (
-              <Segmented tone="sub" value={funding} onChange={setFunding} options={[{ value: 'all', label: 'Any scholarship' }, { value: 'partial', label: 'Covers part of the cost' }, { value: 'full', label: 'Covers all of the cost' }]} />
-            )}
-          </div>
-        </div>
-        {!loading && <p className="text-sm text-neutral-600">{results.length} result{results.length === 1 ? '' : 's'}</p>}
-
-        {loading ? (
-          <Spinner />
-        ) : results.length === 0 ? (
-          <p className="text-neutral-600">Nothing matches these filters yet.</p>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {(showAll ? results : results.slice(0, 6)).map((r) => (
-              r.kind === 'school'
-                ? <SchoolCard key={`school-${r.id}`} s={r.item} count={progCount[r.id] || 0} to={`/schools/${r.id}`} signedIn={!!user} />
-                : <ScholarshipCard key={`sch-${r.id}`} s={r.item} full={full} />
-            ))}
-          </div>
-        )}
-        {!loading && results.length > 6 && (
-          <button className="btn btn-outline" onClick={() => setShowAll(!showAll)}>
-            {showAll ? 'Show fewer' : `Show all ${results.length} results`}
-          </button>
-        )}
-      </section>
-
-      {/* Program first: pick a field, see a taste, the rest is locked */}
+      {/* Pick a field: each tile opens the programs page for that field */}
       <section className="space-y-4">
         <h2 className="text-2xl font-bold">What do you want to study?</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {FIELDS.map((f) => (
-            <button
+            <Link
               key={f.id}
-              type="button"
-              onClick={() => setField(field === f.id ? '' : f.id)}
-              aria-pressed={field === f.id}
-              className={`text-left rounded-2xl border-2 p-4 min-h-24 transition ${
-                field === f.id ? 'border-brand-orange bg-brand-orange-soft' : 'border-neutral-200 hover:border-brand-orange'
-              }`}
+              to={`/programs?field=${encodeURIComponent(f.id)}`}
+              className="text-left rounded-2xl border-2 border-neutral-200 p-4 min-h-24 transition hover:border-brand-orange hover:bg-brand-orange-soft"
             >
               <p className="font-heading font-bold">{f.id}</p>
               <p className="text-sm text-neutral-600 mt-1">{f.blurb}</p>
-            </button>
+            </Link>
           ))}
         </div>
-
-        {field && (
-          <div className="rounded-3xl border border-neutral-200 p-4 md:p-6 space-y-4">
-            {fieldPrograms.length === 0 ? (
-              <p className="text-neutral-600">No {field} programs have been added yet. Check back soon.</p>
-            ) : (
-              <>
-                <p className="font-semibold">
-                  {fieldPrograms.length} {field} program{fieldPrograms.length === 1 ? '' : 's'} at {fieldSchoolCount} school{fieldSchoolCount === 1 ? '' : 's'}
-                </p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {(full ? fieldPrograms : fieldPrograms.slice(0, TEASE)).map((p) => (
-                    <ProgramCard
-                      key={p.id}
-                      p={p}
-                      school={schoolById[p.schoolId]}
-                      full={full}
-                      saved={saved.isSaved(p)}
-                      onToggle={saved.toggleProgram}
-                    />
-                  ))}
-                  {!full && fieldPrograms.length > TEASE && (
-                    <div className="card flex flex-col items-center justify-center text-center gap-2 bg-neutral-50 border-dashed">
-                      <p className="font-heading text-2xl font-bold text-brand-orange">+{fieldPrograms.length - TEASE}</p>
-                      <p className="text-sm text-neutral-600">more {field} programs are waiting for you</p>
-                    </div>
-                  )}
-                </div>
-                {!full && (
-                  <div className="rounded-2xl bg-brand-orange-soft p-4 md:p-5 space-y-3">
-                    <p className="font-semibold">
-                      {user ? 'Subscribe to unlock requirements, fees, cut-offs and your chances.' : 'Sign up free to see requirements, fees, cut-offs and your chances.'}
-                    </p>
-                    <div className="flex flex-wrap gap-3">
-                      {user ? (
-                        <Link to="/pricing" className="btn btn-orange">See pricing</Link>
-                      ) : (
-                        <>
-                          <Link to="/signup" className="btn btn-orange">Sign up free</Link>
-                          <Link to="/login" className="btn btn-outline">Sign in</Link>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-        )}
+        <Link to="/programs" className="underline font-semibold">See all programs</Link>
       </section>
 
       {/* Journey */}

@@ -2,12 +2,14 @@ import { useMemo, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useCatalog, isLocal } from '../hooks/useCatalog'
-import { Gate, PageTitle, Segmented, VerifiedBadges, Spinner } from '../components/ui'
+import { Gate, PageTitle, Pagination, Segmented, VerifiedBadges, Spinner } from '../components/ui'
 import { Monogram, ProgramCard, SchoolCard } from '../components/Cards'
 import { groupPrograms } from '../lib/variants'
 import { useSaved } from '../hooks/useSaved'
 import { FIELDS, SHOW_INTERNATIONAL } from '../lib/constants'
 import { SCHOOL_CATEGORIES, schoolCategory } from '../lib/schoolCategory'
+
+const PAGE = 12
 
 export function Schools() {
   const { user } = useAuth()
@@ -25,8 +27,11 @@ export function Schools() {
     if (v) next.set(k, v)
     else next.delete(k)
     clear.forEach((c) => next.delete(c))
+    next.delete('page')
     setParams(next, { replace: true })
   }
+  const page = Math.max(1, parseInt(params.get('page'), 10) || 1)
+  const goPage = (n) => { const next = new URLSearchParams(params); if (n > 1) next.set('page', n); else next.delete('page'); setParams(next); window.scrollTo({ top: 0 }) }
 
   // A school is listed when its own details match the search OR one of its programs does.
   // `matched` holds the programs that fit the search and field, so the card can show them.
@@ -72,7 +77,7 @@ export function Schools() {
       </div>
       {!loading && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {list.map(({ s, count, show }) => {
+          {list.slice((page - 1) * PAGE, page * PAGE).map(({ s, count, show }) => {
             const query = new URLSearchParams()
             if (q) query.set('q', q)
             if (field) query.set('field', field)
@@ -82,6 +87,7 @@ export function Schools() {
           {list.length === 0 && <p className="text-neutral-600">No schools match these filters yet.</p>}
         </div>
       )}
+      {!loading && <Pagination page={page} pages={Math.ceil(list.length / PAGE)} onChange={goPage} />}
     </div>
   )
 }
@@ -103,8 +109,11 @@ export function SchoolDetail() {
     const next = new URLSearchParams(params)
     if (v) next.set(k, v)
     else next.delete(k)
+    next.delete('page')
     setParams(next, { replace: true })
   }
+  const page = Math.max(1, parseInt(params.get('page'), 10) || 1)
+  const goPage = (n) => { const next = new URLSearchParams(params); if (n > 1) next.set('page', n); else next.delete('page'); setParams(next); window.scrollTo({ top: 0 }) }
 
   if (loading) return <Spinner />
   if (!school) return <p>School not found. <Link to="/schools" className="underline">Back to schools</Link></p>
@@ -149,7 +158,7 @@ export function SchoolDetail() {
           {levels.length > 1 && (
             <Segmented
               value={level}
-              onChange={(v) => { const n = new URLSearchParams(params); n.delete('mode'); n.delete('campus'); n.delete('program'); if (v) n.set('level', v); else n.delete('level'); setParams(n, { replace: true }) }}
+              onChange={(v) => { const n = new URLSearchParams(params); n.delete('mode'); n.delete('campus'); n.delete('program'); n.delete('page'); if (v) n.set('level', v); else n.delete('level'); setParams(n, { replace: true }) }}
               options={[{ value: '', label: 'All levels' }, ...levels.map((l) => ({ value: l, label: l }))]}
             />
           )}
@@ -172,10 +181,11 @@ export function SchoolDetail() {
           {allProgs.length === 0 && <p className="text-neutral-600">No programs added yet.</p>}
           {allProgs.length > 0 && progs.length === 0 && <p className="text-neutral-600">No programs match. Clear the search to see them all.</p>}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {progs.map((p) => (
+            {progs.slice((page - 1) * PAGE, page * PAGE).map((p) => (
               <ProgramCard key={p.id} p={p} school={school} full={full} saved={saved.isSaved(p)} onToggle={saved.toggleProgram} hideSchool />
             ))}
           </div>
+          <Pagination page={page} pages={Math.ceil(progs.length / PAGE)} onChange={goPage} />
         </>
       ) : (
         <>

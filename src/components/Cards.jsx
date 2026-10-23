@@ -1,15 +1,27 @@
 // Result cards shared by Home, Find a School, School pages, Scholarships and Interested.
 import { useEffect, useRef, useState } from 'react'
-import { schoolCategoryLabel } from '../lib/schoolCategory'
+import { schoolCategory, schoolCategoryLabel } from '../lib/schoolCategory'
 import { Link } from 'react-router-dom'
 import { Badge, LockedRows, VerifiedBadges } from './ui'
 import { variantLabel } from '../lib/variants'
 import { logoFor } from '../lib/logos'
 
 // The school's logo when we have one, otherwise a square with its initials.
-export function Monogram({ name, logo, className = '' }) {
+// Kinds of school that have too many members to collect a logo for each one get a shared icon instead of initials.
+const KIND_ICONS = {
+  'Nursing college': 'M12 21s-7.5-4.6-9.6-9.2C1 8.7 2.7 5 6.3 5c2.1 0 3.7 1.2 5.7 3.3C14 6.2 15.6 5 17.7 5c3.6 0 5.300 3.7 3.900 6.800C19.500 16.400 12 21 12 21z',
+  'College of Education': 'M12 3 1 9l11 6 9-4.9V17h2V9L12 3zM5 13.200V17c0 1.700 3.100 3 7 3s7-1.300 7-3v-3.800l-7 3.800-7-3.800z',
+}
+export function Monogram({ name, logo, kind, className = '' }) {
   const [broken, setBroken] = useState(false)
   logo = logo || logoFor(name)
+  if ((!logo || broken) && KIND_ICONS[kind]) {
+    return (
+      <span aria-hidden="true" className={`shrink-0 w-12 h-12 rounded-xl border border-neutral-200 bg-brand-green-soft flex items-center justify-center text-neutral-800 ${className}`}>
+        <svg viewBox="0 0 24 24" className="w-1/2 h-1/2" fill="currentColor"><path d={KIND_ICONS[kind]} /></svg>
+      </span>
+    )
+  }
   if (logo && !broken) {
     return (
       <span aria-hidden="true" className={`shrink-0 w-12 h-12 rounded-xl border border-neutral-200 bg-white flex items-center justify-center overflow-hidden ${className}`}>
@@ -59,7 +71,7 @@ export function ProgramCard({ p, school, full, saved, onToggle, hideSchool = fal
         ) : (
           <>
             <div className="flex items-start gap-3">
-              <Monogram name={p.schoolName} logo={school?.logoUrl} />
+              <Monogram name={p.schoolName} logo={school?.logoUrl} kind={schoolCategory({ name: p.schoolName, category: school?.category })} />
               <div className="min-w-0 flex-1">
                 <p className="font-semibold text-sm leading-tight break-words">{p.schoolName}</p>
                 <p className="text-sm text-neutral-600">{school?.city ? `${school.city}, ` : ''}{school?.country || 'Ghana'}</p>
@@ -130,7 +142,7 @@ function ProgramDetails({ p, variants, school, onClose }) {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start gap-3">
-          <Monogram name={p.schoolName} logo={school?.logoUrl} />
+          <Monogram name={p.schoolName} logo={school?.logoUrl} kind={schoolCategory({ name: p.schoolName, category: school?.category })} />
           <div className="min-w-0 flex-1">
             <p className="font-semibold text-sm leading-tight break-words">{p.schoolName}</p>
             <p className="text-sm text-neutral-600">{school?.city ? `${school.city}, ` : ''}{school?.country || 'Ghana'}</p>
@@ -177,7 +189,7 @@ export function SchoolCard({ s, count, matches = [], to, signedIn }) {
   return (
     <article className="card flex flex-col gap-3 hover:border-brand-orange transition-colors">
       <div className="flex items-start gap-3">
-        <Monogram name={s.name} logo={s.logoUrl} />
+        <Monogram name={s.name} logo={s.logoUrl} kind={schoolCategory(s)} />
         <div className="min-w-0 flex-1">
           <h3 className="font-bold leading-snug break-words">{s.name}</h3>
           <p className="text-sm text-neutral-600">{[s.city, s.country].filter(Boolean).join(', ')}</p>

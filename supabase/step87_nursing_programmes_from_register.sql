@@ -1,0 +1,7 @@
+-- Record only (already loaded inline on 2026-10-23). Source: ChatGPT replies reading the Nursing and Midwifery Council register
+-- https://www.nmc.gov.gh/web/online-accreditation (unverified). The Ministry of Health site returned errors, so durations and entry rules were not confirmed per college.
+-- Added 87 programmes to 46 public nursing colleges that had none or fewer: Registered General Nursing (RGN), Registered Midwifery (RM),
+-- Registered Community Health Nursing (RCN) as 3-year Diplomas; Nurse Assistant Clinical (NAC), Nurse Assistant Preventive (NAP) as 2-year Certificates.
+-- Entry rule stored in the note only: Ministry general rule as read by ChatGPT from its entry-requirements PDF: aggregate 36 or better (basic nursing), 48 or better (NAC, NAP).
+-- Not loaded because the code meaning or level is unclear: MID, RMN, RCMN, RPHN, PHN, EN, OPN, CCN, PON, ENT, PAED, and BSc routes (for example Dunkwa RGN and RM BSc, Winneba RGN and PHN BSc).
+-- Not loaded: nursing programmes at universities (UG, UENR, UCC, UDS, UHAS, KNUST). Not nursing: Brother Tarcisius Prosthetic and Orthotics Training College, School of Dispensing Optics Oyoko.

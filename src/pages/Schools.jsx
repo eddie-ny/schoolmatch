@@ -145,7 +145,7 @@ export function SchoolDetail() {
     <div className="space-y-5">
       <Link to="/schools" className="text-sm underline">Back to schools</Link>
       <div className="flex items-start gap-4">
-        <Monogram name={school.name} logo={school.logoUrl} className="!w-16 !h-16" />
+        <Monogram name={school.name} logo={school.logoUrl} kind={schoolCategory(school)} className="!w-16 !h-16" />
         <div>
           <h1 className="text-2xl font-bold">{school.name}</h1>
           <p className="text-neutral-600">{[school.city, school.country].filter(Boolean).join(', ')}</p>

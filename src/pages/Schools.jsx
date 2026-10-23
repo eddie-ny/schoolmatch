@@ -33,6 +33,9 @@ export function Schools() {
   const page = Math.max(1, parseInt(params.get('page'), 10) || 1)
   const goPage = (n) => { const next = new URLSearchParams(params); if (n > 1) next.set('page', n); else next.delete('page'); setParams(next); window.scrollTo({ top: 0 }) }
 
+  // Only schools with programmes are listed, and only the kinds that have at least one.
+  const hasKind = useMemo(() => new Set(schools.filter((x) => programs.some((p) => p.schoolId === x.id)).map(schoolCategory)), [schools, programs])
+
   // A school is listed when its own details match the search OR one of its programs does.
   // `matched` holds the programs that fit the search and field, so the card can show them.
   const list = useMemo(() => {
@@ -50,7 +53,7 @@ export function Schools() {
         const show = field ? matched : needle ? own.filter((p) => progHit(p)) : []
         return { s, count: own.length, show, keep: matched.length > 0 || (!field && !offers && schoolHit) }
       })
-      .filter((x) => x.keep)
+      .filter((x) => x.keep && x.count > 0)
   }, [schools, programs, q, where, field, kind, offers])
 
   return (
@@ -58,7 +61,7 @@ export function Schools() {
       <PageTitle title="Find a School" sub={SHOW_INTERNATIONAL ? 'Local and international schools and programs.' : 'Ghanaian universities and their programs.'} />
       <div className="space-y-3 mb-6">
         <input className="input" placeholder="Search by school, program (for example law), city or country" value={q} onChange={(e) => setParam('q', e.target.value)} />
-        <Segmented value={kind} onChange={(v) => setParam('kind', v)} options={[{ value: '', label: 'All schools' }, ...SCHOOL_CATEGORIES.map((c) => ({ value: c.id, label: c.label }))]} />
+        <Segmented value={kind} onChange={(v) => setParam('kind', v)} options={[{ value: '', label: 'All schools' }, ...SCHOOL_CATEGORIES.filter((c) => hasKind.has(c.id)).map((c) => ({ value: c.id, label: c.label }))]} />
         <div className="flex flex-wrap items-center gap-3">
           {SHOW_INTERNATIONAL && <Segmented value={where} onChange={(v) => setParam('where', v === 'all' ? '' : v)} options={[{ value: 'all', label: 'All' }, { value: 'local', label: 'Local' }, { value: 'intl', label: 'International' }]} />}
           <select className="input !w-auto !border-brand-orange" value={field} onChange={(e) => setParam('field', e.target.value)} aria-label="Field of study">

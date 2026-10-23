@@ -78,7 +78,7 @@ export default function Home() {
   const results = useMemo(() => {
     const out = []
     if (browse === 'schools') {
-      schools.filter((x) => !kind || schoolCategory(x) === kind).forEach((x) => out.push({ kind: 'school', id: x.id, local: isLocal(x.country), item: x }))
+      schools.filter((x) => (progCount[x.id] || 0) > 0 && (!kind || schoolCategory(x) === kind)).forEach((x) => out.push({ kind: 'school', id: x.id, local: isLocal(x.country), item: x }))
     } else {
       scholarships.forEach((x) => {
         const ft = x.fundingType === 'Full' ? 'full' : 'partial'
@@ -86,7 +86,7 @@ export default function Home() {
       })
     }
     return out.filter((r) => where === 'all' || (where === 'local' ? r.local : !r.local))
-  }, [schools, scholarships, where, funding, browse, kind])
+  }, [schools, scholarships, where, funding, browse, kind, progCount])
 
   const full = access.level === 'full'
 
@@ -145,7 +145,7 @@ export default function Home() {
           <Segmented value={browse} onChange={setBrowse} options={[{ value: 'schools', label: 'Schools' }, { value: 'scholarships', label: 'Scholarships' }]} />
           <div>
             {browse === 'schools' ? (
-              <Segmented tone="sub" value={kind} onChange={setKind} options={[{ value: '', label: 'All schools' }, ...SCHOOL_CATEGORIES.map((c) => ({ value: c.id, label: c.label }))]} />
+              <Segmented tone="sub" value={kind} onChange={setKind} options={[{ value: '', label: 'All schools' }, ...SCHOOL_CATEGORIES.filter((c) => schools.some((x) => progCount[x.id] > 0 && schoolCategory(x) === c.id)).map((c) => ({ value: c.id, label: c.label }))]} />
             ) : (
               <Segmented tone="sub" value={funding} onChange={setFunding} options={[{ value: 'all', label: 'Any scholarship' }, { value: 'partial', label: 'Covers part of the cost' }, { value: 'full', label: 'Covers all of the cost' }]} />
             )}

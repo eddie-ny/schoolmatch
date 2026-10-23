@@ -20,6 +20,10 @@ const labelTone = {
   'Different qualification needed': 'orange',
 }
 
+// Masters results: schools you meet first, then schools that state no class, then schools asking for a higher class.
+const classRank = (r) => (r.label === 'Meets stated class' ? 0 : r.label === 'Class not published' ? 1 : 2)
+const byClass = (list) => [...list].sort((a, b) => classRank(a) - classRank(b))
+
 function GradeSelect({ value, onChange }) {
   return (
     <select className="input" value={value || ''} onChange={(e) => onChange(e.target.value)}>
@@ -30,29 +34,36 @@ function GradeSelect({ value, onChange }) {
 }
 
 function ResultCard({ item, highlight }) {
+  const [more, setMore] = useState(false)
+  const classLabel = item.label === 'Meets stated class' || item.label === 'Below stated class' || item.label === 'Class not published'
+  // One short line that says what the school wants. The long text sits behind Details.
+  const need = classLabel
+    ? (item.requiredClass ? `Needs ${item.requiredClass} or better` : 'No minimum class stated')
+    : item.requiredQualification ? `Needs ${item.requiredQualification}` : ''
+  const shortLabel = item.label === 'Class not published' ? 'No minimum class stated' : item.label
+  const long = [item.entryNote, ...(item.notes || [])].filter(Boolean)
   return (
     <div className={`card space-y-2 ${highlight ? 'border-2 border-brand-orange' : ''}`}>
       <div className="flex flex-wrap items-center gap-2">
-        <Badge tone={labelTone[item.label]}>{item.label}</Badge>
+        <Badge tone={labelTone[item.label]}>{shortLabel}</Badge>
         {item.projection && <Badge tone="orange">Projection</Badge>}
         {item.demo && <Badge tone="orange">Sample data</Badge>}
       </div>
-      <h3 className="font-bold">{item.programName}</h3>
+      <h3 className="font-bold leading-snug">{item.programName}</h3>
       <p className="text-sm text-neutral-600">{item.schoolName}</p>
-      <div className="text-sm space-y-1">
-        {item.label === 'Meets stated class' || item.label === 'Below stated class' || item.label === 'Class not published' ? (
-          <p>{item.requiredClass ? `Lowest first-degree class the school states: ${item.requiredClass}` : 'The school does not publish a minimum class. Check with the school.'}</p>
-        ) : null}
-        {item.requiredQualification && <p>Qualification the school asks for: <b>{item.requiredQualification}</b></p>}
-        {item.entryNote && <p className="text-neutral-600">{item.entryNote}</p>}
-        {item.aggregate != null && (
-          <p>Your aggregate: <b>{item.aggregate}</b>{item.cutoff != null ? ` · Usual cut-off: ${item.cutoff}` : ' · No cut-off data yet'}</p>
-        )}
-        {item.failures && item.failures.length > 0 && (
-          <ul className="list-disc ml-5 text-neutral-700">{item.failures.map((f) => <li key={f}>{f}</li>)}</ul>
-        )}
-        {(item.notes || []).map((n) => <p key={n} className="text-neutral-600">{n}</p>)}
-      </div>
+      {need && <p className="text-sm font-semibold">{need}</p>}
+      {item.aggregate != null && (
+        <p className="text-sm">Your aggregate: <b>{item.aggregate}</b>{item.cutoff != null ? ` · Cut-off: ${item.cutoff}` : ''}</p>
+      )}
+      {item.failures && item.failures.length > 0 && (
+        <ul className="list-disc ml-5 text-sm text-neutral-700">{item.failures.slice(0, 3).map((f) => <li key={f}>{f}</li>)}</ul>
+      )}
+      {long.length > 0 && (
+        <div>
+          <button type="button" className="text-sm underline" onClick={() => setMore(!more)} aria-expanded={more}>{more ? 'Hide details' : 'Details'}</button>
+          {more && <div className="mt-2 space-y-1 text-sm text-neutral-600">{long.map((n) => <p key={n}>{n}</p>)}</div>}
+        </div>
+      )}
     </div>
   )
 }
@@ -307,9 +318,9 @@ function EligibilityInner() {
           <p>Your first-degree class: <b>{output.yourClass}</b>. Each school sets its own entry rules, so confirm with the school before you apply.</p>
           <h3 className="font-semibold">Schools offering {output.programName}</h3>
           {output.targets.length === 0 && <p className="text-neutral-600">No schools offer this masters program yet.</p>}
-          <PagedGrid items={output.targets} render={(r) => <ResultCard key={r.programId} item={r} highlight />} />
+          <PagedGrid items={byClass(output.targets)} render={(r) => <ResultCard key={r.programId} item={r} highlight />} />
           {output.others.length > 0 && <h3 className="font-semibold">Other masters programs</h3>}
-          <PagedGrid items={output.others} render={(r) => <ResultCard key={r.programId} item={r} />} />
+          <PagedGrid items={byClass(output.others)} render={(r) => <ResultCard key={r.programId} item={r} />} />
         </section>
       )}
 

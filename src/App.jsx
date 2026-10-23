@@ -1,5 +1,5 @@
-import { lazy, Suspense } from 'react'
-import { Routes, Route } from 'react-router-dom'
+import { lazy, Suspense, useEffect } from 'react'
+import { Routes, Route, useLocation } from 'react-router-dom'
 import { Analytics } from '@vercel/analytics/react'
 import Layout from './components/Layout'
 import Home from './pages/Home'
@@ -30,9 +30,32 @@ const NotFound = lazy(() => import('./pages/NotFound'))
 // Visitor counts for the Vercel dashboard. Staff pages and the parent link page (which carries a token) are not counted.
 const skipAnalytics = (event) => (/\/(admin|support|parent-confirm|reset-password)(\/|\?|$)/.test(event.url) ? null : event)
 
+// Every move to another page starts at the top. Changing a filter on the same page does not scroll.
+// The next page loads in pieces (the page code, then the catalogue), and the page grows as it fills in, so the top is
+// held for a moment after the move. It lets go as soon as the visitor scrolls or touches the screen.
+function ScrollToTop() {
+  const { pathname } = useLocation()
+  useEffect(() => {
+    if ('scrollRestoration' in window.history) window.history.scrollRestoration = 'manual'
+    window.scrollTo(0, 0)
+    let holding = true
+    const top = () => { if (holding && window.scrollY > 0) window.scrollTo(0, 0) }
+    const stop = () => { holding = false }
+    const ro = typeof ResizeObserver === 'function' ? new ResizeObserver(top) : null
+    ro?.observe(document.body)
+    const timer = setTimeout(stop, 1500)
+    window.addEventListener('wheel', stop, { passive: true, once: true })
+    window.addEventListener('touchstart', stop, { passive: true, once: true })
+    window.addEventListener('keydown', stop, { once: true })
+    return () => { stop(); clearTimeout(timer); ro?.disconnect(); window.removeEventListener('wheel', stop); window.removeEventListener('touchstart', stop); window.removeEventListener('keydown', stop) }
+  }, [pathname])
+  return null
+}
+
 export default function App() {
   return (
     <>
+    <ScrollToTop />
     <Analytics beforeSend={skipAnalytics} />
     <Routes>
       <Route element={<Layout />}>

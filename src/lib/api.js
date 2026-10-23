@@ -5,6 +5,7 @@
 
 import { supabase } from './supabase'
 import { CORE_SUBJECTS } from './constants'
+import { logoFor } from './logos'
 
 export const PASSWORD_RULE = 'Use at least 8 characters with upper case, lower case and numbers.'
 export const passwordProblem = (pw) =>
@@ -319,7 +320,7 @@ export async function loadCatalog() {
 
   const schools = sS.data.map((x) => {
     const f = fullSchools[x.id] || x
-    return { id: x.id, name: x.name, country: x.country, type: x.type, city: x.city, website: f.website || '', category: f.category || '', logoUrl: x.logo_url || '', verified: x.verified, demo: x.demo }
+    return { id: x.id, name: x.name, country: x.country, type: x.type, city: x.city, website: f.website || '', category: f.category || '', logoUrl: x.logo_url || logoFor(x.name), verified: x.verified, demo: x.demo }
   })
   const schoolById = Object.fromEntries(schools.map((x) => [x.id, x]))
 

@@ -4,10 +4,12 @@ import { schoolCategoryLabel } from '../lib/schoolCategory'
 import { Link } from 'react-router-dom'
 import { Badge, LockedRows, VerifiedBadges } from './ui'
 import { variantLabel } from '../lib/variants'
+import { logoFor } from '../lib/logos'
 
 // The school's logo when we have one, otherwise a square with its initials.
 export function Monogram({ name, logo, className = '' }) {
   const [broken, setBroken] = useState(false)
+  logo = logo || logoFor(name)
   if (logo && !broken) {
     return (
       <span aria-hidden="true" className={`shrink-0 w-12 h-12 rounded-xl border border-neutral-200 bg-white flex items-center justify-center overflow-hidden ${className}`}>

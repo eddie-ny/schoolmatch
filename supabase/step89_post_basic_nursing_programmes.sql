@@ -1,0 +1,2 @@
+-- Record: post-basic nursing programmes ENT, OPN, CCN, PON added for their four specialist schools (already run).
+-- Names and 1 year duration from nmc.gov.gh/web/examination-licensing. MID, EN, RCMN, PAED, PNNM, NP, PN, RGB: no official meaning found, so not loaded.

@@ -10,7 +10,8 @@ export function schoolCategory(s) {
   const own = SCHOOL_CATEGORIES.find((c) => c.id.toLowerCase() === String(s?.category || '').toLowerCase())
   if (own) return own.id
   const name = s?.name || ''
-  if (/nursing|midwifery/i.test(name)) return 'Nursing college'
+  if (/nurs|midwif/i.test(name)) return 'Nursing college'
+  if (/health/i.test(name) && !/universit/i.test(name)) return 'Nursing college' // College of Health, Health Sciences, Community Health Nurses Training
   if (/college of education/i.test(name)) return 'College of Education'
   if (/technical university/i.test(name)) return 'Technical University'
   return 'University'

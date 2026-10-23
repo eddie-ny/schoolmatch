@@ -1,0 +1,9 @@
+-- Record only (already run inline on 2026-10-23). UEW masters minimum first-degree class, from ChatGPT replies citing
+-- https://www.uew.edu.gh/admissions/apply-uew/regular-postgraduate-admissions and https://uew.edu.gh/admissions/apply/entry-requirements (unverified).
+-- Set 'Second Class Lower' on: every two-year MPhil row (quoted general rule: "Candidate must possess a first degree with at least Second Lower Class Division
+-- in the relevant field of study from any recognised university"), MA Arts & Culture, MA Communication Instruction, MA Development Communication,
+-- MA Journalism and Media Studies, MA Strategic Communication, MSc Development Finance, MSc Economics Education, MEd Computer Education and Technology,
+-- MEd Educational Administration and Management.
+-- Left empty (UEW does not publish a class for them in the pages read): other MA, other MEd, all MBA, MFA, Executive Masters, and the 1-year MPhil top-ups
+-- (those ask for a relevant master's degree with CGPA of at least 2.5, not a first-degree class).
+-- ChatGPT also listed MSc Biology, MA Applied Linguistics, MPhil Business Administration (HRM option) and others that are not in our catalogue; not loaded.

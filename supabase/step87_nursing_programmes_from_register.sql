@@ -5,3 +5,5 @@
 -- Entry rule stored in the note only: Ministry general rule as read by ChatGPT from its entry-requirements PDF: aggregate 36 or better (basic nursing), 48 or better (NAC, NAP).
 -- Not loaded because the code meaning or level is unclear: MID, RMN, RCMN, RPHN, PHN, EN, OPN, CCN, PON, ENT, PAED, and BSc routes (for example Dunkwa RGN and RM BSc, Winneba RGN and PHN BSc).
 -- Not loaded: nursing programmes at universities (UG, UENR, UCC, UDS, UHAS, KNUST). Not nursing: Brother Tarcisius Prosthetic and Orthotics Training College, School of Dispensing Optics Oyoko.
+-- Later the same day: added RMN and RCMN (Pantang Nurses Training College, Ankaful), RMN (Yendi) and PHN (Public Health Nurses Training School, Korle-Bu) as Diplomas, duration not set.
+-- Names follow the existing entries under "Public Nursing and Midwifery Training Colleges (Ministry of Health)".

@@ -7,3 +7,6 @@
 -- Left empty (UEW does not publish a class for them in the pages read): other MA, other MEd, all MBA, MFA, Executive Masters, and the 1-year MPhil top-ups
 -- (those ask for a relevant master's degree with CGPA of at least 2.5, not a first-degree class).
 -- ChatGPT also listed MSc Biology, MA Applied Linguistics, MPhil Business Administration (HRM option) and others that are not in our catalogue; not loaded.
+-- Later the same day: added 10 UEW masters programmes ChatGPT listed that the catalogue lacked (unverified):
+-- MSc Biology, MA Applied Linguistics, MPhil Business Administration (HRM option), MPhil Communication Instruction, MPhil Strategic Communication,
+-- MA Translation Studies, MPhil African Studies, MPhil Assessment in Special Education, MPhil Health Promotion and Education, MEd Basic Education.

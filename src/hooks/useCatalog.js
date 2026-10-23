@@ -14,8 +14,11 @@ const notExpired = (s) => !s.deadline || String(s.deadline).slice(0, 10) >= new 
 // Only public schools are listed. A school whose type is Private (or anything but Public) is hidden, and so are its programs.
 const isPublic = (s) => String(s.type || 'Public').toLowerCase() === 'public'
 
+// Entries that are a group of colleges, not a real college, so students never see them.
+const NOT_A_COLLEGE = new Set(['public nursing and midwifery training colleges (ministry of health)'])
+
 function shape(c) {
-  const publicSchools = c.schools.filter(isPublic)
+  const publicSchools = c.schools.filter((s) => isPublic(s) && !NOT_A_COLLEGE.has(String(s.name).trim().toLowerCase()))
   const publicIds = new Set(publicSchools.map((s) => s.id))
   const open = { ...c, schools: publicSchools, programs: c.programs.filter((p) => publicIds.has(p.schoolId)), scholarships: c.scholarships.filter(notExpired) }
   return SHOW_INTERNATIONAL ? open : {

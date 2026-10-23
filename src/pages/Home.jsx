@@ -1,6 +1,11 @@
+import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { useCatalog, isLocal } from '../hooks/useCatalog'
 import { FIELDS, SHOW_INTERNATIONAL } from '../lib/constants'
+import { Segmented, Spinner } from '../components/ui'
+import { SchoolCard, ScholarshipCard } from '../components/Cards'
+import { SCHOOL_CATEGORIES, schoolCategory } from '../lib/schoolCategory'
 
 const tasks = [
   { to: '/schools', title: 'Find a School', text: SHOW_INTERNATIONAL ? 'Search local and international schools and programs.' : 'Search Ghanaian universities and their programs.', bar: 'border-l-brand-orange' },
@@ -61,7 +66,29 @@ function HeroArt() {
 }
 
 export default function Home() {
-  const { user } = useAuth()
+  const { user, access } = useAuth()
+  const { schools, programs, scholarships, loading } = useCatalog()
+  const progCount = useMemo(() => { const m = {}; programs.forEach((p) => { m[p.schoolId] = (m[p.schoolId] || 0) + 1 }); return m }, [programs])
+  const [where, setWhere] = useState('all')
+  const [funding, setFunding] = useState('all')
+  const [browse, setBrowse] = useState('schools')
+  const [kind, setKind] = useState('')
+
+  // One summary card per result: either schools (filtered by kind of school) or scholarships (filtered by how much they pay).
+  const results = useMemo(() => {
+    const out = []
+    if (browse === 'schools') {
+      schools.filter((x) => !kind || schoolCategory(x) === kind).forEach((x) => out.push({ kind: 'school', id: x.id, local: isLocal(x.country), item: x }))
+    } else {
+      scholarships.forEach((x) => {
+        const ft = x.fundingType === 'Full' ? 'full' : 'partial'
+        if (funding === 'all' || funding === ft) out.push({ kind: 'scholarship', id: x.id, local: isLocal(x.country), item: x })
+      })
+    }
+    return out.filter((r) => where === 'all' || (where === 'local' ? r.local : !r.local))
+  }, [schools, scholarships, where, funding, browse, kind])
+
+  const full = access.level === 'full'
 
   return (
     <div className="space-y-16">
@@ -82,6 +109,18 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Illustration */}
+      <section className="grid md:grid-cols-2 gap-8 items-center max-w-4xl mx-auto w-full">
+        <div className="space-y-4 text-center md:text-left">
+          <h2 className="text-2xl md:text-4xl font-bold">Your results, matched to schools</h2>
+          <p className="text-neutral-600 text-lg">
+            Enter your grades, pick a program and see every school that offers it, labelled by your chances.
+          </p>
+          <Link to="/eligibility" className="btn btn-green">Try it now</Link>
+        </div>
+        <HeroArt />
+      </section>
+
       {/* Four task cards */}
       <section className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {tasks.map((t) => (
@@ -92,7 +131,52 @@ export default function Home() {
         ))}
       </section>
 
-      {/* Pick a field: each tile opens the programs page for that field */}
+      {/* Filters and one summary card per result */}
+      <section className="space-y-4">
+        <h2 className="text-2xl font-bold">Browse</h2>
+        <div className="space-y-3">
+          {SHOW_INTERNATIONAL && (
+            <Segmented
+              value={where}
+              onChange={setWhere}
+              options={[{ value: 'all', label: 'All' }, { value: 'local', label: 'Local' }, { value: 'intl', label: 'International' }]}
+            />
+          )}
+          <Segmented value={browse} onChange={setBrowse} options={[{ value: 'schools', label: 'Schools' }, { value: 'scholarships', label: 'Scholarships' }]} />
+          <div>
+            {browse === 'schools' ? (
+              <Segmented tone="sub" value={kind} onChange={setKind} options={[{ value: '', label: 'All schools' }, ...SCHOOL_CATEGORIES.map((c) => ({ value: c.id, label: c.label }))]} />
+            ) : (
+              <Segmented tone="sub" value={funding} onChange={setFunding} options={[{ value: 'all', label: 'Any scholarship' }, { value: 'partial', label: 'Covers part of the cost' }, { value: 'full', label: 'Covers all of the cost' }]} />
+            )}
+          </div>
+        </div>
+        {!loading && <p className="text-sm text-neutral-600">{results.length} result{results.length === 1 ? '' : 's'}</p>}
+
+        {loading ? (
+          <Spinner />
+        ) : results.length === 0 ? (
+          <p className="text-neutral-600">Nothing matches these filters yet.</p>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {results.slice(0, 6).map((r) => (
+              r.kind === 'school'
+                ? <SchoolCard key={`school-${r.id}`} s={r.item} count={progCount[r.id] || 0} to={`/schools/${r.id}`} signedIn={!!user} />
+                : <ScholarshipCard key={`sch-${r.id}`} s={r.item} full={full} />
+            ))}
+          </div>
+        )}
+        {!loading && results.length > 6 && (
+          <Link
+            className="btn btn-outline"
+            to={browse === 'schools' ? (kind ? `/schools?kind=${encodeURIComponent(kind)}` : '/schools') : (funding === 'all' ? '/scholarships' : `/scholarships?funding=${funding}`)}
+          >
+            {`See all ${results.length} ${browse === 'schools' ? 'schools' : 'scholarships'}`}
+          </Link>
+        )}
+      </section>
+
+      {/* Program first: pick a field, see a taste, the rest is locked */}
       <section className="space-y-4">
         <h2 className="text-2xl font-bold">What do you want to study?</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -107,7 +191,6 @@ export default function Home() {
             </Link>
           ))}
         </div>
-        <Link to="/programs" className="underline font-semibold">See all programs</Link>
       </section>
 
       {/* Journey */}

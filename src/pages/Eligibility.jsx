@@ -16,12 +16,15 @@ const labelTone = {
   'Meets stated class': 'green',
   'Class not published': 'gray',
   'Below stated class': 'orange',
+  'Meets stated CGPA': 'green',
+  'Below stated CGPA': 'orange',
+  'Asks for CGPA': 'gray',
   'Qualification matches': 'green',
   'Different qualification needed': 'orange',
 }
 
 // Masters results: schools you meet first, then schools that state no class, then schools asking for a higher class.
-const classRank = (r) => (r.label === 'Meets stated class' ? 0 : r.label === 'Class not published' ? 1 : 2)
+const classRank = (r) => (/^Meets/.test(r.label) ? 0 : /^Below/.test(r.label) ? 2 : 1)
 const byClass = (list) => [...list].sort((a, b) => classRank(a) - classRank(b))
 
 function GradeSelect({ value, onChange }) {
@@ -35,10 +38,10 @@ function GradeSelect({ value, onChange }) {
 
 function ResultCard({ item, highlight }) {
   const [more, setMore] = useState(false)
-  const classLabel = item.label === 'Meets stated class' || item.label === 'Below stated class' || item.label === 'Class not published'
+  const classLabel = ['Meets stated class', 'Below stated class', 'Class not published', 'Meets stated CGPA', 'Below stated CGPA', 'Asks for CGPA'].includes(item.label)
   // One short line that says what the school wants. The long text sits behind Details.
   const need = classLabel
-    ? (item.requiredClass ? `Needs ${item.requiredClass} or better` : 'No minimum class stated')
+    ? [item.requiredClass ? `Needs ${item.requiredClass} or better` : (item.requiredCgpa ? '' : 'No minimum class stated'), item.requiredCgpa ? `CGPA of at least ${item.requiredCgpa}` : ''].filter(Boolean).join(' and ')
     : item.requiredQualification ? `Needs ${item.requiredQualification}` : ''
   const shortLabel = item.label === 'Class not published' ? 'No minimum class stated' : item.label
   const long = [item.entryNote, ...(item.notes || [])].filter(Boolean)
@@ -128,6 +131,7 @@ function EligibilityInner() {
   const saved = user.results
   const [level, setLevel] = useState('undergraduate')
   const [degreeClass, setDegreeClass] = useState('')
+  const [cgpa, setCgpa] = useState('')
   const masters = level === 'masters'
   const topup = level === 'topup'
   const [qualification, setQualification] = useState('')
@@ -176,8 +180,9 @@ function EligibilityInner() {
     if (masters) {
       if (!degreeClass) return setError('Choose your first-degree class.')
       if (!programName) return setError('Type the masters program you want and choose it from the list.')
+      if (cgpa !== '' && !(Number(cgpa) >= 0 && Number(cgpa) <= 5)) return setError('Your CGPA must be a number from 0 to 5, for example 3.2.')
       setBusy(true)
-      try { setOutput(await checkMastersEligibility({ programName, degreeClass })) } catch (err) { setError(err.message) }
+      try { setOutput(await checkMastersEligibility({ programName, degreeClass, cgpa })) } catch (err) { setError(err.message) }
       setBusy(false)
       return
     }
@@ -237,6 +242,9 @@ function EligibilityInner() {
               <option value="">Choose class</option>
               {DEGREE_CLASSES.map((c) => <option key={c}>{c}</option>)}
             </select>
+          </Field>
+          <Field label="CGPA (optional)" hint="Only a few schools ask for it, for example 2.5 out of 4.0. Leave it empty if you do not know it. Schools that do not ask will ignore it.">
+            <input className="input" type="number" inputMode="decimal" min="0" max="5" step="0.01" placeholder="For example 3.2" value={cgpa} onChange={(e) => setCgpa(e.target.value)} />
           </Field>
         </div>
         ) : (

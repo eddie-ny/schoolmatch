@@ -492,8 +492,11 @@ export async function checkEligibility({ programName, scope, mode, grades, elect
 }
 
 // Masters: compares the student's first-degree class with the class each school states. No thresholds are guessed.
-export async function checkMastersEligibility({ programName, degreeClass }) {
-  const { data, error } = await supabase.rpc('check_masters_eligibility', { p_program_name: programName, p_degree_class: degreeClass })
+export async function checkMastersEligibility({ programName, degreeClass, cgpa }) {
+  // The CGPA goes along only when the student typed one, so the check works the same for schools that do not ask for it.
+  const args = { p_program_name: programName, p_degree_class: degreeClass }
+  if (cgpa !== '' && cgpa != null) args.p_cgpa = Number(cgpa)
+  const { data, error } = await supabase.rpc('check_masters_eligibility', args)
   fail(error, 'Could not check masters eligibility.')
   return data
 }

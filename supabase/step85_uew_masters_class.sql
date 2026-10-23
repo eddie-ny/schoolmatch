@@ -10,3 +10,12 @@
 -- Later the same day: added 10 UEW masters programmes ChatGPT listed that the catalogue lacked (unverified):
 -- MSc Biology, MA Applied Linguistics, MPhil Business Administration (HRM option), MPhil Communication Instruction, MPhil Strategic Communication,
 -- MA Translation Studies, MPhil African Studies, MPhil Assessment in Special Education, MPhil Health Promotion and Education, MEd Basic Education.
+-- Second pass (ChatGPT, quoting UEW sandwich, MBA and MEd rules): set 'Second Class Lower' on 22 more UEW rows:
+-- MBA Accounting, Finance, Human Resource Management, Management Information System, Marketing, Procurement and Supply Chain Management
+-- (UEW wording "at least a Second Class Division", Third Class with 5 years' experience accepted);
+-- MA Art Education, English, Ghanaian Language Studies, History Education, Theatre Arts, Conflict Human Rights and Peace Studies;
+-- MEd Biology Education, Early Childhood Education, French Education, Geography, Home Economics, Mathematics Education, Physical Education, Social Studies Education, Special Education, Supervision.
+-- Still empty: MFA, Executive Masters, MEd Counseling Psychology, English, Guidance and Counselling, Institutional Mentorship and Supervision, Mathematics, Political Science, Science, TESL, Basic Education (distance MEd rule says "good Bachelor's Degree" with no class).
+-- Source pages carry older headings (sandwich page 2020/21, regular page 2023/24), so these are unverified.
+-- UCC: set from our own stored notes: MBA Accounting 'Third Class' ("at least Third Class plus two years of experience"), MEd ICT Education 'Second Class Lower' ("at least Second Class Honours").
+-- Not applied to the other 51 UCC sandwich rows: UCC's general rule "at least Second Class" is for regular admission; the sandwich notice states no class.

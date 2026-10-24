@@ -1,0 +1,4 @@
+-- Record (already run): CKT-UTAS and UENR masters, ChatGPT reply of 24 October 2026 (unverified).
+-- Second Class Lower: CKT-UTAS Master of Public Health, UENR MSc Sustainable Mining.
+-- Notes only: five CKT-UTAS top-ups (no prior masters grade published; general MSc/MPhil rule not confirmed for top-ups).
+-- Blank: CKT-UTAS MEd Mathematics and MEd Science (no MEd rule found), UENR MSc Mining and Extractive Resource Policy Planning.

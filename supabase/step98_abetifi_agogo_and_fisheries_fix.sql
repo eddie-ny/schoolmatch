@@ -1,0 +1,5 @@
+-- Record (already run), Claude's own web check, 24 October 2026.
+-- Added 5 B.Ed. programmes (Abetifi: Primary, JHS, UCC; Agogo: Early Grade, Primary, JHS, UEW) from the UNOFFICIAL site ghstudents.com (2025/2026), tagged unverified.
+-- Reverted MPhil Fisheries Science (UDS) to no class: the current UDS 2026/2027 graduate admissions page (gs.uds.edu.gh/admissions) states none.
+-- Checked, no change: UEW flyer 2025 gives one MEd rule, "a good Bachelor's with education component", no class, so the six MEds stay blank.
+-- Not loaded: Accra (only a December 2019 news article) and Akrokerri (only a 2018 unofficial list).

@@ -1,0 +1,5 @@
+-- Record (already run): UEW masters, ChatGPT replies of 24 October 2026.
+-- MEd Political Science got "Second Class Lower" (both replies agree).
+-- Nine MPhil top-up notes were added (prior masters grade, not a first-degree class, so no class or CGPA field was set).
+-- Not loaded: the six other MEd programmes. One reply says "at least 2nd Class Lower under the general MEd sandwich rule", the other found nothing on the programme pages, and our rows are Regular mode.
+-- MFA Theatre Arts, MA Translation Studies, Executive Masters: no class published.

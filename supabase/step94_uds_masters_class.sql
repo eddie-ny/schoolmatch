@@ -1,0 +1,4 @@
+-- Record (already run): UDS masters, ChatGPT reply of 24 October 2026 (unverified).
+-- Second Class Lower set for MEd Agriculture, MPhil Agricultural Education, MPhil Entrepreneurship and Innovation, MPhil Procurement and Supply Chain Management, MPhil Fisheries Science (2024/2025 PDF).
+-- Notes only: Agroforestry and Dryland Conservation, Environmental Management and Sustainability ("First- or Second-Class Honours", no division), Early Childhood Care and Education (prior masters CGPA 3.0).
+-- Left blank: the UDS general rule "at least a Second Class" does not say which division, so it is not copied onto the other 12 programmes.

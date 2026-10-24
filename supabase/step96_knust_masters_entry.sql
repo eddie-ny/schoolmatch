@@ -1,0 +1,4 @@
+-- Record (already run): KNUST masters, from the Graduate Admission Requirements 2026/2027 PDF (ChatGPT reply, 24 October 2026, unverified).
+-- Second Class Lower: MPH Health Economics and Policy.
+-- min_cgpa set: MEd Educational Planning and Administration 2.5; MPhil Educational Planning and Administration, ICT Education, Mathematics Education, Science Education 3.0 (each also accepts a CWA of 55 or 60, stated in the note).
+-- Notes only: MSc Architecture top-up (CWA 60, not CGPA), MPhil Mechanical Engineering and Publishing Studies top-ups (prior masters), Clinical Psychology, Veterinary Anatomy (no class published).

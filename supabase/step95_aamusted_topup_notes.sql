@@ -1,0 +1,3 @@
+-- Record (already run): AAMUSTED, ChatGPT reply of 24 October 2026 (2025/2026 notice, unverified).
+-- No class or CGPA published for any of the 17 programmes. A note was added to the 16 one-year MPhil top-ups: needs a prior masters, no grade published, competitive exam or interview.
+-- The MPH has no published class. The regular MPhil rule "at least Second Class (Lower Division)" is for first-degree entrants, not top-ups, so it was not applied.

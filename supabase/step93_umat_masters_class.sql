@@ -1,0 +1,4 @@
+-- Record (already run): UMaT masters entry classes from UMaT postgraduate and department pages (ChatGPT, 24 October 2026, mostly undated, unverified).
+-- 15 programmes Second Class Lower: MBTM x4, MSc Engineering Management, MPhil and MSc Computer Science and Engineering, Mathematics, Environmental Engineering, Occupational Health and Safety, MPhil Petroleum Engineering, MPhil Petroleum Refining.
+-- 12 programmes Second Class Upper: Electrical and Electronic, Geological, Geomatic, Mechanical, Minerals, Mining Engineering (MSc and MPhil each).
+-- Not loaded: MSc Petroleum Engineering and MSc Petroleum Refining (reply was cut off before them).

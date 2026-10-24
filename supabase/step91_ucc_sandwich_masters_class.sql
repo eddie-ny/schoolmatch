@@ -1,0 +1,4 @@
+-- Record (already run): UCC sandwich masters given "Second Class Lower" where the UCC 2026 sandwich notice (25 March 2026) states it.
+-- MBA Finance, MBA Human Resource Management, MBA Management, MEd Accounting Education, MEd Management Education, MEd Mathematics Education,
+-- MEd Clothing and Textiles, MEd Family Ecology, MEd Food and Nutrition, MSc Economics.
+-- The general "good first degree" wording states no class, so those programmes stay blank. Reply was cut off after MPhil Early Childhood Education.

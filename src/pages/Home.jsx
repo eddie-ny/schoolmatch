@@ -24,7 +24,7 @@ const steps = [
 
 
 // Original illustration drawn in the brand colours. The two floating cards describe real features only.
-function HeroArt() {
+export function HeroArt() {
   return (
     <div className="relative rounded-3xl overflow-hidden bg-brand-green-soft aspect-square w-full max-w-md mx-auto shadow-sm" aria-hidden="true">
       <svg viewBox="0 0 400 400" className="absolute inset-0 w-full h-full">

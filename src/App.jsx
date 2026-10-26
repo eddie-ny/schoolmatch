@@ -3,10 +3,14 @@ import { Routes, Route, useLocation } from 'react-router-dom'
 import { Analytics } from '@vercel/analytics/react'
 import Layout from './components/Layout'
 import Home from './pages/Home'
+import Landing from './pages/Landing'
 import { SHOW_INTERNATIONAL } from './lib/constants'
 const Schools = lazy(() => import('./pages/Schools').then((m) => ({ default: m.Schools })))
 const SchoolDetail = lazy(() => import('./pages/Schools').then((m) => ({ default: m.SchoolDetail })))
 const Abroad = lazy(() => import('./pages/Abroad'))
+const International = lazy(() => import('./pages/International'))
+const InternationalEligibility = lazy(() => import('./pages/InternationalEligibility'))
+const SatTest = lazy(() => import('./pages/SatTest'))
 const Scholarships = lazy(() => import('./pages/Scholarships'))
 const Eligibility = lazy(() => import('./pages/Eligibility'))
 const Login = lazy(() => import('./pages/Auth').then((m) => ({ default: m.Login })))
@@ -59,7 +63,11 @@ export default function App() {
     <Analytics beforeSend={skipAnalytics} />
     <Routes>
       <Route element={<Layout />}>
-        <Route path="/" element={<Home />} />
+        <Route path="/" element={<Landing />} />
+        <Route path="/local" element={<Home />} />
+        <Route path="/international" element={<International />} />
+        <Route path="/international/eligibility" element={<InternationalEligibility />} />
+        <Route path="/international/sat" element={<SatTest />} />
         <Route path="/schools" element={<Schools />} />
         <Route path="/schools/:id" element={<SchoolDetail />} />
         {SHOW_INTERNATIONAL && <Route path="/abroad" element={<Abroad />} />}

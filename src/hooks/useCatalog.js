@@ -21,8 +21,15 @@ function shape(c) {
   const publicSchools = c.schools.filter((s) => isPublic(s) && !NOT_A_COLLEGE.has(String(s.name).trim().toLowerCase()))
   const publicIds = new Set(publicSchools.map((s) => s.id))
   const open = { ...c, schools: publicSchools, programs: c.programs.filter((p) => publicIds.has(p.schoolId)), scholarships: c.scholarships.filter(notExpired) }
-  return SHOW_INTERNATIONAL ? open : {
+  // The International pages always get the schools, programs and scholarships outside Ghana, even while the local pages list Ghana only.
+  const intl = {
+    schools: open.schools.filter((s) => !isLocal(s.country)),
+    programs: open.programs.filter((p) => p.international),
+    scholarships: open.scholarships.filter((s) => !isLocal(s.country)),
+  }
+  return SHOW_INTERNATIONAL ? { ...open, intl } : {
     ...open,
+    intl,
     schools: open.schools.filter((s) => isLocal(s.country)),
     programs: open.programs.filter((p) => !p.international),
     scholarships: open.scholarships.filter((s) => isLocal(s.country)),
@@ -44,7 +51,7 @@ export function useCatalog() {
   const { user, access } = useAuth()
   const key = `${user?.id || 'anon'}|${access.level}`
   const hit = cached && cached.key === key && Date.now() - cached.at < TTL && cached.value
-  const [data, setData] = useState(hit ? { ...hit, loading: false, error: '' } : { schools: [], programs: [], scholarships: [], loading: true, error: '' })
+  const [data, setData] = useState(hit ? { ...hit, loading: false, error: '' } : { schools: [], programs: [], scholarships: [], intl: { schools: [], programs: [], scholarships: [] }, loading: true, error: '' })
   useEffect(() => {
     let live = true
     const entry = getCatalog(key)
@@ -52,7 +59,7 @@ export function useCatalog() {
     setData((d) => (d.loading ? d : { ...d, loading: true }))
     entry.promise
       .then((c) => live && setData({ ...c, loading: false, error: '' }))
-      .catch((e) => live && setData({ schools: [], programs: [], scholarships: [], loading: false, error: e.message }))
+      .catch((e) => live && setData({ schools: [], programs: [], scholarships: [], intl: { schools: [], programs: [], scholarships: [] }, loading: false, error: e.message }))
     return () => { live = false }
   }, [key])
   return data

@@ -9,6 +9,8 @@ import { SHOW_INTERNATIONAL } from '../lib/constants'
 export const APP_NAME = 'WEMK'
 
 const links = [
+  { to: '/local', label: 'Local' },
+  { to: '/international', label: 'International' },
   { to: '/schools', label: 'Find a School' },
   { to: '/programs', label: 'Programs' },
   ...(SHOW_INTERNATIONAL ? [{ to: '/abroad', label: 'Study Abroad' }] : []),

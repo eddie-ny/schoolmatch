@@ -20,8 +20,9 @@ export default function International() {
   return (
     <div className="space-y-8">
       <PageTitle title="International" sub="Universities abroad, with entry requirements checked against your SAT score or degree." />
-      <section className="rounded-3xl bg-neutral-900 text-white p-6 md:p-8 border-4 border-brand-orange md:flex md:items-center md:gap-6">
-        <div className="md:flex-1">
+      <div className="grid md:grid-cols-[1fr_auto] gap-6 items-center">
+      <section className="rounded-3xl bg-neutral-900 text-white p-6 md:p-8 border-4 border-brand-orange">
+        <div>
         <h2 className="text-2xl md:text-4xl font-extrabold leading-tight">Ready for International Admission?</h2>
         <p className="text-lg mt-1 text-white/90">Take your SAT today. Get admission.</p>
         <div className="flex flex-wrap gap-3 mt-4">
@@ -29,8 +30,11 @@ export default function International() {
           <Link to="/international/eligibility" className="btn !bg-white !text-neutral-900">Check my eligibility</Link>
         </div>
         </div>
-        <IntlArt className="hidden md:block w-64 shrink-0" />
       </section>
+      <div className="rounded-3xl bg-brand-orange-soft w-full max-w-sm mx-auto md:w-80 aspect-square flex items-center justify-center p-4 shadow-sm">
+        <IntlArt className="w-full" />
+      </div>
+      </div>
 
       <section>
         <div className="mb-4">

@@ -1,7 +1,7 @@
 // Original illustration for the International path: a globe, a paper plane and a graduation cap. Decorative only.
 export default function IntlArt({ className = '' }) {
   return (
-    <svg viewBox="0 0 320 240" className={className} aria-hidden="true" focusable="false">
+    <svg viewBox="30 10 280 230" className={className} aria-hidden="true" focusable="false">
       <circle cx="170" cy="130" r="86" fill="#FFB02E" />
       <circle cx="170" cy="130" r="86" fill="none" stroke="#fff" strokeWidth="3" opacity="0.7" />
       <ellipse cx="170" cy="130" rx="38" ry="86" fill="none" stroke="#fff" strokeWidth="3" opacity="0.7" />

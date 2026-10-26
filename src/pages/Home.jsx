@@ -28,24 +28,30 @@ export function HeroArt() {
   return (
     <div className="relative rounded-3xl overflow-hidden bg-brand-green-soft aspect-square w-full max-w-md mx-auto shadow-sm" aria-hidden="true">
       <svg viewBox="0 0 400 400" className="absolute inset-0 w-full h-full">
-        <circle cx="250" cy="140" r="95" fill="#FFD27A" />
-        <path d="M30 400 V220 a115 115 0 0 1 230 0 V400 Z" fill="#B2DE2B" opacity="0.65" />
-        {/* leaves */}
-        <path d="M20 400 C40 330 90 300 150 290 C140 340 100 385 20 400 Z" fill="#5E9E4E" />
-        <path d="M70 400 C90 350 130 330 180 330 C170 370 130 395 70 400 Z" fill="#9CCB6B" />
-        {/* body */}
-        <path d="M130 400 V300 a75 75 0 0 1 75 -75 h20 a75 75 0 0 1 75 75 V400 Z" fill="#FFB02E" />
-        {/* arm */}
-        <path d="M262 262 C290 270 312 300 328 340 L296 352 C284 322 270 304 250 296 Z" fill="#A9693F" />
-        {/* neck and head */}
-        <rect x="190" y="205" width="32" height="30" rx="10" fill="#A9693F" />
-        <circle cx="206" cy="175" r="42" fill="#A9693F" />
-        {/* hair */}
-        <path d="M162 170 C158 128 190 112 214 116 C240 118 256 140 250 170 C240 150 220 144 196 146 C180 148 168 156 162 170 Z" fill="#26352B" />
-        {/* plant pot */}
-        <path d="M322 400 L330 366 H372 L378 400 Z" fill="#D9824E" />
-        <path d="M350 366 C336 340 340 312 352 292 C368 316 366 344 350 366 Z" fill="#5E9E4E" />
-        <path d="M352 366 C368 352 384 346 392 334 C388 356 376 366 352 366 Z" fill="#7FB55F" />
+        <circle cx="290" cy="110" r="52" fill="#FFD27A" />
+        <path d="M0 400 V330 C80 300 160 310 400 320 V400 Z" fill="#B2DE2B" opacity="0.65" />
+        {/* campus building */}
+        <path d="M70 190 L200 120 L330 190 Z" fill="#26352B" />
+        <rect x="86" y="190" width="228" height="14" fill="#3A4F40" />
+        <rect x="100" y="204" width="24" height="104" rx="4" fill="#fff" />
+        <rect x="150" y="204" width="24" height="104" rx="4" fill="#fff" />
+        <rect x="226" y="204" width="24" height="104" rx="4" fill="#fff" />
+        <rect x="276" y="204" width="24" height="104" rx="4" fill="#fff" />
+        <path d="M184 308 V250 a16 16 0 0 1 32 0 V308 Z" fill="#FFB02E" />
+        <rect x="70" y="308" width="260" height="14" rx="3" fill="#D9D9D9" />
+        <rect x="56" y="322" width="288" height="14" rx="3" fill="#BDBDBD" />
+        <circle cx="200" cy="168" r="9" fill="#FFB02E" />
+        {/* trees */}
+        <rect x="30" y="296" width="8" height="40" fill="#8A5A36" />
+        <circle cx="34" cy="284" r="26" fill="#5E9E4E" />
+        <rect x="364" y="300" width="8" height="36" fill="#8A5A36" />
+        <circle cx="368" cy="288" r="24" fill="#7FB55F" />
+        {/* books */}
+        <rect x="120" y="352" width="90" height="16" rx="3" fill="#FFB02E" />
+        <rect x="130" y="368" width="96" height="16" rx="3" fill="#5E9E4E" />
+        {/* graduation cap */}
+        <path d="M290 330 L340 346 L290 362 L240 346 Z" fill="#26352B" />
+        <path d="M262 352 V366 C274 374 306 374 318 366 V352 L290 360 Z" fill="#3A4F40" />
       </svg>
       <div className="absolute top-5 left-4 bg-white rounded-2xl shadow-md px-4 py-3 flex items-center gap-3">
         <span className="w-9 h-9 rounded-xl bg-brand-orange-soft flex items-center justify-center text-brand-orange font-bold">&#10022;</span>

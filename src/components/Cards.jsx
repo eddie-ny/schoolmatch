@@ -126,7 +126,6 @@ export function ProgramCard({ p, school, full, saved, onToggle, hideSchool = fal
 // Everything we know about the programme, with each way of studying it in its own block.
 function ProgramDetails({ p, variants, school, onClose }) {
   const box = useRef(null)
-  const masters = p.level === 'Masters'
   useEffect(() => {
     const opener = document.activeElement
     box.current?.focus()
@@ -141,46 +140,56 @@ function ProgramDetails({ p, variants, school, onClose }) {
         className="bg-white rounded-2xl w-full max-w-lg max-h-[85vh] overflow-auto p-5 space-y-4 outline-none"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-start gap-3">
-          <Monogram name={p.schoolName} logo={school?.logoUrl} kind={schoolCategory({ name: p.schoolName, category: school?.category })} />
-          <div className="min-w-0 flex-1">
-            <p className="font-semibold text-sm leading-tight break-words">{p.schoolName}</p>
-            <p className="text-sm text-neutral-600">{school?.city ? `${school.city}, ` : ''}{school?.country || 'Ghana'}</p>
-          </div>
-        </div>
-        <h2 className="text-xl font-bold leading-snug break-words">{p.name}</h2>
-        <div className="flex flex-wrap gap-2">
-          {p.level && <Badge>{p.level}</Badge>}
-          {p.field && <Badge>{p.field}</Badge>}
-          {p.demo && <Badge tone="orange">Sample data</Badge>}
-        </div>
-        {variants.map((v) => (
-          <section key={v.id} className="rounded-xl border border-neutral-200 p-3 space-y-2">
-            <div className="flex flex-wrap items-center gap-2">
-              <h3 className="font-semibold">{variantLabel(v)}</h3>
-              {v.verified === false && !v.demo && <Badge>Unverified</Badge>}
-            </div>
-            <dl className="text-sm grid grid-cols-2 gap-x-4 gap-y-1">
-              {v.entryQualification && (<><dt className="text-neutral-500">You need</dt><dd className="break-words">{v.entryQualification}</dd></>)}
-              {!masters && (
-                <>
-                  {v.cutoffAggregate != null && (<><dt className="text-neutral-500">Cut-off aggregate</dt><dd>{v.cutoffAggregate}{v.cutoffYear ? ` (${v.cutoffYear})` : ''}</dd></>)}
-                  {v.requirements?.length > 0 && (<><dt className="text-neutral-500">Requirements</dt><dd className="break-words">{v.requirements.map((r) => `${r.subject}${r.minGrade ? ' ' + r.minGrade : ''}`).join(', ')}</dd></>)}
-                </>
-              )}
-              {v.durationYears != null && (<><dt className="text-neutral-500">Duration</dt><dd>{v.durationYears} years</dd></>)}
-              {v.minDegreeClass && (<><dt className="text-neutral-500">Degree class needed</dt><dd>{v.minDegreeClass}</dd></>)}
-              {v.feesGhs != null && (<><dt className="text-neutral-500">Fees</dt><dd>GHS {Number(v.feesGhs).toLocaleString()}</dd></>)}
-              {v.feesUsd != null && (<><dt className="text-neutral-500">Fees</dt><dd>USD {Number(v.feesUsd).toLocaleString()}</dd></>)}
-            </dl>
-            {v.entryNote && <p className="text-sm text-neutral-700 break-words">{v.entryNote}</p>}
-          </section>
-        ))}
+        <ProgramBody p={p} variants={variants} school={school} />
         <div className="flex flex-wrap gap-3">
-          {school?.website && <a className="btn btn-orange" href={school.website} target="_blank" rel="noreferrer">School website</a>}
           <button className="btn btn-outline" onClick={onClose}>Close</button>
         </div>
       </div>
+    </div>
+  )
+}
+
+// The facts about a programme: school, badges, and one block per way of studying it. Used in the pop-up and on the programme page.
+export function ProgramBody({ p, variants = [p], school }) {
+  const masters = p.level === 'Masters'
+  return (
+    <div className="space-y-4">
+      <div className="flex items-start gap-3">
+        <Monogram name={p.schoolName} logo={school?.logoUrl} kind={schoolCategory({ name: p.schoolName, category: school?.category })} />
+        <div className="min-w-0 flex-1">
+          <p className="font-semibold text-sm leading-tight break-words">{p.schoolName}</p>
+          <p className="text-sm text-neutral-600">{school?.city ? `${school.city}, ` : ''}{school?.country || 'Ghana'}</p>
+        </div>
+      </div>
+      <h2 className="text-xl font-bold leading-snug break-words">{p.name}</h2>
+      <div className="flex flex-wrap gap-2">
+        {p.level && <Badge>{p.level}</Badge>}
+        {p.field && <Badge>{p.field}</Badge>}
+        {p.demo && <Badge tone="orange">Sample data</Badge>}
+      </div>
+      {variants.map((v) => (
+        <section key={v.id} className="rounded-xl border border-neutral-200 p-3 space-y-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="font-semibold">{variantLabel(v)}</h3>
+            {v.verified === false && !v.demo && <Badge>Unverified</Badge>}
+          </div>
+          <dl className="text-sm grid grid-cols-2 gap-x-4 gap-y-1">
+            {v.entryQualification && (<><dt className="text-neutral-500">You need</dt><dd className="break-words">{v.entryQualification}</dd></>)}
+            {!masters && (
+              <>
+                {v.cutoffAggregate != null && (<><dt className="text-neutral-500">Cut-off aggregate</dt><dd>{v.cutoffAggregate}{v.cutoffYear ? ` (${v.cutoffYear})` : ''}</dd></>)}
+                {v.requirements?.length > 0 && (<><dt className="text-neutral-500">Requirements</dt><dd className="break-words">{v.requirements.map((r) => `${r.subject}${r.minGrade ? ' ' + r.minGrade : ''}`).join(', ')}</dd></>)}
+              </>
+            )}
+            {v.durationYears != null && (<><dt className="text-neutral-500">Duration</dt><dd>{v.durationYears} years</dd></>)}
+            {v.minDegreeClass && (<><dt className="text-neutral-500">Degree class needed</dt><dd>{v.minDegreeClass}</dd></>)}
+            {v.feesGhs != null && (<><dt className="text-neutral-500">Fees</dt><dd>GHS {Number(v.feesGhs).toLocaleString()}</dd></>)}
+            {v.feesUsd != null && (<><dt className="text-neutral-500">Fees</dt><dd>USD {Number(v.feesUsd).toLocaleString()}</dd></>)}
+          </dl>
+          {v.entryNote && <p className="text-sm text-neutral-700 break-words">{v.entryNote}</p>}
+        </section>
+      ))}
+      {school?.website && <a className="btn btn-orange" href={school.website} target="_blank" rel="noreferrer">School website</a>}
     </div>
   )
 }

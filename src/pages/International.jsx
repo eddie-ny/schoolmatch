@@ -5,6 +5,7 @@ import { useCatalog } from '../hooks/useCatalog'
 import { useSaved } from '../hooks/useSaved'
 import { PageTitle, Segmented, Spinner, PagedGrid } from '../components/ui'
 import { ProgramCard, ScholarshipCard } from '../components/Cards'
+import IntlArt from '../components/IntlArt'
 
 // Home of the International path: bachelors and masters abroad, with the SAT call on top.
 export default function International() {
@@ -19,13 +20,16 @@ export default function International() {
   return (
     <div className="space-y-8">
       <PageTitle title="International" sub="Universities abroad, with entry requirements checked against your SAT score or degree." />
-      <section className="rounded-3xl bg-neutral-900 text-white p-6 md:p-8 border-4 border-brand-orange">
+      <section className="rounded-3xl bg-neutral-900 text-white p-6 md:p-8 border-4 border-brand-orange md:flex md:items-center md:gap-6">
+        <div className="md:flex-1">
         <h2 className="text-2xl md:text-4xl font-extrabold leading-tight">Ready for International Admission?</h2>
         <p className="text-lg mt-1 text-white/90">Take your SAT today. Get admission.</p>
         <div className="flex flex-wrap gap-3 mt-4">
           <Link to="/international/sat" className="btn btn-orange">Take a short SAT test</Link>
           <Link to="/international/eligibility" className="btn !bg-white !text-neutral-900">Check my eligibility</Link>
         </div>
+        </div>
+        <IntlArt className="hidden md:block w-64 shrink-0" />
       </section>
 
       <section>

@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useEffect } from 'react'
 import { listEligibilityPrograms, checkEligibility, checkMastersEligibility, checkTopupEligibility } from '../lib/api'
@@ -52,7 +53,9 @@ function ResultCard({ item, highlight }) {
         {item.projection && <Badge tone="orange">Projection</Badge>}
         {item.demo && <Badge tone="orange">Sample data</Badge>}
       </div>
-      <h3 className="font-bold leading-snug">{item.programName}</h3>
+      <h3 className="font-bold leading-snug">
+        {item.programId ? <Link to={`/programs/${item.programId}`} className="hover:underline">{item.programName}</Link> : item.programName}
+      </h3>
       <p className="text-sm text-neutral-600">{item.schoolName}</p>
       {need && <p className="text-sm font-semibold">{need}</p>}
       {item.aggregate != null && (
@@ -213,6 +216,8 @@ function EligibilityInner() {
 
   const qualified = (output?.targets || []).filter((r) => r.label !== 'Not yet eligible')
   const notYet = (output?.targets || []).filter((r) => r.label === 'Not yet eligible')
+  const othersQualify = (output?.others || []).filter((r) => r.label !== 'Not yet eligible')
+  const othersNot = (output?.others || []).filter((r) => r.label === 'Not yet eligible')
 
   if (loading) return <Spinner />
 
@@ -356,8 +361,20 @@ function EligibilityInner() {
             </details>
           )}
 
-          <h3 className="font-semibold">Other programs you could consider, best first</h3>
-          <PagedGrid items={output.others} render={(r) => <ResultCard key={r.programId} item={r} />} />
+          <h3 className="font-semibold">All programs you qualify for, best first</h3>
+          <p className="text-sm text-neutral-600">
+            {qualified.length === 0
+              ? `You do not meet the requirements for ${output.programName} yet. These are the programs you do qualify for.`
+              : 'These are every program your results qualify for, including ones you did not choose. Tap a program name to open its page.'}
+          </p>
+          {othersQualify.length === 0 && <p className="text-neutral-600">No other programs match your results yet.</p>}
+          <PagedGrid items={othersQualify} render={(r) => <ResultCard key={r.programId} item={r} />} />
+          {othersNot.length > 0 && (
+            <details className="card">
+              <summary className="font-semibold cursor-pointer">Programs you do not qualify for yet ({othersNot.length})</summary>
+              <PagedGrid items={othersNot} render={(r) => <ResultCard key={r.programId} item={r} />} />
+            </details>
+          )}
           <p className="text-xs text-neutral-500">{DISCLAIMER}</p>
         </section>
       )}

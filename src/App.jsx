@@ -24,6 +24,7 @@ const Support = lazy(() => import('./pages/Support'))
 const Complaints = lazy(() => import('./pages/Complaints'))
 const Interested = lazy(() => import('./pages/Interested'))
 const Invite = lazy(() => import('./pages/Invite'))
+const ProgramDetail = lazy(() => import('./pages/ProgramDetail'))
 const Programs = lazy(() => import('./pages/Programs'))
 const Privacy = lazy(() => import('./pages/Privacy'))
 const Settings = lazy(() => import('./pages/Settings'))
@@ -68,6 +69,7 @@ export default function App() {
         <Route path="/international" element={<International />} />
         <Route path="/international/eligibility" element={<InternationalEligibility />} />
         <Route path="/international/sat" element={<SatTest />} />
+        <Route path="/programs/:id" element={<ProgramDetail />} />
         <Route path="/schools" element={<Schools />} />
         <Route path="/schools/:id" element={<SchoolDetail />} />
         {SHOW_INTERNATIONAL && <Route path="/abroad" element={<Abroad />} />}

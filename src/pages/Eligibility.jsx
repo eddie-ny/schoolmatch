@@ -45,7 +45,7 @@ function ResultCard({ item, highlight }) {
   const need = classLabel
     ? [item.requiredClass ? `Needs ${item.requiredClass} or better` : (item.requiredCgpa ? '' : 'No minimum class stated'), item.requiredCgpa ? `CGPA of at least ${item.requiredCgpa}` : ''].filter(Boolean).join(' and ')
     : item.requiredQualification ? `Needs ${item.requiredQualification}` : ''
-  const shortLabel = item.label === 'Class not published' ? 'No minimum class stated' : item.label
+  const shortLabel = item.label === 'Class not published' ? 'No minimum class stated' : item.label === 'Requirements met' && item.cutoff == null ? 'Requirements met, no cut-off added' : item.label === 'Long shot' ? 'Long shot: well above the cut-off' : item.label
   const long = [item.entryNote, ...(item.notes || [])].filter(Boolean)
   return (
     <div className={`card space-y-2 ${highlight ? 'border-2 border-brand-orange' : ''}`}>
@@ -192,6 +192,14 @@ function EligibilityInner() {
     }
     const chosen = electives.filter(Boolean)
     if (new Set(chosen).size !== chosen.length) return setError('Each elective can only be picked once.')
+    // The aggregate needs English, Mathematics, Science or Social Studies, and three electives with grades. Without them every result would be a guess.
+    const missing = []
+    if (!grades['English Language']) missing.push('English Language')
+    if (!grades['Core Mathematics']) missing.push('Core Mathematics')
+    if (!grades['Integrated Science'] && !grades['Social Studies']) missing.push('Integrated Science or Social Studies')
+    const gradedElectives = chosen.filter((x) => grades[x])
+    if (gradedElectives.length < 3) missing.push(`${3 - gradedElectives.length} more elective${3 - gradedElectives.length === 1 ? '' : 's'} with a grade`)
+    if (missing.length) return setError(`We cannot work out your aggregate yet. Please add: ${missing.join(', ')}.`)
     if (!programName) return setError('Type the program you want to study and choose it from the list.')
 
     const clean = {}
@@ -215,10 +223,16 @@ function EligibilityInner() {
     }
   }
 
-  const qualified = (output?.targets || []).filter((r) => r.label !== 'Not yet eligible')
-  const notYet = (output?.targets || []).filter((r) => r.label === 'Not yet eligible')
-  const othersQualify = (output?.others || []).filter((r) => r.label !== 'Not yet eligible')
-  const othersNot = (output?.others || []).filter((r) => r.label === 'Not yet eligible')
+  // Qualify: you meet the entry requirements and your aggregate is not far above the cut-off.
+  // Long shot: you meet the requirements, but your aggregate is well above the cut-off, so it is unlikely.
+  // Not yet: you do not meet the entry requirements.
+  const bucket = (list, kind) => (list || []).filter((r) => (kind === 'not' ? r.label === 'Not yet eligible' : kind === 'long' ? r.label === 'Long shot' : r.label !== 'Not yet eligible' && r.label !== 'Long shot'))
+  const qualified = bucket(output?.targets, 'yes')
+  const longShots = bucket(output?.targets, 'long')
+  const notYet = bucket(output?.targets, 'not')
+  const othersQualify = bucket(output?.others, 'yes')
+  const othersLong = bucket(output?.others, 'long')
+  const othersNot = bucket(output?.others, 'not')
 
   if (loading) return <Spinner />
 
@@ -368,11 +382,18 @@ function EligibilityInner() {
           <h3 className="font-semibold">Schools offering {output.programName} that you qualify for</h3>
           {output.targets.length === 0 && <p className="text-neutral-600">No schools offer this program yet.</p>}
           {output.targets.length > 0 && qualified.length === 0 && (
-            <p className="text-neutral-600">You do not meet the entry requirements for any school offering this program yet. What is missing for each school is listed below.</p>
+            <p className="text-neutral-600">{longShots.length > 0 ? 'None of these schools is a realistic match for your aggregate yet. The ones where you meet the entry requirements but are well above the cut-off are listed below.' : 'You do not meet the entry requirements for any school offering this program yet. What is missing for each school is listed below.'}</p>
           )}
           <PagedGrid items={qualified} render={(r) => <ResultCard key={r.programId} item={r} highlight />} />
+          {longShots.length > 0 && (
+            <details className="card" open={qualified.length === 0 && notYet.length === 0}>
+              <summary className="font-semibold cursor-pointer">Schools offering {output.programName} where your aggregate is well above the cut-off ({longShots.length})</summary>
+              <p className="text-sm text-neutral-600 mt-2">You meet the entry requirements, but admission is unlikely with your aggregate.</p>
+              <PagedGrid items={longShots} render={(r) => <ResultCard key={r.programId} item={r} />} />
+            </details>
+          )}
           {notYet.length > 0 && (
-            <details className="card" open={qualified.length === 0}>
+            <details className="card" open={qualified.length === 0 && longShots.length === 0}>
               <summary className="font-semibold cursor-pointer">Schools offering {output.programName} that you do not qualify for yet ({notYet.length})</summary>
               <PagedGrid items={notYet} render={(r) => <ResultCard key={r.programId} item={r} />} />
             </details>
@@ -386,6 +407,12 @@ function EligibilityInner() {
           </p>
           {othersQualify.length === 0 && <p className="text-neutral-600">No other programs match your results yet.</p>}
           <PagedGrid items={othersQualify} render={(r) => <ResultCard key={r.programId} item={r} />} />
+          {othersLong.length > 0 && (
+            <details className="card">
+              <summary className="font-semibold cursor-pointer">Other programs where your aggregate is well above the cut-off ({othersLong.length})</summary>
+              <PagedGrid items={othersLong} render={(r) => <ResultCard key={r.programId} item={r} />} />
+            </details>
+          )}
           {othersNot.length > 0 && (
             <details className="card">
               <summary className="font-semibold cursor-pointer">Programs you do not qualify for yet ({othersNot.length})</summary>

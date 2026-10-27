@@ -1,0 +1,12 @@
+-- Already applied. UENR 2026/27 official admission requirements PDF (uenr.edu.gh/wp-content/uploads/2026/09/2026_2027-Academic-Year-Admission-Requirements-for-Diploma-and-Undergratduate-Programmes-REVISED-EDITION-1.pdf).
+-- Read via a page summariser, so wording is paraphrased. No cut-off aggregates are published by UENR.
+with u as (select p.id, p.name from public.programs p join public.schools s on s.id=p.school_id where s.name='University of Energy and Natural Resources' and p.level='Undergraduate')
+, d1 as (delete from public.program_requirements r using u where r.program_id=u.id and u.name='BSc Environmental Engineering' and r.subject='Chemistry' returning 1)
+, g1 as (insert into public.program_requirements (program_id,subject,min_grade,is_core,any_of_group,any_of_need) select u.id,x.s,'C6',false,1,1 from u,(values ('Chemistry'),('Biology'),('Geography')) x(s) where u.name='BSc Environmental Engineering' returning 1)
+, c1 as (insert into public.program_requirements (program_id,subject,min_grade,is_core,any_of_group,any_of_need) select u.id,'Elective Mathematics','C6',false,null,1 from u where u.name='BSc Computer Science' returning 1)
+, c2 as (insert into public.program_requirements (program_id,subject,min_grade,is_core,any_of_group,any_of_need) select u.id,x.s,'C6',false,1,2 from u,(values ('Physics'),('Chemistry'),('Biology'),('Geography')) x(s) where u.name='BSc Computer Science' returning 1)
+, b1 as (insert into public.program_requirements (program_id,subject,min_grade,is_core,any_of_group,any_of_need) select u.id,x.s,'C6',false,null,1 from u,(values ('Chemistry'),('Biology')) x(s) where u.name='BSc Biochemistry' returning 1)
+, h1 as (insert into public.program_requirements (program_id,subject,min_grade,is_core,any_of_group,any_of_need) select u.id,x.s,'C6',false,null,1 from u,(values ('Chemistry'),('Physics')) x(s) where u.name='BSc Chemistry' returning 1)
+, m1 as (insert into public.program_requirements (program_id,subject,min_grade,is_core,any_of_group,any_of_need) select u.id,'Chemistry','C6',false,null,1 from u where u.name in ('BSc Medical Laboratory Science','BSc Biological Science') returning 1)
+, m2 as (insert into public.program_requirements (program_id,subject,min_grade,is_core,any_of_group,any_of_need) select u.id,x.s,'C6',false,1,1 from u,(values ('Elective Mathematics'),('Physics')) x(s) where u.name in ('BSc Medical Laboratory Science','BSc Biological Science') returning 1)
+select 1;

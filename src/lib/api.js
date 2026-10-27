@@ -256,6 +256,15 @@ export async function saveResults(userId, { mode, grades, electives, sat }) {
   }
 }
 
+// Saves only the SAT score. The WASSCE grades already saved from Local eligibility are left alone.
+export async function saveSat(userId, sat) {
+  const val = sat === '' || sat == null ? null : Number(sat)
+  const { data: row, error } = await supabase.from('results').select('id').eq('student_id', userId).eq('exam', 'WASSCE').maybeSingle()
+  fail(error, 'Could not save your SAT score.')
+  if (row) fail((await supabase.from('results').update({ sat_score: val }).eq('id', row.id)).error, 'Could not save your SAT score.')
+  else fail((await supabase.from('results').insert({ student_id: userId, exam: 'WASSCE', kind: 'final', sat_score: val })).error, 'Could not save your SAT score.')
+}
+
 // ---------- Documents (private Storage bucket, one folder per student) ----------
 export async function uploadDocument(userId, file) {
   const safe = file.name.replace(/[^\w.\- ]+/g, '_')

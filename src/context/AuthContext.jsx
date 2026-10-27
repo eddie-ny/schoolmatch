@@ -79,6 +79,7 @@ export function AuthProvider({ children }) {
   }, [])
   const saveProfile = useCallback(async (p) => { await api.saveProfile(user.id, p); await refresh() }, [user, refresh])
   const saveResults = useCallback(async (r) => { await api.saveResults(user.id, r); await refresh() }, [user, refresh])
+  const saveSat = useCallback(async (v) => { await api.saveSat(user.id, v); await refresh() }, [user, refresh])
   const addDocument = useCallback(async (f) => { await api.uploadDocument(user.id, f); await refresh() }, [user, refresh])
   const removeDocument = useCallback(async (d) => { await api.removeDocument(d); await refresh() }, [refresh])
 
@@ -90,7 +91,7 @@ export function AuthProvider({ children }) {
     <AuthContext.Provider
       value={{
         user, loading, notice, clearNotice: () => setNotice(''), access, mfa, mfaNeeded: !!user?.mfaPending, profileComplete, parentPending, recovering,
-        signUp, signIn, signOut, saveProfile, saveResults, addDocument, removeDocument, refresh,
+        signUp, signIn, signOut, saveProfile, saveResults, saveSat, addDocument, removeDocument, refresh,
         requestPasswordReset: api.requestPasswordReset,
         resendConfirmation: api.resendConfirmation,
         setNewPassword: async (pw) => { await api.setNewPassword(pw); setRecovering(false) },

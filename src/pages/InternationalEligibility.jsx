@@ -72,15 +72,34 @@ function mastersLabel(p, cls) {
 const tone = { pass: 'text-green-700', fail: 'text-red-700', unknown: 'text-neutral-500' }
 const mark = { pass: '✓', fail: '✗', unknown: '?' }
 
+// Grades saved from Local eligibility fill the six boxes, so the student enters them once.
+// Science takes Integrated Science, or Social Studies if that is what they sat. Electives are the three best.
+function gradesFromSaved(r) {
+  const out = ['', '', '', '', '', '']
+  if (!r?.grades) return out
+  const g = r.grades
+  out[0] = g['English Language'] || ''
+  out[1] = g['Core Mathematics'] || ''
+  out[2] = g['Integrated Science'] || g['Social Studies'] || ''
+  const best = (r.electives || []).map((n) => g[n]).filter((x) => GRADES.includes(x)).sort((a, b) => GRADES.indexOf(a) - GRADES.indexOf(b)).slice(0, 3)
+  best.forEach((x, i) => { out[3 + i] = x })
+  return out
+}
+
 function InternationalEligibilityInner() {
   const [params] = useSearchParams()
-  const { access } = useAuth()
+  const { user, access, saveSat } = useAuth()
   const { intl, loading } = useCatalog()
   const saved = useSaved()
   const [level, setLevel] = useState('Undergraduate')
-  const [sat, setSat] = useState(() => { let v = params.get('sat'); if (!v) { try { v = sessionStorage.getItem('satScore') } catch { /* ignore */ } } return v && /^\d{3,4}$/.test(v) ? v : '' })
+  const [sat, setSat] = useState(() => {
+    let v = params.get('sat') || (user?.results?.sat ? String(user.results.sat) : '')
+    if (!v) { try { v = sessionStorage.getItem('satScore') } catch { /* ignore */ } }
+    return v && /^\d{3,4}$/.test(v) ? v : ''
+  })
   const [cls, setCls] = useState('')
-  const [grades, setGrades] = useState(['', '', '', '', '', ''])
+  const [grades, setGrades] = useState(() => gradesFromSaved(user?.results))
+  const [note, setNote] = useState('')
   const [test, setTest] = useState('none')
   const [score, setScore] = useState('')
   const [go, setGo] = useState(false)
@@ -134,7 +153,7 @@ function InternationalEligibilityInner() {
                   </label>
                 ))}
               </div>
-              <p className="text-xs text-neutral-600 mt-1">English, Mathematics, Integrated Science or Social Studies, and your 3 best electives.</p>
+              <p className="text-xs text-neutral-600 mt-1">English, Mathematics, Integrated Science or Social Studies, and your 3 best electives.{user?.results?.grades && Object.keys(user.results.grades).length > 0 ? ' Filled in from the results you saved in Local eligibility. Change them here if needed.' : ''}</p>
             </div>
             <label className="block">
               <span className="block text-sm font-semibold mb-1">Your SAT score (400 to 1600), if you have one</span>
@@ -156,7 +175,14 @@ function InternationalEligibilityInner() {
                 </label>
               )}
             </div>
-            <button className="btn btn-orange" onClick={() => setGo(true)}>Check my eligibility</button>
+            <button className="btn btn-orange" onClick={async () => {
+              setGo(true)
+              setNote('')
+              if (sat !== '' && !satBad && String(user?.results?.sat ?? '') !== sat) {
+                try { await saveSat(sat) } catch (e) { setNote(`Your SAT score was used but could not be saved: ${e.message}`) }
+              }
+            }}>Check my eligibility</button>
+            {note && <p role="alert" className="text-sm text-red-700">{note}</p>}
           </>
         )}
       </div>

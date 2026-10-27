@@ -277,10 +277,10 @@ export function SignupsSection({ users: allUsers, canDisable, onToggle, err, rel
                   </td>
                   <td className="p-3 align-top break-all">{u.email}</td>
                   <td className="p-3 align-top whitespace-nowrap">{u.phone}</td>
-                  <td className="p-3"><Badge tone={subbed || trial ? 'green' : 'orange'}>{label}</Badge></td>
-                  <td className="p-3">{u.profileComplete ? 'Complete' : 'Incomplete'}</td>
-                  <td className="p-3">{accountBadge(u)}</td>
-                  <td className="p-3"><div className="grid grid-cols-2 gap-2 w-[15rem]">
+                  <td className="p-3 align-top"><Badge tone={subbed || trial ? 'green' : 'orange'}>{label}</Badge></td>
+                  <td className="p-3 align-top">{u.profileComplete ? 'Complete' : 'Incomplete'}</td>
+                  <td className="p-3 align-top">{accountBadge(u)}</td>
+                  <td className="p-3 align-top"><div className="grid grid-cols-2 gap-2 w-[15rem]">
                     {canEdit(u) && <button className="btn btn-outline !min-h-11 !py-1" onClick={() => setEditing(u)}>Edit</button>}
                     {canActivate(u) && <button className="btn btn-outline !min-h-11 !py-1" onClick={() => setActTarget(u)}>Activate</button>}
                     {canToggle(u) && !u.unconfirmed && <button className="btn btn-outline !min-h-11 !py-1" onClick={() => onToggle(u)}>{u.disabled ? 'Reactivate' : 'Disable'}</button>}

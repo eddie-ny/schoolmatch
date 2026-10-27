@@ -1,0 +1,5 @@
+-- STEP 104 (APPLIED 2026-10-27): Ohio State University (Columbus) and Pennsylvania State University (University Park), one "General undergraduate entry" row each. Unverified.
+-- OSU: SAT required, IELTS 6.5, TOEFL 79 (old scale), Duolingo 120, English test waived for Ghanaian citizens. CDS 2024-2025 SAT 1280 to 1430.
+-- PSU: SAT optional, IELTS 6.5, TOEFL 80 (old scale), Duolingo 120, no Ghana citizenship waiver found (english_test_waiver false). CDS 2024-2025 SAT 1250 to 1410.
+-- Sources: ChatGPT research of official pages, checked 2026-10-27 (admissions.osu.edu, psu.edu Ghana credentials and international admissions pages).
+-- The loading statement was run directly in Supabase.

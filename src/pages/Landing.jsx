@@ -32,7 +32,7 @@ export default function Landing() {
         <HeroArt />
       </section>
 
-      <section className="rounded-3xl bg-gradient-to-br from-brand-orange to-brand-green text-neutral-900 p-6 md:p-10 shadow-md">
+      <section className="rounded-3xl bg-brand-green text-neutral-900 p-6 md:p-10 shadow-md">
         <p className="inline-block rounded-full bg-neutral-900 text-white text-xs font-extrabold px-3 py-1 uppercase tracking-wide">SAT classes</p>
         <h2 className="text-3xl md:text-5xl font-extrabold mt-3 leading-tight">Ready for International Admission?</h2>
         <p className="text-lg md:text-xl mt-2 text-neutral-800">Take your SAT today. Get admission.</p>

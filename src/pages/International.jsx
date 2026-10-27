@@ -21,7 +21,7 @@ export default function International() {
     <div className="space-y-8">
       <PageTitle title="International" sub="Universities abroad, with entry requirements checked against your SAT score or degree." />
       <div className="grid md:grid-cols-[1fr_auto] gap-6 items-center">
-      <section className="rounded-3xl bg-gradient-to-br from-brand-orange to-brand-green text-neutral-900 p-6 md:p-8 shadow-md">
+      <section className="rounded-3xl bg-brand-green text-neutral-900 p-6 md:p-8 shadow-md">
         <div>
         <h2 className="text-2xl md:text-4xl font-extrabold leading-tight">Ready for International Admission?</h2>
         <p className="text-lg mt-1 text-neutral-800">Take your SAT today. Get admission.</p>

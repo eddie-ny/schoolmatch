@@ -1,0 +1,5 @@
+-- STEP 103 (APPLIED 2026-10-27): West Virginia University (Morgantown) and its general undergraduate entry row. Unverified.
+-- Sources: WVU Ghana page (https://www.wvu.edu/admissions/undergraduate/how-to-apply/international-students/admission-requirements-for-international-students/ghana/),
+-- WVU first-time freshman and English proficiency pages via ChatGPT research, checked 2026-10-27.
+-- Stored: sat_policy optional, min_wassce_grade C5, IELTS 6.5, TOEFL 79 (old scale), Duolingo 105, english_test_waiver true (Ghanaian citizenship). GPA 2.5 for first-year admission is in entry_note.
+-- The loading statement was run directly in Supabase.

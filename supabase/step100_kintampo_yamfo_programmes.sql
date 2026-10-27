@@ -1,0 +1,5 @@
+-- STEP 100 (APPLIED 2026-10-27): 12 programmes for College of Health and Well-Being, Kintampo (official 2026/2027 admission notice)
+-- and 7 for College of Health, Yamfo (official programmes list). All unverified. Fees and durations not published, left blank.
+-- Yamfo: first four carry the published WASSCE rule; the last three were awaiting accreditation in Jan 2026 per the college site.
+-- Not loaded: Accra and Akrokerri Colleges of Education (only a generic B.Ed. found, unconfirmed), and 5 nursing colleges (NO DATA FOUND).
+-- The loading statement was run directly in Supabase; see the programmes table for the rows.

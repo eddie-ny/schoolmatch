@@ -264,25 +264,28 @@ export function SignupsSection({ users: allUsers, canDisable, onToggle, err, rel
       <div className="hidden md:block overflow-x-auto card !p-0">
         <table className="w-full text-sm">
           <thead className="text-left bg-neutral-50">
-            <tr><th className="p-3">Name</th><th className="p-3">Email</th><th className="p-3">Phone</th><th className="p-3">Access</th><th className="p-3">Profile</th><th className="p-3">Account</th><th className="p-3">Actions</th></tr>
+            <tr><th className="p-3 min-w-[12rem]">Name</th><th className="p-3 min-w-[14rem]">Email</th><th className="p-3 whitespace-nowrap">Phone</th><th className="p-3">Access</th><th className="p-3">Profile</th><th className="p-3">Account</th><th className="p-3">Actions</th></tr>
           </thead>
           <tbody>
             {users.map((u) => {
               const { subbed, trial, label } = accessLabel(u)
               return (
                 <tr key={u.id} className="border-t border-neutral-200">
-                  <td className="p-3">{u.fullName}{u.isMinor && ' (under 18)'} {u.staffRole && <Badge tone="green">{ROLE_LABEL[u.staffRole]}</Badge>}</td>
-                  <td className="p-3">{u.email}</td>
-                  <td className="p-3">{u.phone}</td>
+                  <td className="p-3 align-top">
+                    <p className="font-semibold break-words">{u.fullName}{u.isMinor && ' (under 18)'}</p>
+                    {u.staffRole && <div className="mt-1"><Badge tone="green">{ROLE_LABEL[u.staffRole]}</Badge></div>}
+                  </td>
+                  <td className="p-3 align-top break-all">{u.email}</td>
+                  <td className="p-3 align-top whitespace-nowrap">{u.phone}</td>
                   <td className="p-3"><Badge tone={subbed || trial ? 'green' : 'orange'}>{label}</Badge></td>
                   <td className="p-3">{u.profileComplete ? 'Complete' : 'Incomplete'}</td>
                   <td className="p-3">{accountBadge(u)}</td>
-                  <td className="p-3 whitespace-nowrap space-x-2">
+                  <td className="p-3"><div className="grid grid-cols-2 gap-2 w-[15rem]">
                     {canEdit(u) && <button className="btn btn-outline !min-h-11 !py-1" onClick={() => setEditing(u)}>Edit</button>}
                     {canActivate(u) && <button className="btn btn-outline !min-h-11 !py-1" onClick={() => setActTarget(u)}>Activate</button>}
                     {canToggle(u) && !u.unconfirmed && <button className="btn btn-outline !min-h-11 !py-1" onClick={() => onToggle(u)}>{u.disabled ? 'Reactivate' : 'Disable'}</button>}
                     {canRemove(u) && <button className="btn btn-outline !min-h-11 !py-1 !border-red-300 text-red-700" onClick={() => setDelTarget(u)}>Delete</button>}
-                  </td>
+                  </div></td>
                 </tr>
               )
             })}
@@ -325,8 +328,8 @@ export function ParentsSection({ pending: allPending, canAccept, reload }) {
 
   const Buttons = ({ x, full }) => (
     <div className={`flex flex-wrap gap-2 ${full ? '' : 'justify-start'}`}>
-      <button className={`btn btn-orange !min-h-11 !py-1 ${full ? 'flex-1' : ''}`} onClick={() => makeLink(x)}>Create link</button>
-      {canAccept && <button className={`btn btn-green !min-h-11 !py-1 ${full ? 'flex-1' : ''}`} onClick={() => setAcceptTarget(x)}>Accept</button>}
+      <button className={`btn btn-orange !min-h-11 !py-1 ${full ? 'flex-1' : '!w-32'}`} onClick={() => makeLink(x)}>Create link</button>
+      {canAccept && <button className={`btn btn-green !min-h-11 !py-1 ${full ? 'flex-1' : '!w-32'}`} onClick={() => setAcceptTarget(x)}>Accept</button>}
     </div>
   )
 
@@ -378,8 +381,8 @@ export function ParentsSection({ pending: allPending, canAccept, reload }) {
           <tbody>
             {pending.map((x) => (
               <tr key={x.studentId} className="border-t border-neutral-200">
-                <td className="p-3">{x.studentName}</td>
-                <td className="p-3">{x.parentName}</td>
+                <td className="p-3 align-top font-semibold break-words min-w-[10rem]">{x.studentName}</td>
+                <td className="p-3 align-top break-words min-w-[10rem]">{x.parentName}</td>
                 <td className="p-3">{x.parentPhone}</td>
                 <td className="p-3">{x.parentEmail}{x.parentEmail && x.parentEmail.toLowerCase() === x.studentEmail.toLowerCase() ? ' (same as student)' : ''}</td>
                 <td className="p-3 whitespace-nowrap"><Buttons x={x} /></td>

@@ -332,6 +332,7 @@ export async function loadCatalog() {
       id: x.id, schoolId: x.school_id, schoolName: school?.name || '', name: x.name, level: x.level, field: x.field, demo: x.demo, mode: x.mode || 'Regular', campus: x.campus || '',
       international: school ? !isLocalCountry(school.country) : false,
       feesUsd: f?.fees_usd ?? null, feesGhs: f?.fees_ghs ?? null, entryNote: f?.entry_note || '', entryQualification: f?.entry_qualification || x.entry_qualification || '', minDegreeClass: f?.min_degree_class || '', durationYears: f?.duration_years ?? null,
+      satPolicy: f?.sat_policy || '', minWassceGrade: f?.min_wassce_grade || '', minIelts: f?.min_ielts != null ? Number(f.min_ielts) : null, minToefl: f?.min_toefl ?? null, minDuolingo: f?.min_duolingo ?? null, sourceUrl: f?.intl_source_url || '',
       englishTestWaiver: !!f?.english_test_waiver, foundationAvailable: !!f?.foundation_available, verified: !!f?.verified,
       requirements: (f?.program_requirements || []).map((r) => ({ subject: r.subject, minGrade: r.min_grade })),
       cutoffAggregate: latest?.cutoff_aggregate ?? null, cutoffYear: latest?.year ?? null,

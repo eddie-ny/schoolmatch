@@ -21,18 +21,20 @@ export default function International() {
     <div className="space-y-8">
       <PageTitle title="International" sub="Universities abroad, with entry requirements checked against your SAT score or degree." />
       <div className="grid md:grid-cols-[1fr_auto] gap-6 items-center">
-      <section className="rounded-3xl bg-neutral-900 text-white p-6 md:p-8 border-4 border-brand-orange">
+      <section className="rounded-3xl bg-gradient-to-br from-brand-orange to-brand-green text-neutral-900 p-6 md:p-8 shadow-md">
         <div>
         <h2 className="text-2xl md:text-4xl font-extrabold leading-tight">Ready for International Admission?</h2>
-        <p className="text-lg mt-1 text-white/90">Take your SAT today. Get admission.</p>
+        <p className="text-lg mt-1 text-neutral-800">Take your SAT today. Get admission.</p>
         <div className="flex flex-wrap gap-3 mt-4">
-          <Link to="/international/sat" className="btn btn-orange">Take a short SAT test</Link>
+          <Link to="/international/sat" className="btn !bg-neutral-900 !text-white">Take a short SAT test</Link>
           <Link to="/international/eligibility" className="btn !bg-white !text-neutral-900">Check my eligibility</Link>
         </div>
         </div>
       </section>
-      <div className="rounded-3xl bg-brand-orange-soft w-full max-w-sm mx-auto md:w-80 aspect-square flex items-center justify-center p-4 shadow-sm">
-        <IntlArt className="w-full" />
+      <div className="relative w-full max-w-md mx-auto md:w-[30rem] aspect-square flex items-center justify-center" aria-hidden="true">
+        <div className="absolute -z-0 left-[8%] top-[12%] w-[70%] h-[70%] rounded-full bg-brand-orange/35 blur-3xl" />
+        <div className="absolute -z-0 right-[2%] bottom-[4%] w-[55%] h-[55%] rounded-full bg-brand-green/45 blur-3xl" />
+        <IntlArt className="relative w-full md:w-[125%] max-w-none drop-shadow-xl" />
       </div>
       </div>
 

@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { useCatalog, isLocal } from '../hooks/useCatalog'
+import { isLocal } from '../hooks/useCatalog'
+import { useScopedCatalog } from '../hooks/useScope'
 import { Gate, PageTitle, Pagination, Segmented, Spinner } from '../components/ui'
 import { ScholarshipCard } from '../components/Cards'
 import { SHOW_INTERNATIONAL } from '../lib/constants'
@@ -10,7 +11,7 @@ const PAGE = 12
 
 export default function Scholarships() {
   const { access, user } = useAuth()
-  const { scholarships, loading } = useCatalog()
+  const { scholarships, loading } = useScopedCatalog()
   const [params] = useSearchParams()
   const [funding, setFunding] = useState(params.get('funding') || 'all')
   const [where, setWhere] = useState('all')

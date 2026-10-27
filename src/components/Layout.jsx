@@ -4,19 +4,18 @@ import { useAuth } from '../context/AuthContext'
 import { timeLeft } from '../lib/access'
 import MfaChallenge from './MfaChallenge'
 import { ConfirmDialog, Spinner } from './ui'
-import { SHOW_INTERNATIONAL } from '../lib/constants'
+import { scopeOf } from '../hooks/useScope'
 
 export const APP_NAME = 'WEMK'
 
-const links = [
-  { to: '/local', label: 'Local' },
-  { to: '/international', label: 'International' },
-  { to: '/schools', label: 'Find a School' },
-  { to: '/programs', label: 'Programs' },
-  ...(SHOW_INTERNATIONAL ? [{ to: '/abroad', label: 'Study Abroad' }] : []),
-  { to: '/scholarships', label: 'Scholarships' },
-  { to: '/eligibility', label: 'Check My Eligibility' },
-  { to: '/pricing', label: 'Pricing' },
+// Each side of the site (Local, International) has its own menu. The landing page and account pages have none.
+const sideLinks = (side) => [
+  { to: `/${side}`, label: 'Home', end: true },
+  { to: `/${side}/schools`, label: 'Find a School' },
+  { to: `/${side}/programs`, label: 'Programs' },
+  { to: `/${side}/scholarships`, label: 'Scholarships' },
+  { to: `/${side}/eligibility`, label: 'Check My Eligibility' },
+  ...(side === 'international' ? [{ to: '/international/sat', label: 'SAT Practice' }] : []),
 ]
 
 // Name + chevron button that opens the account menu (GoScholar-style). Click, Enter or Space opens it;
@@ -51,6 +50,8 @@ function UserMenu({ user, onSignOut }) {
             <p className="text-xs text-neutral-600 truncate">{user.email}</p>
           </div>
           <Link role="menuitem" to="/profile" className={item}>Profile</Link>
+          <Link role="menuitem" to="/interested" className={item}>Interested</Link>
+          <Link role="menuitem" to="/pricing" className={item}>Pricing</Link>
           <Link role="menuitem" to="/invite" className={item}>Invite friends</Link>
           <Link role="menuitem" to="/settings" className={item}>Account Settings</Link>
           {user.role === 'admin' && <Link role="menuitem" to="/admin" className={item}>Admin</Link>}
@@ -68,7 +69,8 @@ export default function Layout() {
   const [confirmOut, setConfirmOut] = useState(false)
   const nav = useNavigate()
   const { pathname } = useLocation()
-  const navLinks = user ? [...links.slice(0, -1), { to: '/interested', label: 'Interested' }, links[links.length - 1]] : links
+  const side = scopeOf(pathname)
+  const navLinks = side ? sideLinks(side) : []
 
   // Staff go straight to their own page once per sign-in: support to /support, admins to /admin.
   useEffect(() => {
@@ -98,20 +100,23 @@ export default function Layout() {
       <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:bg-white focus:p-3 focus:m-2 focus:rounded-lg focus:font-semibold">Skip to content</a>
       <header className="border-b border-neutral-200/70 bg-white/90 backdrop-blur sticky top-0 z-20">
         <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
-          <Link to="/" className="font-heading font-bold text-xl inline-flex items-center min-h-11">
-            <span className="text-brand-orange">WE</span>
-            <span className="text-brand-green">MK</span>
+          <Link to="/" className="inline-flex flex-col justify-center min-h-11 leading-none" aria-label={side ? `WEMK ${side}, back to the start page` : 'WEMK home'}>
+            <span className="font-heading font-bold text-xl">
+              <span className="text-brand-orange">WE</span>
+              <span className="text-brand-green">MK</span>
+            </span>
+            {side && <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500 mt-0.5">{side === 'local' ? 'Local' : 'International'}</span>}
           </Link>
 
-          <nav className="hidden lg:flex items-center gap-5 text-sm font-medium whitespace-nowrap">
+          <nav className="hidden lg:flex items-center gap-6 text-sm font-medium whitespace-nowrap mx-6">
             {navLinks.map((l) => (
-              <NavLink key={l.to} to={l.to} className={({ isActive }) => `inline-flex items-center min-h-11 ${isActive ? 'text-brand-orange' : 'hover:text-brand-green'}`}>
+              <NavLink key={l.to} to={l.to} end={l.end} className={({ isActive }) => `inline-flex items-center min-h-11 ${isActive ? 'text-brand-orange' : 'hover:text-brand-green'}`}>
                 {l.label}
               </NavLink>
             ))}
           </nav>
 
-          <div className="hidden lg:flex items-center gap-3 whitespace-nowrap">
+          <div className="hidden lg:flex items-center gap-3 whitespace-nowrap ml-auto">
             {user && !mfaNeeded ? (
               <UserMenu user={user} onSignOut={() => setConfirmOut(true)} />
             ) : (
@@ -130,11 +135,13 @@ export default function Layout() {
         {open && (
           <div className="lg:hidden border-t border-neutral-200 px-4 py-3 flex flex-col gap-1" onClick={() => setOpen(false)}>
             {navLinks.map((l) => (
-              <NavLink key={l.to} to={l.to} className="py-3 font-medium">{l.label}</NavLink>
+              <NavLink key={l.to} to={l.to} end={l.end} className="py-3 font-medium">{l.label}</NavLink>
             ))}
             {user ? (
               <>
                 <Link to="/profile" className="py-3 font-medium">Profile</Link>
+                <Link to="/interested" className="py-3 font-medium">Interested</Link>
+                <Link to="/pricing" className="py-3 font-medium">Pricing</Link>
                 <Link to="/settings" className="py-3 font-medium">Account Settings</Link>
                 {user.role === 'admin' && <Link to="/admin" className="py-3 font-medium">Admin</Link>}
                 {user.role === 'support' && <Link to="/support" className="py-3 font-medium">Support</Link>}

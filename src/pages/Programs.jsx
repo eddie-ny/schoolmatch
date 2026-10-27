@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { useCatalog } from '../hooks/useCatalog'
+import { useScopedCatalog } from '../hooks/useScope'
 import { useSaved } from '../hooks/useSaved'
 import { PageTitle, Pagination } from '../components/ui'
 import { ProgramCard } from '../components/Cards'
@@ -13,7 +13,7 @@ const PAGE = 24
 // Every programme at every university, with search and a field filter. Hearts add to the Interested page.
 export default function Programs() {
   const { access } = useAuth()
-  const { schools, programs, loading } = useCatalog()
+  const { schools, programs, loading } = useScopedCatalog()
   const saved = useSaved()
   const [params, setParams] = useSearchParams()
   const q = params.get('q') || ''

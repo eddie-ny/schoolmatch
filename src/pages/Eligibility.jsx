@@ -54,7 +54,7 @@ function ResultCard({ item, highlight }) {
         {item.demo && <Badge tone="orange">Sample data</Badge>}
       </div>
       <h3 className="font-bold leading-snug">
-        {item.programId ? <Link to={`/programs/${item.programId}`} className="hover:underline">{item.programName}</Link> : item.programName}
+        {item.programId ? <Link to={`/${item.international ? 'international' : 'local'}/programs/${item.programId}`} className="hover:underline">{item.programName}</Link> : item.programName}
       </h3>
       <p className="text-sm text-neutral-600">{item.schoolName}</p>
       {need && <p className="text-sm font-semibold">{need}</p>}

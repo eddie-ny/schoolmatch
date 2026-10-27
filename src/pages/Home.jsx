@@ -8,10 +8,10 @@ import { SchoolCard, ScholarshipCard } from '../components/Cards'
 import { SCHOOL_CATEGORIES, schoolCategory } from '../lib/schoolCategory'
 
 const tasks = [
-  { to: '/schools', title: 'Find a School', text: SHOW_INTERNATIONAL ? 'Search local and international schools and programs.' : 'Search Ghanaian universities and their programs.', bar: 'border-l-brand-orange' },
+  { to: '/local/schools', title: 'Find a School', text: SHOW_INTERNATIONAL ? 'Search local and international schools and programs.' : 'Search Ghanaian universities and their programs.', bar: 'border-l-brand-orange' },
   ...(SHOW_INTERNATIONAL ? [{ to: '/abroad', title: 'Study Abroad', text: 'Compare entry rules, English waivers and costs.', bar: 'border-l-brand-green' }] : []),
-  { to: '/scholarships', title: 'Find Scholarships', text: 'Browse funding by type and country.', bar: 'border-l-brand-orange' },
-  { to: '/eligibility', title: 'Check My Eligibility', text: 'Enter your results and see where you stand.', bar: 'border-l-brand-green' },
+  { to: '/local/scholarships', title: 'Find Scholarships', text: 'Browse funding by type and country.', bar: 'border-l-brand-orange' },
+  { to: '/local/eligibility', title: 'Check My Eligibility', text: 'Enter your results and see where you stand.', bar: 'border-l-brand-green' },
 ]
 
 const steps = [
@@ -110,8 +110,8 @@ export default function Home() {
           {SHOW_INTERNATIONAL ? 'Check your eligibility for local and international schools, and find scholarships, all in one place.' : 'Check your eligibility for Ghanaian universities and find scholarships, all in one place.'}
         </p>
         <div className="mt-7 flex flex-col sm:flex-row gap-3 justify-center">
-          <Link to="/eligibility" className="btn btn-orange !min-h-14 !px-8 text-lg">Check My Eligibility</Link>
-          <Link to="/schools" className="btn btn-outline !min-h-14 !px-8 text-lg">Find a School</Link>
+          <Link to="/local/eligibility" className="btn btn-orange !min-h-14 !px-8 text-lg">Check My Eligibility</Link>
+          <Link to="/local/schools" className="btn btn-outline !min-h-14 !px-8 text-lg">Find a School</Link>
         </div>
       </section>
 
@@ -122,7 +122,7 @@ export default function Home() {
           <p className="text-neutral-600 text-lg">
             Enter your grades, pick a program and see every school that offers it, labelled by your chances.
           </p>
-          <Link to="/eligibility" className="btn btn-green">Try it now</Link>
+          <Link to="/local/eligibility" className="btn btn-green">Try it now</Link>
         </div>
         <HeroArt />
       </section>
@@ -167,7 +167,7 @@ export default function Home() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {results.slice(0, 6).map((r) => (
               r.kind === 'school'
-                ? <SchoolCard key={`school-${r.id}`} s={r.item} count={progCount[r.id] || 0} to={`/schools/${r.id}`} signedIn={!!user} />
+                ? <SchoolCard key={`school-${r.id}`} s={r.item} count={progCount[r.id] || 0} to={`/local/schools/${r.id}`} signedIn={!!user} />
                 : <ScholarshipCard key={`sch-${r.id}`} s={r.item} full={full} />
             ))}
           </div>
@@ -175,7 +175,7 @@ export default function Home() {
         {!loading && results.length > 6 && (
           <Link
             className="btn btn-outline"
-            to={browse === 'schools' ? (kind ? `/schools?kind=${encodeURIComponent(kind)}` : '/schools') : (funding === 'all' ? '/scholarships' : `/scholarships?funding=${funding}`)}
+            to={browse === 'schools' ? (kind ? `/local/schools?kind=${encodeURIComponent(kind)}` : '/local/schools') : (funding === 'all' ? '/local/scholarships' : `/local/scholarships?funding=${funding}`)}
           >
             {`See all ${results.length} ${browse === 'schools' ? 'schools' : 'scholarships'}`}
           </Link>
@@ -189,7 +189,7 @@ export default function Home() {
           {FIELDS.map((f) => (
             <Link
               key={f.id}
-              to={`/programs?field=${encodeURIComponent(f.id)}`}
+              to={`/local/programs?field=${encodeURIComponent(f.id)}`}
               className="text-left rounded-2xl border-2 border-neutral-200 p-4 min-h-24 transition hover:border-brand-orange hover:bg-brand-orange-soft"
             >
               <p className="font-heading font-bold">{f.id}</p>

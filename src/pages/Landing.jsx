@@ -1,11 +1,11 @@
 import { Link } from 'react-router-dom'
-import { HeroArt } from './Home'
+import LandingArt from '../components/LandingArt'
 
 const info = [
-  { to: '/schools', title: 'Find a School', text: 'Search Ghanaian universities and colleges.', bar: 'border-l-brand-green' },
-  { to: '/programs', title: 'Programs', text: 'Every program, at every school.', bar: 'border-l-brand-orange' },
-  { to: '/scholarships', title: 'Scholarships', text: 'Funding you can apply for.', bar: 'border-l-brand-green' },
-  { to: '/eligibility', title: 'Check My Eligibility', text: 'Enter your results and see where you stand.', bar: 'border-l-brand-orange' },
+  { title: 'Find a School', text: 'Search universities and colleges, in Ghana or abroad.', bar: 'border-l-brand-green' },
+  { title: 'Programs', text: 'Every program, at every school.', bar: 'border-l-brand-orange' },
+  { title: 'Scholarships', text: 'Funding you can apply for.', bar: 'border-l-brand-green' },
+  { title: 'Check My Eligibility', text: 'Enter your results and see where you stand.', bar: 'border-l-brand-orange' },
 ]
 
 // The first page a visitor sees. Two paths, Local and International, then the SAT call and the shared tools.
@@ -19,17 +19,17 @@ export default function Landing() {
           <div className="grid sm:grid-cols-2 gap-3">
             <Link to="/local" className="card border-2 border-brand-green hover:bg-brand-green-soft block">
               <p className="text-xl font-bold">Local</p>
-              <p className="text-sm text-neutral-700 mt-1">Ghanaian universities. Bachelors and masters. WASSCE based.</p>
+              <p className="text-sm text-neutral-700 mt-1">Ghanaian universities and colleges. Bachelors and masters.</p>
               <span className="btn btn-green mt-3">Study in Ghana</span>
             </Link>
             <Link to="/international" className="card border-2 border-brand-orange hover:bg-brand-orange-soft block">
               <p className="text-xl font-bold">International</p>
-              <p className="text-sm text-neutral-700 mt-1">Universities abroad. Bachelors and masters. SAT based.</p>
+              <p className="text-sm text-neutral-700 mt-1">Universities abroad. Bachelors and masters.</p>
               <span className="btn btn-orange mt-3">Study abroad</span>
             </Link>
           </div>
         </div>
-        <HeroArt />
+        <LandingArt />
       </section>
 
       <section className="rounded-3xl bg-brand-green text-neutral-900 p-6 md:p-10 shadow-md">
@@ -43,13 +43,13 @@ export default function Landing() {
       </section>
 
       <section>
-        <h2 className="text-xl font-bold mb-3">More on WEMK</h2>
+        <h2 className="text-xl font-bold mb-3">What you can do on WEMK</h2><p className="text-sm text-neutral-600 -mt-2 mb-3">Choose Local or International above, and each one has all four.</p>
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {info.map((t) => (
-            <Link key={t.to} to={t.to} className={`card border-l-8 ${t.bar} hover:bg-neutral-50 block`}>
+            <div key={t.title} className={`card border-l-8 ${t.bar}`}>
               <p className="font-bold">{t.title}</p>
               <p className="text-sm text-neutral-600 mt-1">{t.text}</p>
-            </Link>
+            </div>
           ))}
         </div>
       </section>

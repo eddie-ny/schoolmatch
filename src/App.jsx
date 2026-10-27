@@ -1,10 +1,15 @@
 import { lazy, Suspense, useEffect } from 'react'
-import { Routes, Route, useLocation } from 'react-router-dom'
+import { Routes, Route, useLocation, Navigate } from 'react-router-dom'
 import { Analytics } from '@vercel/analytics/react'
 import Layout from './components/Layout'
 import Home from './pages/Home'
 import Landing from './pages/Landing'
 import { SHOW_INTERNATIONAL } from './lib/constants'
+function ToLocal() {
+  const { pathname, search } = useLocation()
+  return <Navigate to={`/local${pathname}${search}`} replace />
+}
+
 const Schools = lazy(() => import('./pages/Schools').then((m) => ({ default: m.Schools })))
 const SchoolDetail = lazy(() => import('./pages/Schools').then((m) => ({ default: m.SchoolDetail })))
 const Abroad = lazy(() => import('./pages/Abroad'))
@@ -66,15 +71,28 @@ export default function App() {
       <Route element={<Layout />}>
         <Route path="/" element={<Landing />} />
         <Route path="/local" element={<Home />} />
+        <Route path="/local/schools" element={<Schools />} />
+        <Route path="/local/schools/:id" element={<SchoolDetail />} />
+        <Route path="/local/programs" element={<Programs />} />
+        <Route path="/local/programs/:id" element={<ProgramDetail />} />
+        <Route path="/local/scholarships" element={<Scholarships />} />
+        <Route path="/local/eligibility" element={<Eligibility />} />
         <Route path="/international" element={<International />} />
+        <Route path="/international/schools" element={<Schools />} />
+        <Route path="/international/schools/:id" element={<SchoolDetail />} />
+        <Route path="/international/programs" element={<Programs />} />
+        <Route path="/international/programs/:id" element={<ProgramDetail />} />
+        <Route path="/international/scholarships" element={<Scholarships />} />
         <Route path="/international/eligibility" element={<InternationalEligibility />} />
         <Route path="/international/sat" element={<SatTest />} />
-        <Route path="/programs/:id" element={<ProgramDetail />} />
-        <Route path="/schools" element={<Schools />} />
-        <Route path="/schools/:id" element={<SchoolDetail />} />
+        {/* Old addresses still work and go to the Local side. */}
+        <Route path="/schools" element={<ToLocal />} />
+        <Route path="/schools/:id" element={<ToLocal />} />
+        <Route path="/programs" element={<ToLocal />} />
+        <Route path="/programs/:id" element={<ToLocal />} />
+        <Route path="/scholarships" element={<ToLocal />} />
+        <Route path="/eligibility" element={<ToLocal />} />
         {SHOW_INTERNATIONAL && <Route path="/abroad" element={<Abroad />} />}
-        <Route path="/scholarships" element={<Scholarships />} />
-        <Route path="/eligibility" element={<Eligibility />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -87,7 +105,6 @@ export default function App() {
         <Route path="/complaints" element={<Complaints />} />
         <Route path="/interested" element={<Interested />} />
         <Route path="/invite" element={<Invite />} />
-        <Route path="/programs" element={<Programs />} />
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/parent-confirm" element={<ParentConfirm />} />
         <Route path="/terms" element={<Legal page="terms" />} />

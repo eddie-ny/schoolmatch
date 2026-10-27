@@ -10,7 +10,10 @@ import { groupPrograms } from '../lib/variants'
 // Programs the student hearted, grouped by university.
 export default function Interested() {
   const { user, access } = useAuth()
-  const { schools, programs, loading } = useCatalog()
+  const cat = useCatalog()
+  const loading = cat.loading
+  const schools = [...cat.schools, ...cat.intl.schools]
+  const programs = [...cat.programs, ...cat.intl.programs]
   const saved = useSaved()
   const full = access.level === 'full'
 
@@ -31,7 +34,7 @@ export default function Interested() {
       {loading ? <Spinner /> : total === 0 ? (
         <div className="card space-y-3 max-w-xl">
           <p>You have not marked any programs yet. Press the heart on a program to keep it here.</p>
-          <Link to="/schools" className="btn btn-orange">Find a school</Link>
+          <Link to="/local/schools" className="btn btn-orange">Find a school</Link>
         </div>
       ) : (
         <>

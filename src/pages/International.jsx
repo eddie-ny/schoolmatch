@@ -7,6 +7,13 @@ import { PageTitle, Segmented, Spinner, PagedGrid } from '../components/ui'
 import { ProgramCard, ScholarshipCard } from '../components/Cards'
 import IntlArt from '../components/IntlArt'
 
+const tiles = [
+  { to: '/international/schools', title: 'Find a School', text: 'Universities abroad and their programs.', bar: 'border-l-brand-orange' },
+  { to: '/international/programs', title: 'Programs', text: 'Every program, at every school.', bar: 'border-l-brand-green' },
+  { to: '/international/scholarships', title: 'Scholarships', text: 'Funding for study abroad.', bar: 'border-l-brand-orange' },
+  { to: '/international/eligibility', title: 'Check My Eligibility', text: 'Enter your results and see where you stand.', bar: 'border-l-brand-green' },
+]
+
 // Home of the International path: bachelors and masters abroad, with the SAT call on top.
 export default function International() {
   const { access } = useAuth()
@@ -37,6 +44,15 @@ export default function International() {
         <IntlArt className="relative w-full md:w-[125%] max-w-none drop-shadow-xl" />
       </div>
       </div>
+
+      <section className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {tiles.map((t) => (
+          <Link key={t.to} to={t.to} className={`card border-l-8 ${t.bar} hover:bg-neutral-50 block`}>
+            <p className="font-bold">{t.title}</p>
+            <p className="text-sm text-neutral-600 mt-1">{t.text}</p>
+          </Link>
+        ))}
+      </section>
 
       <section>
         <div className="mb-4">

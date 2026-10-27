@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { useCatalog, isLocal } from '../hooks/useCatalog'
-import { Gate, PageTitle, Pagination, Segmented, VerifiedBadges, Spinner } from '../components/ui'
+import { isLocal } from '../hooks/useCatalog'
+import { useScope, useScopedCatalog } from '../hooks/useScope'
+import { BackLink, Gate, PageTitle, Pagination, Segmented, VerifiedBadges, Spinner } from '../components/ui'
 import { Monogram, ProgramCard, SchoolCard } from '../components/Cards'
 import { groupPrograms } from '../lib/variants'
 import { useSaved } from '../hooks/useSaved'
@@ -13,7 +14,8 @@ const PAGE = 12
 
 export function Schools() {
   const { user } = useAuth()
-  const { schools, programs, loading } = useCatalog()
+  const { schools, programs, loading } = useScopedCatalog()
+  const { to } = useScope()
   const [params, setParams] = useSearchParams()
   const q = params.get('q') || ''
   const where = params.get('where') || 'all'
@@ -85,7 +87,7 @@ export function Schools() {
             if (q) query.set('q', q)
             if (field) query.set('field', field)
             const qs = query.toString() ? `?${query.toString()}` : ''
-            return <SchoolCard key={s.id} s={s} count={count} matches={show} to={`/schools/${s.id}${qs}`} signedIn={!!user} />
+            return <SchoolCard key={s.id} s={s} count={count} matches={show} to={to(`/schools/${s.id}${qs}`)} signedIn={!!user} />
           })}
           {list.length === 0 && <p className="text-neutral-600">No schools match these filters yet.</p>}
         </div>
@@ -98,7 +100,8 @@ export function Schools() {
 export function SchoolDetail() {
   const { id } = useParams()
   const { user, access } = useAuth()
-  const { schools, programs, loading } = useCatalog()
+  const { schools, programs, loading } = useScopedCatalog()
+  const { to } = useScope()
   const saved = useSaved()
   const [params, setParams] = useSearchParams()
   const school = schools.find((s) => s.id === id)
@@ -119,7 +122,7 @@ export function SchoolDetail() {
   const goPage = (n) => { const next = new URLSearchParams(params); if (n > 1) next.set('page', n); else next.delete('page'); setParams(next); window.scrollTo({ top: 0 }) }
 
   if (loading) return <Spinner />
-  if (!school) return <p>School not found. <Link to="/schools" className="underline">Back to schools</Link></p>
+  if (!school) return <BackLink to={to('/schools')}>Back to schools</BackLink>
   if (!user) return <Gate />
 
   const allProgs = programs.filter((p) => p.schoolId === school.id)
@@ -143,7 +146,7 @@ export function SchoolDetail() {
 
   return (
     <div className="space-y-5">
-      <Link to="/schools" className="text-sm underline">Back to schools</Link>
+      <BackLink to={to('/schools')}>Back to schools</BackLink>
       <div className="flex items-start gap-4">
         <Monogram name={school.name} logo={school.logoUrl} kind={schoolCategory(school)} className="!w-16 !h-16" />
         <div>

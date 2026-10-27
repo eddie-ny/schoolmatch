@@ -39,6 +39,16 @@ export function Gate({ text }) {
   )
 }
 
+// A proper button for going back, instead of a bare underlined line of text.
+export function BackLink({ to, children }) {
+  return (
+    <Link to={to} className="btn btn-outline !min-h-10 !px-4 text-sm inline-flex items-center gap-2 w-fit">
+      <svg aria-hidden="true" width="16" height="16" viewBox="0 0 20 20"><path d="M12 4l-6 6 6 6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+      {children}
+    </Link>
+  )
+}
+
 export function PageTitle({ title, sub }) {
   useEffect(() => { document.title = `${title} | WEMK` }, [title])
   return (

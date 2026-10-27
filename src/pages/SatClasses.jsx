@@ -32,8 +32,8 @@ export default function SatClasses() {
       <PageTitle title="SAT classes and tutoring" sub={c.intro} />
 
       <section className="rounded-3xl bg-brand-green text-neutral-900 p-6 md:p-8">
-        <h2 className="text-2xl md:text-3xl font-extrabold leading-tight">Want a higher SAT score?</h2>
-        <p className="mt-2">Tell us where you are and where you want to be. We will help you get ready.</p>
+        <h2 className="text-2xl md:text-3xl font-extrabold leading-tight">Get ready for the real SAT</h2>
+        <p className="mt-2">Whether you are starting out or already scoring well, a short sample is not the real exam. Tell us where you are and where you want to be.</p>
         {c.price && <p className="mt-2 font-semibold">{c.price}</p>}
       </section>
 

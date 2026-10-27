@@ -26,6 +26,7 @@ const labelTone = {
 
 // Masters results: schools you meet first, then schools that state no class, then schools asking for a higher class.
 const classRank = (r) => (/^Meets/.test(r.label) ? 0 : /^Below/.test(r.label) ? 2 : 1)
+const outOfReach = (r) => /^(Below|Not yet)/.test(r.label)
 const byClass = (list) => [...list].sort((a, b) => classRank(a) - classRank(b))
 
 function GradeSelect({ value, onChange }) {
@@ -320,8 +321,16 @@ function EligibilityInner() {
           <h3 className="font-semibold">Schools offering {output.programName}</h3>
           {output.targets.length === 0 && <p className="text-neutral-600">No schools offer this top-up program yet.</p>}
           <PagedGrid items={output.targets} render={(r) => <ResultCard key={r.programId} item={r} highlight />} />
-          {output.others.length > 0 && <h3 className="font-semibold">Other top-up programs</h3>}
-          <PagedGrid items={output.others} render={(r) => <ResultCard key={r.programId} item={r} />} />
+          <h3 className="font-semibold">All top-up programs you qualify for</h3>
+          <p className="text-sm text-neutral-600">Every top-up program your qualification fits, including ones you did not choose. Tap a program name to open its page.</p>
+          {output.others.filter((r) => !outOfReach(r)).length === 0 && <p className="text-neutral-600">No other top-up programs match your qualification yet.</p>}
+          <PagedGrid items={output.others.filter((r) => !outOfReach(r))} render={(r) => <ResultCard key={r.programId} item={r} />} />
+          {output.others.some(outOfReach) && (
+            <details className="card">
+              <summary className="font-semibold cursor-pointer">Top-up programs you do not qualify for yet ({output.others.filter(outOfReach).length})</summary>
+              <PagedGrid items={output.others.filter(outOfReach)} render={(r) => <ResultCard key={r.programId} item={r} />} />
+            </details>
+          )}
         </section>
       )}
 
@@ -332,8 +341,16 @@ function EligibilityInner() {
           <h3 className="font-semibold">Schools offering {output.programName}</h3>
           {output.targets.length === 0 && <p className="text-neutral-600">No schools offer this masters program yet.</p>}
           <PagedGrid items={byClass(output.targets)} render={(r) => <ResultCard key={r.programId} item={r} highlight />} />
-          {output.others.length > 0 && <h3 className="font-semibold">Other masters programs</h3>}
-          <PagedGrid items={byClass(output.others)} render={(r) => <ResultCard key={r.programId} item={r} />} />
+          <h3 className="font-semibold">All masters programs you qualify for</h3>
+          <p className="text-sm text-neutral-600">Every masters program your degree class fits, including ones you did not choose. Programs that state no minimum class are included, so check with the school. Tap a program name to open its page.</p>
+          {output.others.filter((r) => !outOfReach(r)).length === 0 && <p className="text-neutral-600">No other masters programs match your degree class yet.</p>}
+          <PagedGrid items={byClass(output.others.filter((r) => !outOfReach(r)))} render={(r) => <ResultCard key={r.programId} item={r} />} />
+          {output.others.some(outOfReach) && (
+            <details className="card">
+              <summary className="font-semibold cursor-pointer">Masters programs you do not qualify for yet ({output.others.filter(outOfReach).length})</summary>
+              <PagedGrid items={output.others.filter(outOfReach)} render={(r) => <ResultCard key={r.programId} item={r} />} />
+            </details>
+          )}
         </section>
       )}
 

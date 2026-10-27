@@ -39,8 +39,8 @@ export default function SatTest() {
           </div>
         </div>
         <div className="rounded-3xl bg-brand-green text-neutral-900 p-6 space-y-3">
-          <h2 className="text-xl md:text-2xl font-extrabold">Want a higher score?</h2>
-          <p>Get help preparing for the SAT with classes or one-on-one tutoring. Contact us and we will help you get ready.</p>
+          <h2 className="text-xl md:text-2xl font-extrabold">Get ready for the real SAT</h2>
+          <p>This was a short sample. The real SAT is much longer and harder, and the timing is strict. Classes, tutoring and full practice tests help you prepare, whatever your score here. Contact us and we will help you get ready.</p>
           <Link to="/international/sat-classes" className="btn !bg-neutral-900 !text-white">Get SAT training</Link>
         </div>
         <ol className="space-y-3">

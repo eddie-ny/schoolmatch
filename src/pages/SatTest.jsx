@@ -38,6 +38,11 @@ export default function SatTest() {
             <button className="btn btn-outline" onClick={restart}>Try again</button>
           </div>
         </div>
+        <div className="rounded-3xl bg-brand-green text-neutral-900 p-6 space-y-3">
+          <h2 className="text-xl md:text-2xl font-extrabold">Want a higher score?</h2>
+          <p>Get help preparing for the SAT with classes or one-on-one tutoring. Contact us and we will help you get ready.</p>
+          <Link to="/international/sat-classes" className="btn !bg-neutral-900 !text-white">Get SAT training</Link>
+        </div>
         <ol className="space-y-3">
           {SAT_SAMPLE.map((s, n) => (
             <li key={s.id} className="card">

@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { useScopedCatalog } from '../hooks/useScope'
+import { useScope, useScopedCatalog } from '../hooks/useScope'
 import { useSaved } from '../hooks/useSaved'
 import { PageTitle, Pagination } from '../components/ui'
 import { ProgramCard } from '../components/Cards'
@@ -14,6 +14,7 @@ const PAGE = 24
 export default function Programs() {
   const { access } = useAuth()
   const { schools, programs, loading } = useScopedCatalog()
+  const { international } = useScope()
   const saved = useSaved()
   const [params, setParams] = useSearchParams()
   const q = params.get('q') || ''
@@ -42,7 +43,7 @@ export default function Programs() {
 
   return (
     <div>
-      <PageTitle title={field ? `${field} programs` : 'Programs'} sub="Every program we have, at every university. Press the heart to keep one." />
+      <PageTitle title={field ? `${field} programs` : 'Programs'} sub={international ? 'Every program we have at universities abroad. Press the heart to keep one.' : 'Every program we have, at every university. Press the heart to keep one.'} />
       <div className="space-y-3 mb-6">
         <input className="input" placeholder="Search by program, field or university (for example law, nursing, KNUST)" value={q} onChange={(e) => setParam('q', e.target.value)} aria-label="Search programs" />
         <select className="input !w-auto !border-brand-green" value={level} onChange={(e) => setParam('level', e.target.value)} aria-label="Level of study">

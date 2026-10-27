@@ -15,7 +15,7 @@ const PAGE = 12
 export function Schools() {
   const { user } = useAuth()
   const { schools, programs, loading } = useScopedCatalog()
-  const { to } = useScope()
+  const { to, international } = useScope()
   const [params, setParams] = useSearchParams()
   const q = params.get('q') || ''
   const where = params.get('where') || 'all'
@@ -60,7 +60,7 @@ export function Schools() {
 
   return (
     <div>
-      <PageTitle title="Find a School" sub={SHOW_INTERNATIONAL ? 'Local and international schools and programs.' : 'Ghanaian universities and their programs.'} />
+      <PageTitle title="Find a School" sub={international ? 'Universities abroad and their programs.' : 'Ghanaian universities and their programs.'} />
       <div className="space-y-3 mb-6">
         <input className="input" placeholder="Search by school, program (for example law), city or country" value={q} onChange={(e) => setParam('q', e.target.value)} />
         <Segmented value={kind} onChange={(v) => setParam('kind', v)} options={[{ value: '', label: 'All schools' }, ...SCHOOL_CATEGORIES.filter((c) => hasKind.has(c.id)).map((c) => ({ value: c.id, label: c.label }))]} />

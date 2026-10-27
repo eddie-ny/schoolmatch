@@ -38,7 +38,7 @@ export default function Landing() {
         <p className="text-lg md:text-xl mt-2 text-neutral-800">Take your SAT today. Get admission.</p>
         <div className="flex flex-wrap gap-3 mt-5">
           <Link to="/international/sat" className="btn !bg-neutral-900 !text-white !text-lg">Take a short SAT test</Link>
-          <Link to="/international" className="btn !bg-white !text-neutral-900">See international schools</Link>
+          <Link to="/international/sat-classes" className="btn !bg-white !text-neutral-900">SAT classes and tutoring</Link>
         </div>
       </section>
 

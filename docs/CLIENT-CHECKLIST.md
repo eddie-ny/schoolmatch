@@ -21,7 +21,7 @@ Plain language, safe to send. Please never send passwords. Invite us as a member
 ## D. Brand and content
 11. Final WEMK logo and colours.
 12. Her SAT questions for the SAT test (the site has 10 sample practice questions to be replaced). Real SAT questions belong to the College Board, so she must use her own or licensed ones.
-13. The SAT classes details for the landing page ad: who teaches them, price, where to sign up.
+13. The SAT classes and tutoring details: what is offered (classes, tutoring), price, WhatsApp number, phone and email. They go into src/data/satClasses.js and fill the SAT Classes page and the landing page ad. Anything left empty is not shown.
 14. Any scholarships she wants listed (for example Camfed and the CNPC Foundation) with the official link for each.
 15. Which international universities and programmes to feature first, for the International path.
 

@@ -15,6 +15,7 @@ const SchoolDetail = lazy(() => import('./pages/Schools').then((m) => ({ default
 const Abroad = lazy(() => import('./pages/Abroad'))
 const International = lazy(() => import('./pages/International'))
 const InternationalEligibility = lazy(() => import('./pages/InternationalEligibility'))
+const SatClasses = lazy(() => import('./pages/SatClasses'))
 const SatTest = lazy(() => import('./pages/SatTest'))
 const Scholarships = lazy(() => import('./pages/Scholarships'))
 const Eligibility = lazy(() => import('./pages/Eligibility'))
@@ -85,6 +86,7 @@ export default function App() {
         <Route path="/international/scholarships" element={<Scholarships />} />
         <Route path="/international/eligibility" element={<InternationalEligibility />} />
         <Route path="/international/sat" element={<SatTest />} />
+        <Route path="/international/sat-classes" element={<SatClasses />} />
         {/* Old addresses still work and go to the Local side. */}
         <Route path="/schools" element={<ToLocal />} />
         <Route path="/schools/:id" element={<ToLocal />} />

@@ -15,7 +15,7 @@ const sideLinks = (side) => [
   { to: `/${side}/programs`, label: 'Programs' },
   { to: `/${side}/scholarships`, label: 'Scholarships' },
   { to: `/${side}/eligibility`, label: 'Check My Eligibility' },
-  ...(side === 'international' ? [{ to: '/international/sat', label: 'SAT Practice' }] : []),
+  ...(side === 'international' ? [{ to: '/international/sat', label: 'SAT Prep' }] : []),
 ]
 
 // Name + chevron button that opens the account menu (GoScholar-style). Click, Enter or Space opens it;
@@ -202,6 +202,7 @@ export default function Layout() {
         <div className="max-w-5xl mx-auto px-4 py-6 flex flex-col gap-2">
           <p>Starter data is unverified. Results are guidance, not a guarantee of admission.</p>
           <div className="flex flex-wrap gap-x-4 gap-y-1">
+            <Link to="/" className="underline inline-flex items-center min-h-11">Switch Local or International</Link>
             <Link to="/pricing" className="underline inline-flex items-center min-h-11">Pricing</Link>
             <Link to="/invite" className="underline inline-flex items-center min-h-11">Invite friends</Link>
             <Link to="/privacy" className="underline inline-flex items-center min-h-11">Privacy</Link>

@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { isLocal } from '../hooks/useCatalog'
-import { useScopedCatalog } from '../hooks/useScope'
+import { useScope, useScopedCatalog } from '../hooks/useScope'
 import { Gate, PageTitle, Pagination, Segmented, Spinner } from '../components/ui'
 import { ScholarshipCard } from '../components/Cards'
 import { SHOW_INTERNATIONAL } from '../lib/constants'
@@ -12,6 +12,7 @@ const PAGE = 12
 export default function Scholarships() {
   const { access, user } = useAuth()
   const { scholarships, loading } = useScopedCatalog()
+  const { international } = useScope()
   const [params] = useSearchParams()
   const [funding, setFunding] = useState(params.get('funding') || 'all')
   const [where, setWhere] = useState('all')
@@ -28,7 +29,7 @@ export default function Scholarships() {
 
   return (
     <div>
-      <PageTitle title="Scholarships" sub={SHOW_INTERNATIONAL ? 'Browse by funding type and country.' : 'Funding for study in Ghana.'} />
+      <PageTitle title="Scholarships" sub={international ? 'Funding for study abroad.' : 'Funding for study in Ghana.'} />
       <div className="space-y-3 mb-6">
         <Segmented value={funding} onChange={(v) => { setFunding(v); setPage(1) }} options={[{ value: 'all', label: 'Any funding' }, { value: 'partial', label: 'Partial' }, { value: 'full', label: 'Fully funded' }]} />
         {SHOW_INTERNATIONAL && <div><Segmented value={where} onChange={(v) => { setWhere(v); setPage(1) }} options={[{ value: 'all', label: 'All' }, { value: 'local', label: 'Local' }, { value: 'intl', label: 'International' }]} /></div>}

@@ -35,6 +35,7 @@ export default function International() {
         <div className="flex flex-wrap gap-3 mt-4">
           <Link to="/international/sat" className="btn !bg-neutral-900 !text-white">Take a short SAT test</Link>
           <Link to="/international/eligibility" className="btn !bg-white !text-neutral-900">Check my eligibility</Link>
+          <Link to="/international/sat-classes" className="btn !bg-white !text-neutral-900">SAT classes</Link>
         </div>
         </div>
       </section>

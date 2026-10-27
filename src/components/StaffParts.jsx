@@ -236,8 +236,10 @@ export function SignupsSection({ users: allUsers, canDisable, onToggle, err, rel
         onConfirm={runDelete}
         onCancel={() => setDelTarget(null)}
       />
-      <input className="input max-w-xl" type="search" placeholder="Search students and staff by name or email" aria-label="Search people" value={q} onChange={(e) => setQ(e.target.value)} />
-      {reload && <AddStudent onDone={done} />}
+      <div className="flex flex-wrap items-start gap-4">
+        <input className="input flex-1 min-w-[16rem] max-w-xl" type="search" placeholder="Search students and staff by name or email" aria-label="Search people" value={q} onChange={(e) => setQ(e.target.value)} />
+        {reload && <AddStudent onDone={done} />}
+      </div>
       {editing && <EditStudent u={editing} onClose={() => setEditing(null)} onSaved={done} />}
       <ul className="md:hidden space-y-3" aria-label="Sign-ups">
         {users.map((u) => {

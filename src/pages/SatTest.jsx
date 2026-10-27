@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { PageTitle } from '../components/ui'
+import { useAuth } from '../context/AuthContext'
 import { SAT_SAMPLE } from '../data/satSample'
 
 // A short practice test. The score is a practice score on the 400 to 1600 scale, worked out from the share of answers right.
@@ -8,6 +9,7 @@ import { SAT_SAMPLE } from '../data/satSample'
 const practiceScore = (right, total) => 400 + Math.round(((right / total) * 1200) / 10) * 10
 
 export default function SatTest() {
+  const { user } = useAuth()
   const [i, setI] = useState(0)
   const [picked, setPicked] = useState([])
   const [done, setDone] = useState(false)
@@ -21,6 +23,7 @@ export default function SatTest() {
 
   if (done) {
     const score = practiceScore(right, total)
+    try { sessionStorage.setItem('satScore', String(score)) } catch { /* storage blocked: the score is still in the link */ }
     return (
       <div className="space-y-6">
         <PageTitle title="Your practice result" />
@@ -29,7 +32,9 @@ export default function SatTest() {
           <p className="text-5xl font-extrabold">{score}</p>
           <p className="text-neutral-700">{right} of {total} right. This is a practice score, not an official SAT score.</p>
           <div className="flex flex-wrap justify-center gap-3 pt-2">
-            <Link to="/international/eligibility" className="btn btn-orange">Check my eligibility</Link>
+            {user
+              ? <Link to={`/international/eligibility?sat=${score}`} className="btn btn-orange">Check my eligibility</Link>
+              : <Link to="/login" className="btn btn-orange">Sign in to check eligibility</Link>}
             <button className="btn btn-outline" onClick={restart}>Try again</button>
           </div>
         </div>

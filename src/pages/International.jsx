@@ -39,9 +39,8 @@ export default function International() {
         </div>
       </section>
       <div className="relative w-full max-w-md mx-auto md:w-[30rem] aspect-square flex items-center justify-center" aria-hidden="true">
-        <div className="absolute -z-0 left-[8%] top-[12%] w-[70%] h-[70%] rounded-full bg-brand-orange/35 blur-3xl" />
-        <div className="absolute -z-0 right-[2%] bottom-[4%] w-[55%] h-[55%] rounded-full bg-brand-green/45 blur-3xl" />
-        <IntlArt className="relative w-full md:w-[125%] max-w-none drop-shadow-xl" />
+        <div className="absolute inset-[6%] rounded-full bg-brand-orange-soft" />
+        <IntlArt className="relative w-[105%] max-w-none" />
       </div>
       </div>
 

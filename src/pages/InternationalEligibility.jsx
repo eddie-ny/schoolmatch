@@ -2,7 +2,8 @@ import { useMemo, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useCatalog } from '../hooks/useCatalog'
 import { useSaved } from '../hooks/useSaved'
-import { PageTitle, Segmented, Spinner, Badge } from '../components/ui'
+import { useSearchParams } from 'react-router-dom'
+import { PageTitle, Segmented, Spinner, Badge, RequireAuth } from '../components/ui'
 import { ProgramCard } from '../components/Cards'
 import { DEGREE_CLASSES, GRADES } from '../lib/constants'
 
@@ -71,12 +72,13 @@ function mastersLabel(p, cls) {
 const tone = { pass: 'text-green-700', fail: 'text-red-700', unknown: 'text-neutral-500' }
 const mark = { pass: '✓', fail: '✗', unknown: '?' }
 
-export default function InternationalEligibility() {
+function InternationalEligibilityInner() {
+  const [params] = useSearchParams()
   const { access } = useAuth()
   const { intl, loading } = useCatalog()
   const saved = useSaved()
   const [level, setLevel] = useState('Undergraduate')
-  const [sat, setSat] = useState('')
+  const [sat, setSat] = useState(() => { let v = params.get('sat'); if (!v) { try { v = sessionStorage.getItem('satScore') } catch { /* ignore */ } } return v && /^\d{3,4}$/.test(v) ? v : '' })
   const [cls, setCls] = useState('')
   const [grades, setGrades] = useState(['', '', '', '', '', ''])
   const [test, setTest] = useState('none')
@@ -181,5 +183,13 @@ export default function InternationalEligibility() {
       )}
       <p className="text-sm text-neutral-600 mt-6">This is guidance, not a guarantee of admission. A "?" means the school has not published that rule. Always confirm requirements with the school.</p>
     </div>
+  )
+}
+
+export default function InternationalEligibility() {
+  return (
+    <RequireAuth>
+      <InternationalEligibilityInner />
+    </RequireAuth>
   )
 }

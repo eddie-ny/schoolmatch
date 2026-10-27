@@ -10,6 +10,7 @@ import { SCHOOL_CATEGORIES, schoolCategory } from '../lib/schoolCategory'
 const tasks = [
   { to: '/local/schools', title: 'Find a School', text: SHOW_INTERNATIONAL ? 'Search local and international schools and programs.' : 'Search Ghanaian universities and their programs.', bar: 'border-l-brand-orange' },
   ...(SHOW_INTERNATIONAL ? [{ to: '/abroad', title: 'Study Abroad', text: 'Compare entry rules, English waivers and costs.', bar: 'border-l-brand-green' }] : []),
+  { to: '/local/programs', title: 'Find Programs', text: 'Every program, and the schools that offer it.', bar: 'border-l-brand-green' },
   { to: '/local/scholarships', title: 'Find Scholarships', text: 'Browse funding by type and country.', bar: 'border-l-brand-orange' },
   { to: '/local/eligibility', title: 'Check My Eligibility', text: 'Enter your results and see where you stand.', bar: 'border-l-brand-green' },
 ]

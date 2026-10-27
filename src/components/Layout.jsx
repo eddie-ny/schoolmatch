@@ -70,6 +70,7 @@ export default function Layout() {
   const nav = useNavigate()
   const { pathname } = useLocation()
   const side = scopeOf(pathname)
+  const staffPage = pathname.startsWith('/admin') || pathname.startsWith('/support')
   const navLinks = side ? sideLinks(side) : []
 
   // Staff go straight to their own page once per sign-in: support to /support, admins to /admin.
@@ -191,7 +192,7 @@ export default function Layout() {
         onCancel={() => setConfirmOut(false)}
       />
 
-      <main id="main" tabIndex={-1} className="flex-1 outline-none max-w-5xl w-full mx-auto px-4 py-6">
+      <main id="main" tabIndex={-1} className={`flex-1 outline-none w-full mx-auto px-4 py-6 ${staffPage ? 'max-w-[90rem]' : 'max-w-5xl'}`}>
         <Suspense fallback={<Spinner className="min-h-[60vh]" />}>
           {mfaNeeded ? <MfaChallenge /> : <Outlet />}
         </Suspense>

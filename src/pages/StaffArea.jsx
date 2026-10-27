@@ -9,7 +9,7 @@ import { ActivityLog, ActivityPage, ArchivePage, NeedMfa, ParentsSection, Signup
 
 const SHEETS = [
   { kind: 'schools', label: 'Schools sheet', cols: 'school_name, country, type, category, city, website, logo_url (optional, a picture address or a path like /logos/ug.png), verified' },
-  { kind: 'programs', label: 'Programs sheet', cols: 'school_name, program_name, level, field, fees_usd, duration_years, min_core_maths, min_core_english, min_core_science, required_electives, cutoff_aggregate, cutoff_year, sat_low, sat_high, english_test_waiver, foundation_available, verified' },
+  { kind: 'programs', label: 'Programs sheet', cols: 'school_name, program_name, level, field, fees_usd, duration_years, min_core_maths, min_core_english, min_core_science, required_electives, cutoff_aggregate, cutoff_year, sat_low, sat_high, english_test_waiver, foundation_available, verified. International extras (all optional): sat_policy (required, optional or not_considered), min_wassce_grade (for example C5), min_ielts, min_toefl, min_duolingo, intl_source_url, entry_note' },
   { kind: 'plans', label: 'Plan prices sheet', cols: 'id, label, months, price, currency  (price in normal money, for example 49.50)' },
   { kind: 'scholarships', label: 'Scholarships sheet', cols: 'name, funder, country, funding_type, level, min_aggregate, min_sat, criteria, deadline, link, verified' },
 ]

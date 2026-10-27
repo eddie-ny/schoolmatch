@@ -402,6 +402,8 @@ export async function importCatalog(kind, rows) {
       const row = {
         school_id: sid, name: r.name, level: clean(r.level), field: clean(r.field), mode: clean(r.mode) || 'Regular', campus: clean(r.campus), fees_usd: r.feesUsd, duration_years: r.durationYears,
         english_test_waiver: !!r.englishTestWaiver, foundation_available: !!r.foundationAvailable, verified: !!r.verified,
+        ...(r.satPolicy !== undefined ? { sat_policy: r.satPolicy, min_wassce_grade: r.minWassceGrade, min_ielts: r.minIelts, min_toefl: r.minToefl, min_duolingo: r.minDuolingo, intl_source_url: r.intlSourceUrl } : {}),
+        ...(r.entryNote ? { entry_note: r.entryNote } : {}),
       }
       const { data: found, error: e1 } = await supabase.from('programs').select('id').eq('school_id', sid).eq('name', r.name).eq('mode', clean(r.mode) || 'Regular').maybeSingle()
       fail(e1, 'Could not read programs.')
@@ -422,11 +424,11 @@ export async function importCatalog(kind, rows) {
         fail((await supabase.from('program_requirements').insert(reqs)).error, 'Could not save requirements.')
       }
       // One cut-off row per year, so the history builds up as years are imported.
-      if (r.cutoffAggregate != null && r.cutoffYear != null) {
+      if ((r.cutoffAggregate != null || r.satLow != null) && r.cutoffYear != null) {
         const cut = { program_id: pid, year: r.cutoffYear, cutoff_aggregate: r.cutoffAggregate, sat_low: r.satLow, sat_high: r.satHigh }
         fail((await supabase.from('program_cutoffs').delete().eq('program_id', pid).eq('year', r.cutoffYear)).error, 'Could not update cut-offs.')
         fail((await supabase.from('program_cutoffs').insert(cut)).error, 'Could not save the cut-off.')
-      } else if (r.cutoffAggregate != null) {
+      } else if (r.cutoffAggregate != null || r.satLow != null) {
         out.skipped.push(`${r.name}: cut-off ignored because cutoff_year is empty`)
       }
     }

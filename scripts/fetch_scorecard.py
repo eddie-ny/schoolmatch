@@ -36,6 +36,7 @@ FIELDS = [
     "latest.admissions.sat_scores.25th_percentile.critical_reading",
     "latest.admissions.sat_scores.75th_percentile.critical_reading",
     "latest.admissions.sat_scores.average.overall",
+    "latest.admissions.test_requirements",  # 1 required, 2 recommended, 3 neither required nor recommended, 4 do not know, 5 considered but not required (ADMCON7)
     "latest.cost.tuition.out_of_state",
 ]
 PARAMS = {

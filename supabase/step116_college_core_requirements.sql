@@ -1,0 +1,5 @@
+-- Already applied. Colleges of Education (admission.coeportal.edu.gh/ADMISSION_PROCEDURE_2025.pdf, official) and nursing training colleges (NMC entry requirements) set
+-- credit passes (C6) in English and Mathematics plus a science/social core and three relevant electives, with no cut-off published. 181 programmes had no requirements at all (shown "No data yet").
+-- Nursing training colleges also state an aggregate of 30 or better; that is an entry limit, not a competitive cut-off, so it was NOT loaded.
+insert into public.program_requirements (program_id,subject,min_grade,is_core)
+select t.id,x.s,'C6',true from (select p.id from public.programs p join public.schools s on s.id=p.school_id where s.country='Ghana' and p.level='Undergraduate' and (s.name ilike '%college of education%' or s.name ilike 'Public Nursing%' or s.name ilike 'Ghana Armed Forces College%' or s.name ilike 'College of Health%') and not exists (select 1 from public.program_requirements r where r.program_id=p.id)) t,(values ('English Language'),('Core Mathematics')) x(s);

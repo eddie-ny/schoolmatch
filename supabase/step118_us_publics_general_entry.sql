@@ -1,0 +1,8 @@
+-- STEP 118 (APPLIED 2026-10-28): five more US public universities, one "General undergraduate entry" row each. All UNVERIFIED.
+-- University of Florida: SAT/ACT required (Florida BOG rule 6.002, UF international freshman page). English minimums for on-campus not found (UF Online: TOEFL 80, IELTS 6.0, Ghana exempt; may not apply).
+-- Arizona State: SAT optional (official Fall 2026 page). English IELTS 6.0, TOEFL 61, Duolingo 95 (general), higher for engineering, nursing, journalism. Min GPA 3.00.
+-- UT Austin: SAT/ACT required. TOEFL 79, IELTS 6.5, Duolingo 115. Ghana is on the exempt list.
+-- Purdue: shown as optional (page says scores evaluated only if provided). English minimums not retrieved.
+-- Michigan: test-optional. English minimums not retrieved; Ghana not exempt. SAT 1360 to 1530 (2024-25 CDS, via secondary article).
+-- SAT ranges for the others, admission rates and test requirements are to come from the College Scorecard CSV (scripts/fetch_scorecard.py).
+-- The loading statements were run directly in Supabase (schools first, then programmes).

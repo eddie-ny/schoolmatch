@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useEffect } from 'react'
 import { listEligibilityPrograms, checkEligibility, checkMastersEligibility, checkTopupEligibility } from '../lib/api'
@@ -133,7 +133,10 @@ function EligibilityInner() {
   const [busy, setBusy] = useState(false)
   useEffect(() => { listEligibilityPrograms().then(setPrograms).catch((e) => setError(e.message)).finally(() => setLoading(false)) }, [])
   const saved = user.results
-  const [level, setLevel] = useState('undergraduate')
+  const [params] = useSearchParams()
+  const fromName = params.get('program') || ''
+  const fromLevel = params.get('level') || ''
+  const [level, setLevel] = useState(fromLevel === 'Masters' ? 'masters' : 'undergraduate')
   const [degreeClass, setDegreeClass] = useState('')
   const [cgpa, setCgpa] = useState('')
   const masters = level === 'masters'
@@ -162,6 +165,16 @@ function EligibilityInner() {
     () => [...new Set(scoped.filter((p) => !field || p.field === field).map((p) => p.group))].sort((a, b) => a.localeCompare(b)),
     [scoped, field]
   )
+
+  // Arriving from a programme page: fill in that programme (by its common name) once the list is loaded.
+  const [prefilled, setPrefilled] = useState(false)
+  useEffect(() => {
+    if (prefilled || !fromName || !programs.length) return
+    const low = fromName.toLowerCase()
+    const hit = programs.find((p) => p.name.toLowerCase() === low) || programs.find((p) => p.group.toLowerCase() === low)
+    if (hit) { setProgramName(hit.group); if (hit.field) setField(hit.field) }
+    setPrefilled(true)
+  }, [programs, fromName, prefilled])
 
   const setGrade = (s) => (g) => setGrades({ ...grades, [s]: g })
   const pickElective = (i, name) => {

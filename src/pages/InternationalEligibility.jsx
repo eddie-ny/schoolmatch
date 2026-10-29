@@ -93,7 +93,7 @@ function InternationalEligibilityInner() {
   const { user, access, saveSat } = useAuth()
   const { intl, loading } = useCatalog()
   const saved = useSaved()
-  const [level, setLevel] = useState('Undergraduate')
+  const [level, setLevel] = useState(params.get('level') === 'Masters' ? 'Masters' : 'Undergraduate')
   const [sat, setSat] = useState(() => {
     let v = params.get('sat') || (user?.results?.sat ? String(user.results.sat) : '')
     if (!v) { try { v = sessionStorage.getItem('satScore') } catch { /* ignore */ } }
@@ -105,7 +105,7 @@ function InternationalEligibilityInner() {
   const [test, setTest] = useState('none')
   const [score, setScore] = useState('')
   const [go, setGo] = useState(false)
-  const [study, setStudy] = useState('')
+  const [study, setStudy] = useState(params.get('program') || '')
   const dStudy = useDebounced(study)
   const [pool, setPool] = useState({ items: [], total: 0, busy: false })
   const full = access.level === 'full'

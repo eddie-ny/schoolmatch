@@ -120,7 +120,7 @@ export default function ProgramDetail() {
                   </dl>
                 </div>
               ))}
-              <Link to={to('/eligibility')} className="btn btn-green">Check if I qualify</Link>
+              <Link to={`${to('/eligibility')}?${new URLSearchParams({ program: p.name, level: p.level || '' })}`} className="btn btn-green">Check if I qualify</Link>
             </section>
 
             <section id="fees" className="space-y-2">

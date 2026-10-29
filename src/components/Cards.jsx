@@ -184,7 +184,6 @@ export function ProgramBody({ p, variants = [p], school }) {
             {v.satPolicy && (<><dt className="text-neutral-500">SAT</dt><dd>{{ required: 'Required', optional: 'Optional', not_considered: 'Not considered' }[v.satPolicy]}{v.satLow != null ? `. Usual range ${v.satLow} to ${v.satHigh ?? v.satLow}${v.cutoffYear ? ` (${v.cutoffYear})` : ''}` : ''}</dd></>)}
             {v.minWassceGrade && (<><dt className="text-neutral-500">WASSCE</dt><dd>{v.minWassceGrade} or better</dd></>)}
             {(v.minIelts != null || v.minToefl != null || v.minDuolingo != null || v.englishTestWaiver) && (<><dt className="text-neutral-500">English</dt><dd>{[v.englishTestWaiver && 'No test needed for Ghanaian citizens', v.minIelts != null && `IELTS ${v.minIelts}`, v.minToefl != null && `TOEFL ${v.minToefl}`, v.minDuolingo != null && `Duolingo ${v.minDuolingo}`].filter(Boolean).join(', ')}</dd></>)}
-            {v.sourceUrl && (<><dt className="text-neutral-500">Source</dt><dd className="break-all"><a className="underline" href={v.sourceUrl} target="_blank" rel="noreferrer">Official page</a></dd></>)}
             {v.durationYears != null && (<><dt className="text-neutral-500">Duration</dt><dd>{v.durationYears} years</dd></>)}
             {v.minDegreeClass && (<><dt className="text-neutral-500">Degree class needed</dt><dd>{v.minDegreeClass}</dd></>)}
             {v.feesGhs != null && (<><dt className="text-neutral-500">Fees</dt><dd>GHS {Number(v.feesGhs).toLocaleString()}</dd></>)}

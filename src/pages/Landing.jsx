@@ -17,15 +17,15 @@ export default function Landing() {
           <h1 className="text-3xl md:text-5xl font-extrabold leading-tight">Find where you can study, and whether you qualify.</h1>
           <p className="text-lg text-neutral-700">Pick your path. We show the schools and programs you can get into.</p>
           <div className="grid sm:grid-cols-2 gap-3">
-            <Link to="/local" className="card border-2 border-brand-green hover:bg-brand-green-soft block">
+            <Link to="/local" className="card border-2 border-brand-green hover:bg-brand-green-soft flex flex-col">
               <p className="text-xl font-bold">Local</p>
               <p className="text-sm text-neutral-700 mt-1">Ghanaian universities and colleges. Bachelors and masters.</p>
-              <span className="btn btn-green mt-3">Study in Ghana</span>
+              <div className="mt-auto pt-3"><span className="btn btn-green">Study in Ghana</span></div>
             </Link>
-            <Link to="/international" className="card border-2 border-brand-orange hover:bg-brand-orange-soft block">
+            <Link to="/international" className="card border-2 border-brand-orange hover:bg-brand-orange-soft flex flex-col">
               <p className="text-xl font-bold">International</p>
               <p className="text-sm text-neutral-700 mt-1">Universities abroad. Bachelors and masters.</p>
-              <span className="btn btn-orange mt-3">Study abroad</span>
+              <div className="mt-auto pt-3"><span className="btn btn-orange">Study abroad</span></div>
             </Link>
           </div>
         </div>

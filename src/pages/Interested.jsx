@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useCatalog } from '../hooks/useCatalog'
@@ -6,15 +6,25 @@ import { useSaved } from '../hooks/useSaved'
 import { Gate, PagedGrid, PageTitle, Spinner } from '../components/ui'
 import { ProgramCard } from '../components/Cards'
 import { groupPrograms } from '../lib/variants'
+import { getProgramsFull } from '../lib/api'
 
 // Programs the student hearted, grouped by university.
 export default function Interested() {
   const { user, access } = useAuth()
   const cat = useCatalog()
-  const loading = cat.loading
-  const schools = [...cat.schools, ...cat.intl.schools]
-  const programs = [...cat.programs, ...cat.intl.programs]
   const saved = useSaved()
+  const [programs, setPrograms] = useState([])
+  const [busy, setBusy] = useState(false)
+  const key = [...saved.ids].sort().join(',')
+  // Only the hearted programmes are fetched, not the whole catalogue.
+  useEffect(() => {
+    let live = true
+    setBusy(true)
+    getProgramsFull([...saved.ids]).then((x) => live && setPrograms(x)).catch(() => live && setPrograms([])).finally(() => live && setBusy(false))
+    return () => { live = false }
+  }, [key]) // eslint-disable-line react-hooks/exhaustive-deps
+  const loading = cat.loading || busy
+  const schools = [...cat.schools, ...cat.intl.schools]
   const full = access.level === 'full'
 
   const groups = useMemo(() => {

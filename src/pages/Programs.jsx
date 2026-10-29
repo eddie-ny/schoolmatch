@@ -1,27 +1,23 @@
-import { useMemo } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { useScope, useScopedCatalog } from '../hooks/useScope'
+import { useScope } from '../hooks/useScope'
 import { useSaved } from '../hooks/useSaved'
-import { PageTitle, Pagination } from '../components/ui'
-import { ProgramCard } from '../components/Cards'
-import { FIELDS } from '../lib/constants'
-import { groupPrograms } from '../lib/variants'
+import { PageTitle, Pagination, Spinner } from '../components/ui'
+import { ProgramResult, SearchBar, useFields, useProgramSearch, PAGE_SIZE } from '../components/Browse'
 
-const PAGE = 24
-
-// Every programme at every university, with search and a field filter. Hearts add to the Interested page.
+// Every programme, searched on the server one page at a time so the page opens fast however many there are.
 export default function Programs() {
-  const { access } = useAuth()
-  const { schools, programs, loading } = useScopedCatalog()
-  const { international } = useScope()
+  useAuth()
+  const { scope, base, international } = useScope()
   const saved = useSaved()
+  const fields = useFields(scope)
   const [params, setParams] = useSearchParams()
   const q = params.get('q') || ''
   const field = params.get('field') || ''
   const level = params.get('level') || ''
   const page = Math.max(1, parseInt(params.get('page'), 10) || 1)
-  const full = access.level === 'full'
+  const { rows, total, loading, error } = useProgramSearch({ scope, q, field, level, page })
+  const pages = Math.ceil(total / PAGE_SIZE)
 
   const setParam = (k, v) => {
     const next = new URLSearchParams(params)
@@ -30,54 +26,46 @@ export default function Programs() {
     next.delete('page')
     setParams(next, { replace: true })
   }
-
-  const schoolById = useMemo(() => Object.fromEntries(schools.map((s) => [s.id, s])), [schools])
-  const list = useMemo(() => {
-    const needle = q.trim().toLowerCase()
-    return groupPrograms(programs
-      .filter((p) => !level || (p.level || 'Undergraduate').toLowerCase() === level.toLowerCase())
-      .filter((p) => !field || (p.field || '').toLowerCase() === field.toLowerCase())
-      .filter((p) => !needle || `${p.name} ${p.field || ''} ${p.schoolName}`.toLowerCase().includes(needle)))
-      .sort((a, b) => a.name.localeCompare(b.name) || a.schoolName.localeCompare(b.schoolName))
-  }, [programs, q, field, level])
+  const goPage = (n) => { const next = new URLSearchParams(params); if (n > 1) next.set('page', n); else next.delete('page'); setParams(next); window.scrollTo({ top: 0 }) }
 
   return (
     <div>
-      <PageTitle title={field ? `${field} programs` : 'Programs'} sub={international ? 'Every program we have at universities abroad. Press the heart to keep one.' : 'Every program we have, at every university. Press the heart to keep one.'} />
-      <div className="space-y-3 mb-6">
-        <input className="input" placeholder="Search by program, field or university (for example law, nursing, KNUST)" value={q} onChange={(e) => setParam('q', e.target.value)} aria-label="Search programs" />
-        <select className="input !w-auto !border-brand-green" value={level} onChange={(e) => setParam('level', e.target.value)} aria-label="Level of study">
-          <option value="">All levels</option>
-          <option>Undergraduate</option>
-          <option>Diploma</option>
-          <option>Certificate</option>
-          <option>Masters</option>
-        </select>{' '}
-        <select className="input !w-auto !border-brand-orange" value={field} onChange={(e) => setParam('field', e.target.value)} aria-label="Field of study">
-          <option value="">Any field</option>
-          {FIELDS.map((f) => <option key={f.id}>{f.id}</option>)}
-        </select>
-        <p className="text-sm text-neutral-600">{loading ? 'Loading...' : `${list.length} program${list.length === 1 ? '' : 's'}${list.length > PAGE ? `, page ${Math.min(page, Math.ceil(list.length / PAGE))} of ${Math.ceil(list.length / PAGE)}` : ''}`}</p>
-        {saved.error && <p className="text-red-700 text-sm" role="alert">{saved.error}</p>}
+      <PageTitle title={field ? `${field} programs` : 'Programs'} sub={international ? 'Bachelor\'s programs at universities abroad. Press the heart to keep one.' : 'Every program, at every university. Press the heart to keep one.'} />
+      <SearchBar q={q} onQ={(v) => setParam('q', v)} />
+      <div className="mt-5 grid lg:grid-cols-[16rem_1fr] gap-6 items-start">
+        <aside className="card !p-4 space-y-4">
+          <label className="block">
+            <span className="text-sm font-semibold">Field of study</span>
+            <select className="input mt-1" value={field} onChange={(e) => setParam('field', e.target.value)}>
+              <option value="">Any field</option>
+              {fields.map((f) => <option key={f.field} value={f.field}>{f.field} ({Number(f.n).toLocaleString()})</option>)}
+            </select>
+          </label>
+          <label className="block">
+            <span className="text-sm font-semibold">Level</span>
+            <select className="input mt-1" value={level} onChange={(e) => setParam('level', e.target.value)}>
+              <option value="">All levels</option>
+              <option>Undergraduate</option>
+              <option>Diploma</option>
+              <option>Certificate</option>
+              <option>Masters</option>
+            </select>
+          </label>
+          {(q || field || level) && <button type="button" className="underline text-sm" onClick={() => setParams({}, { replace: true })}>Clear all filters</button>}
+        </aside>
+        <div className="space-y-4">
+          <p className="text-sm text-neutral-600" aria-live="polite">{loading ? 'Searching...' : `${total.toLocaleString()} program${total === 1 ? '' : 's'}${pages > 1 ? `, page ${Math.min(page, pages)} of ${pages.toLocaleString()}` : ''}`}</p>
+          {saved.error && <p className="text-red-700 text-sm" role="alert">{saved.error}</p>}
+          {error && <p className="text-red-700 text-sm" role="alert">{error}</p>}
+          {loading && rows.length === 0 ? <Spinner /> : (
+            <div className="grid grid-cols-1 gap-4">
+              {rows.map((p) => <ProgramResult key={p.id} p={p} base={base} saved={saved.isSaved(p)} onToggle={saved.toggleProgram} />)}
+            </div>
+          )}
+          {!loading && rows.length === 0 && !error && <p className="text-neutral-600">No programs match these filters yet.</p>}
+          <Pagination page={Math.min(page, pages || 1)} pages={pages} onChange={goPage} />
+        </div>
       </div>
-      {!loading && (
-        <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {list.slice((page - 1) * PAGE, page * PAGE).map((p) => (
-              <ProgramCard
-                key={p.id}
-                p={p}
-                school={schoolById[p.schoolId]}
-                full={full}
-                saved={saved.isSaved(p)}
-                onToggle={saved.toggleProgram}
-              />
-            ))}
-          </div>
-          {list.length === 0 && <p className="text-neutral-600">No programs match these filters yet.</p>}
-          <Pagination page={page} pages={Math.ceil(list.length / PAGE)} onChange={(n) => { const next = new URLSearchParams(params); if (n > 1) next.set('page', n); else next.delete('page'); setParams(next); window.scrollTo({ top: 0 }) }} />
-        </>
-      )}
     </div>
   )
 }

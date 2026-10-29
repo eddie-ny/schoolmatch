@@ -11,7 +11,7 @@ function ToLocal() {
 }
 
 const Schools = lazy(() => import('./pages/Schools').then((m) => ({ default: m.Schools })))
-const SchoolDetail = lazy(() => import('./pages/Schools').then((m) => ({ default: m.SchoolDetail })))
+const SchoolDetail = lazy(() => import('./pages/SchoolDetail'))
 const Abroad = lazy(() => import('./pages/Abroad'))
 const International = lazy(() => import('./pages/International'))
 const InternationalEligibility = lazy(() => import('./pages/InternationalEligibility'))

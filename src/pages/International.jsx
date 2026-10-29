@@ -1,10 +1,11 @@
 import { useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useCatalog } from '../hooks/useCatalog'
 import { useSaved } from '../hooks/useSaved'
-import { PageTitle, Segmented, Spinner, PagedGrid } from '../components/ui'
-import { ProgramCard, ScholarshipCard } from '../components/Cards'
+import { PageTitle, Segmented, Spinner } from '../components/ui'
+import { ScholarshipCard } from '../components/Cards'
+import { ProgramResult, SearchBar, useProgramSearch } from '../components/Browse'
 import IntlArt from '../components/IntlArt'
 
 const tiles = [
@@ -19,10 +20,12 @@ export default function International() {
   const { access } = useAuth()
   const { intl, loading } = useCatalog()
   const saved = useSaved()
+  const nav = useNavigate()
   const [level, setLevel] = useState('Undergraduate')
+  const [study, setStudy] = useState('')
   const full = access.level === 'full'
-  const schoolById = useMemo(() => Object.fromEntries(intl.schools.map((s) => [s.id, s])), [intl.schools])
-  const list = useMemo(() => intl.programs.filter((p) => (level === 'Masters') === (p.level === 'Masters')), [intl.programs, level])
+  const found = useProgramSearch({ scope: 'international', q: study, field: '', level, page: 1, size: 6 })
+  const go = () => nav(`/international/programs?${new URLSearchParams({ ...(study ? { q: study } : {}), level }).toString()}`)
 
   return (
     <div className="space-y-8">
@@ -54,18 +57,20 @@ export default function International() {
         ))}
       </section>
 
-      <section>
-        <div className="mb-4">
+      <section className="space-y-4">
+        <h2 className="text-xl font-bold">What do you want to study?</h2>
+        <form onSubmit={(e) => { e.preventDefault(); go() }} className="space-y-3">
+          <SearchBar q={study} onQ={setStudy} />
           <Segmented value={level} onChange={setLevel} options={[{ value: 'Undergraduate', label: 'Bachelors' }, { value: 'Masters', label: 'Masters' }]} />
-        </div>
-        {loading ? <Spinner /> : list.length === 0 ? (
-          <p className="text-neutral-700">We are adding international {level === 'Masters' ? 'masters' : 'bachelors'} programs. Check back soon.</p>
+        </form>
+        {found.loading && found.rows.length === 0 ? <Spinner /> : found.rows.length === 0 ? (
+          <p className="text-neutral-700">{study ? 'No programs match that yet. Try a broader word.' : `We are adding international ${level === 'Masters' ? 'masters' : 'bachelors'} programs. Check back soon.`}</p>
         ) : (
-          <PagedGrid items={list} size={10} render={(p) => (
-            <ProgramCard key={p.id} p={p} school={schoolById[p.schoolId]} full={full} saved={saved.isSaved(p)} onToggle={saved.toggleProgram} />
-          )} />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {found.rows.map((p) => <ProgramResult key={p.id} p={p} base="/international" saved={saved.isSaved(p)} onToggle={saved.toggleProgram} />)}
+          </div>
         )}
-        <p className="text-sm text-neutral-600 mt-4">International listings are still being added.</p>
+        {found.total > found.rows.length && <button type="button" className="btn btn-outline" onClick={go}>See all {found.total.toLocaleString()} programs</button>}
       </section>
 
       {intl.scholarships.length > 0 && (

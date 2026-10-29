@@ -1,0 +1,7 @@
+-- Schema change approved by the user on 2026-10-29. Applied as migration server_side_search_and_counts.
+-- 1) schools_summary gains program_count (programmes per school).
+-- 2) search_programs(scope, q, field, level, school, limit, offset): public schools only, grouped by
+--    school + name + level (variants = number of modes/campuses), paged, total in every row.
+--    SECURITY DEFINER, returns summary columns only. Execute granted to anon and authenticated.
+-- 3) programs_summary gains school_country (so the app can load Ghana programmes only).
+-- 4) program_fields(scope): distinct fields with counts for the filter list.

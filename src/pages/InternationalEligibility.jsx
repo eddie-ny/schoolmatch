@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useCatalog } from '../hooks/useCatalog'
 import { useSaved } from '../hooks/useSaved'
@@ -6,6 +6,8 @@ import { useSearchParams } from 'react-router-dom'
 import { PageTitle, Segmented, Spinner, Badge, RequireAuth } from '../components/ui'
 import { ProgramCard } from '../components/Cards'
 import { DEGREE_CLASSES, GRADES } from '../lib/constants'
+import { useDebounced } from '../components/Browse'
+import { getProgramsFull, searchPrograms } from '../lib/api'
 
 // Eligibility for the International path.
 // Bachelors: WASSCE grades, SAT score and English proof, checked against each school's published rules.
@@ -103,6 +105,9 @@ function InternationalEligibilityInner() {
   const [test, setTest] = useState('none')
   const [score, setScore] = useState('')
   const [go, setGo] = useState(false)
+  const [study, setStudy] = useState('')
+  const dStudy = useDebounced(study)
+  const [pool, setPool] = useState({ items: [], total: 0, busy: false })
   const full = access.level === 'full'
   const schoolById = useMemo(() => Object.fromEntries(intl.schools.map((s) => [s.id, s])), [intl.schools])
   const masters = level === 'Masters'
@@ -110,10 +115,21 @@ function InternationalEligibilityInner() {
   const satBad = sat !== '' && (satNum < 400 || satNum > 1600)
   const ready = masters ? !!cls : go && !satBad
 
+  // The programmes come from the server, only those matching what the student wants to study (up to 60 at a time).
+  useEffect(() => {
+    if (!ready) { setPool({ items: [], total: 0, busy: false }); return }
+    let live = true
+    setPool((x) => ({ ...x, busy: true }))
+    searchPrograms({ scope: 'intl', q: dStudy, level: masters ? 'Masters' : 'Undergraduate', limit: 60, offset: 0 })
+      .then(async (r) => { const items = await getProgramsFull(r.rows.map((x) => x.id)); if (live) setPool({ items, total: r.total, busy: false }) })
+      .catch(() => live && setPool({ items: [], total: 0, busy: false }))
+    return () => { live = false }
+  }, [ready, masters, dStudy])
+
   const rows = useMemo(() => {
     if (!ready) return []
     const me = { grades, sat: satNum, test, score }
-    return intl.programs
+    return pool.items
       .filter((p) => masters === (p.level === 'Masters'))
       .map((p) => {
         if (masters) return { p, lab: mastersLabel(p, cls), checks: [] }
@@ -121,7 +137,7 @@ function InternationalEligibilityInner() {
         return { p, lab: summarise(checks), checks }
       })
       .sort((a, b) => a.lab.order - b.lab.order || a.p.name.localeCompare(b.p.name))
-  }, [intl.programs, masters, cls, grades, satNum, test, score, ready])
+  }, [pool.items, masters, cls, grades, satNum, test, score, ready])
 
   const setGrade = (i, v) => setGrades((g) => g.map((x, j) => (j === i ? v : x)))
 
@@ -130,6 +146,10 @@ function InternationalEligibilityInner() {
       <PageTitle title="International eligibility" sub="Bachelors use your WASSCE grades, SAT score and English proof. Masters use your first degree class." />
       <div className="card space-y-4 mb-6">
         <Segmented value={level} onChange={(v) => { setLevel(v); setGo(false) }} options={[{ value: 'Undergraduate', label: 'Bachelors' }, { value: 'Masters', label: 'Masters' }]} />
+        <label className="block">
+          <span className="block text-sm font-semibold mb-1">What do you want to study?</span>
+          <input className="input" placeholder="For example nursing, computer science, law" value={study} onChange={(e) => setStudy(e.target.value)} />
+        </label>
         {masters ? (
           <label className="block">
             <span className="block text-sm font-semibold mb-1">Your first degree class</span>
@@ -186,11 +206,13 @@ function InternationalEligibilityInner() {
           </>
         )}
       </div>
-      {loading ? <Spinner /> : !ready ? (
+      {loading || pool.busy ? <Spinner /> : !ready ? (
         <p className="text-neutral-700">{masters ? 'Choose your degree class to see the programs.' : 'Fill in what you have and press Check my eligibility. You can leave out the SAT and English test.'}</p>
       ) : rows.length === 0 ? (
-        <p className="text-neutral-700">We are adding international {masters ? 'masters' : 'bachelors'} programs. Check back soon.</p>
+        <p className="text-neutral-700">{study ? 'No programs match that search. Try a broader word.' : `We are adding international ${masters ? 'masters' : 'bachelors'} programs. Check back soon.`}</p>
       ) : (
+        <>
+        {pool.total > pool.items.length && <p className="text-sm text-neutral-600 mb-3">Showing the first {pool.items.length} of {pool.total.toLocaleString()} matching programs. Type what you want to study to narrow them.</p>}
         <div className="grid sm:grid-cols-2 gap-4">
           {rows.map(({ p, lab, checks }) => (
             <div key={p.id} className="space-y-2">
@@ -206,6 +228,7 @@ function InternationalEligibilityInner() {
             </div>
           ))}
         </div>
+        </>
       )}
       <p className="text-sm text-neutral-600 mt-6">This is guidance, not a guarantee of admission. A "?" means the school has not published that rule. Always confirm requirements with the school.</p>
     </div>

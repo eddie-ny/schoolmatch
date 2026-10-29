@@ -292,8 +292,8 @@ export async function removeDocument(doc) {
 const isLocalCountry = (c) => (c || '').toLowerCase() === 'ghana'
 
 // The API returns at most 1000 rows per request. Read the first page (with the total count), then fetch the rest in parallel.
-async function fetchAll(table, columns) {
-  const first = await supabase.from(table).select(columns, { count: 'exact' }).order('id').range(0, 999)
+async function fetchAll(table, columns, filter = (q) => q) {
+  const first = await filter(supabase.from(table).select(columns, { count: 'exact' })).order('id').range(0, 999)
   if (first.error) return { data: [], error: first.error }
   const rows = first.data
   const step = rows.length
@@ -301,7 +301,7 @@ async function fetchAll(table, columns) {
   if (step === 0 || total <= step) return { data: rows, error: null }
   const jobs = []
   for (let from = step; from < total; from += step) {
-    jobs.push(supabase.from(table).select(columns).order('id').range(from, from + step - 1))
+    jobs.push(filter(supabase.from(table).select(columns)).order('id').range(from, from + step - 1))
   }
   const pages = await Promise.all(jobs)
   for (const pg of pages) {
@@ -315,10 +315,10 @@ export async function loadCatalog() {
   const quiet = (q) => q.then((r) => (r.error ? { data: [] } : r)) // no access to the full tables is normal, not an error
   const [sS, sP, sC, fS, fP, fC] = await Promise.all([
     supabase.from('schools_summary').select('*'),
-    fetchAll('programs_summary', '*'),
+    fetchAll('programs_summary', '*', (q) => q.ilike('school_country', 'ghana')),
     supabase.from('scholarships_summary').select('*'),
     quiet(supabase.from('schools').select('*')),
-    quiet(fetchAll('programs', '*, program_requirements(subject, min_grade), program_cutoffs(year, cutoff_aggregate, sat_low, sat_high)')),
+    quiet(fetchAll('programs', '*, schools!inner(country), program_requirements(subject, min_grade), program_cutoffs(year, cutoff_aggregate, sat_low, sat_high)', (q) => q.ilike('schools.country', 'ghana'))),
     quiet(supabase.from('scholarships').select('*')),
   ])
   fail(sS.error || sP.error || sC.error, 'Could not load the catalogue.')
@@ -329,7 +329,7 @@ export async function loadCatalog() {
 
   const schools = sS.data.map((x) => {
     const f = fullSchools[x.id] || x
-    return { id: x.id, name: x.name, country: x.country, type: x.type, city: x.city, website: f.website || '', category: x.category || f.category || '', logoUrl: x.logo_url || logoFor(x.name), verified: x.verified, demo: x.demo }
+    return { id: x.id, name: x.name, country: x.country, type: x.type, city: x.city, website: f.website || '', category: x.category || f.category || '', logoUrl: x.logo_url || logoFor(x.name), verified: x.verified, demo: x.demo, programCount: x.program_count ?? 0 }
   })
   const schoolById = Object.fromEntries(schools.map((x) => [x.id, x]))
 
@@ -717,4 +717,71 @@ export async function listUsers() {
     unconfirmed: unconfirmed.has(u.id),
     subscription: subs[u.id] ? { plan: subs[u.id].plan, status: subs[u.id].status, expiresAt: subs[u.id].expires_at } : null,
   }))
+}
+
+
+// ---------- Server-side browsing (programmes abroad are too many to download, so each page asks for what it shows) ----------
+const toScope = (scope) => (scope === 'all' ? 'all' : scope === 'international' || scope === 'intl' ? 'intl' : 'local')
+
+function mapFull(f, school) {
+  const latest = [...(f?.program_cutoffs || [])].sort((a, b) => b.year - a.year)[0]
+  return {
+    id: f.id, schoolId: f.school_id, schoolName: school?.name || '', name: f.name, level: f.level, field: f.field, demo: f.demo, mode: f.mode || 'Regular', campus: f.campus || '',
+    international: school ? !isLocalCountry(school.country) : false,
+    feesUsd: f.fees_usd ?? null, feesGhs: f.fees_ghs ?? null, entryNote: f.entry_note || '', entryQualification: f.entry_qualification || '', minDegreeClass: f.min_degree_class || '', durationYears: f.duration_years ?? null,
+    satPolicy: f.sat_policy || '', minWassceGrade: f.min_wassce_grade || '', minIelts: f.min_ielts != null ? Number(f.min_ielts) : null, minToefl: f.min_toefl ?? null, minDuolingo: f.min_duolingo ?? null,
+    englishTestWaiver: !!f.english_test_waiver, foundationAvailable: !!f.foundation_available, verified: !!f.verified,
+    requirements: (f.program_requirements || []).map((r) => ({ subject: r.subject, minGrade: r.min_grade })),
+    cutoffAggregate: latest?.cutoff_aggregate ?? null, cutoffYear: latest?.year ?? null,
+    satLow: latest?.sat_low ?? null, satHigh: latest?.sat_high ?? null,
+  }
+}
+
+const mapSchool = (x) => x && ({ id: x.id, name: x.name, country: x.country, type: x.type, city: x.city, website: x.website || '', category: x.category || '', logoUrl: x.logo_url || logoFor(x.name), verified: x.verified, demo: x.demo, programCount: x.program_count ?? 0 })
+
+// One page of programmes (grouped by school, name and level). Returns { rows, total }.
+export async function searchPrograms({ scope, q = '', field = '', level = '', school = null, limit = 24, offset = 0 }) {
+  const { data, error } = await supabase.rpc('search_programs', { p_scope: toScope(scope), p_q: q, p_field: field, p_level: level, p_school: school, p_limit: limit, p_offset: offset })
+  fail(error, 'Could not load programs.')
+  const rows = (data || []).map((r) => ({
+    id: r.id, schoolId: r.school_id, name: r.name, level: r.level, field: r.field, variantCount: r.variants, modes: r.modes || [],
+    schoolName: r.school_name, schoolCity: r.school_city, schoolCountry: r.school_country, schoolLogo: r.school_logo || logoFor(r.school_name),
+  }))
+  return { rows, total: data?.[0] ? Number(data[0].total) : 0 }
+}
+
+// One school with its website (website needs full access, the summary view does not carry it).
+export async function getSchool(id) {
+  const [s, f] = await Promise.all([
+    supabase.from('schools_summary').select('*').eq('id', id).maybeSingle(),
+    supabase.from('schools').select('website').eq('id', id).maybeSingle(),
+  ])
+  fail(s.error, 'Could not load the school.')
+  return s.data ? mapSchool({ ...s.data, website: f.data?.website }) : null
+}
+
+// Every way of studying one programme (all rows with the same school, name and level), with requirements and cut-offs.
+export async function getProgramGroup(id) {
+  const head = await supabase.from('programs_summary').select('id, school_id, name, level').eq('id', id).maybeSingle()
+  fail(head.error, 'Could not load the program.')
+  if (!head.data) return null
+  const school = await getSchool(head.data.school_id)
+  let q = supabase.from('programs').select('*, program_requirements(subject, min_grade), program_cutoffs(year, cutoff_aggregate, sat_low, sat_high)').eq('school_id', head.data.school_id).eq('name', head.data.name)
+  q = head.data.level ? q.eq('level', head.data.level) : q.is('level', null)
+  const { data, error } = await q
+  fail(error, 'Could not load the program details.')
+  return { school, variants: (data || []).map((f) => mapFull(f, school)) }
+}
+
+// Full details for a list of programme ids (used by Interested and the eligibility checks).
+export async function getProgramsFull(ids) {
+  if (!ids.length) return []
+  const out = []
+  for (let i = 0; i < ids.length; i += 80) {
+    const part = ids.slice(i, i + 80)
+    const { data, error } = await supabase.from('programs').select('*, schools(id, name, country, type, city, category, logo_url, demo, verified), program_requirements(subject, min_grade), program_cutoffs(year, cutoff_aggregate, sat_low, sat_high)').in('id', part)
+    fail(error, 'Could not load the programs.')
+    for (const f of data || []) out.push(mapFull(f, f.schools))
+  }
+  return out
 }

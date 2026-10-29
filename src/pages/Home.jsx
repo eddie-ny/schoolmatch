@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useCatalog, isLocal } from '../hooks/useCatalog'
 import { FIELDS, SHOW_INTERNATIONAL } from '../lib/constants'
@@ -74,6 +74,7 @@ export function HeroArt() {
 
 export default function Home() {
   const { user, access } = useAuth()
+  const nav = useNavigate()
   const { schools, programs, scholarships, loading } = useCatalog()
   const progCount = useMemo(() => { const m = {}; programs.forEach((p) => { m[p.schoolId] = (m[p.schoolId] || 0) + 1 }); return m }, [programs])
   const [where, setWhere] = useState('all')
@@ -186,6 +187,9 @@ export default function Home() {
       {/* Program first: pick a field, see a taste, the rest is locked */}
       <section className="space-y-4">
         <h2 className="text-2xl font-bold">What do you want to study?</h2>
+        <form onSubmit={(e) => { e.preventDefault(); const v = e.currentTarget.elements.study.value.trim(); nav(`/local/programs${v ? `?q=${encodeURIComponent(v)}` : ''}`) }}>
+          <input name="study" className="input !border-2 !border-brand-green" placeholder="Type a program, for example nursing, law or computer science, then press Enter" aria-label="Search programs" />
+        </form>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {FIELDS.map((f) => (
             <Link

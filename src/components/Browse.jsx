@@ -66,17 +66,30 @@ export function ProgramResult({ p, base, saved, onToggle }) {
         {p.variantCount > 1 && <Badge>{p.variantCount} ways to study</Badge>}
       </div>
       <div className="mt-auto flex justify-end">
-        <Link to={`${base}/programs/${p.id}`} target="_blank" rel="noreferrer" className="font-semibold text-sm text-blue-700 hover:underline">View programme information</Link>
+        <Link to={`${base}/programs/${p.id}`} target="_blank" rel="noreferrer" className="font-semibold text-sm text-brand-orange-ink hover:underline">View programme information &rarr;</Link>
       </div>
     </article>
   )
 }
 
-// Search box plus the two filters, shared by the Programs page and the International home.
+// The search box. Lime green border, no extra colours.
 export function SearchBar({ q, onQ, placeholder = 'What do you want to study? (for example nursing, computer science, law)' }) {
+  return <input className="input !border-2 !border-brand-green" placeholder={placeholder} value={q} onChange={(e) => onQ(e.target.value)} aria-label="Search programs" />
+}
+
+// Fields to pick from, biggest first. Same look on Local and International.
+export function FieldTiles({ scope, base, limit = 8 }) {
+  const fields = useFields(scope)
+  const top = [...fields].sort((a, b) => Number(b.n) - Number(a.n)).slice(0, limit)
+  if (!top.length) return null
   return (
-    <div className="rounded-2xl bg-blue-900 p-3 md:p-4">
-      <input className="input !bg-white" placeholder={placeholder} value={q} onChange={(e) => onQ(e.target.value)} aria-label="Search programs" />
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      {top.map((f) => (
+        <Link key={f.field} to={`${base}/programs?field=${encodeURIComponent(f.field)}`} className="rounded-2xl border-2 border-neutral-200 p-4 min-h-20 transition hover:border-brand-orange hover:bg-brand-orange-soft">
+          <p className="font-heading font-bold leading-snug">{f.field}</p>
+          <p className="text-sm text-neutral-600 mt-1">{Number(f.n).toLocaleString()} programs</p>
+        </Link>
+      ))}
     </div>
   )
 }

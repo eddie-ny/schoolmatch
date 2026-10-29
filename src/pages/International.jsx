@@ -5,7 +5,7 @@ import { useCatalog } from '../hooks/useCatalog'
 import { useSaved } from '../hooks/useSaved'
 import { PageTitle, Segmented, Spinner } from '../components/ui'
 import { ScholarshipCard } from '../components/Cards'
-import { FieldTiles, ProgramResult, SearchBar, useProgramSearch } from '../components/Browse'
+import { ProgramResult, SearchBar, useProgramSearch } from '../components/Browse'
 import IntlArt from '../components/IntlArt'
 
 const tiles = [
@@ -63,7 +63,6 @@ export default function International() {
           <SearchBar q={study} onQ={setStudy} />
           <Segmented value={level} onChange={setLevel} options={[{ value: 'Undergraduate', label: 'Bachelors' }, { value: 'Masters', label: 'Masters' }]} />
         </form>
-        {!study && <><p className="text-sm text-neutral-600">Or pick a field.</p><FieldTiles scope="international" base="/international" /></>}
         {found.loading && found.rows.length === 0 ? <Spinner /> : found.rows.length === 0 ? (
           <p className="text-neutral-700">{study ? 'No programs match that yet. Try a broader word.' : `We are adding international ${level === 'Masters' ? 'masters' : 'bachelors'} programs. Check back soon.`}</p>
         ) : (

@@ -1,0 +1,14 @@
+-- Record only (statements were run directly as a collected-data load, no schema change).
+-- Source: US Dept of Education College Scorecard API, public four-year operating schools
+-- (latest = IPEDS 2024-25 reporting year), file scorecard_public_4yr.csv supplied by the user on 2026-10-29.
+-- Result: 540 new schools (country 'United States', type 'Public', verified false), each with one
+-- "General undergraduate entry" programme (mode Regular, verified false) and, where Scorecard had all
+-- four SAT section percentiles and the spread was <= 400, one 2024 program_cutoffs row (sat_low/sat_high =
+-- sum of 25th and 75th percentile math + critical reading; an approximation).
+-- sat_policy mapping from IPEDS test_requirements: 1 required; 2 or 5 optional; 3, 4 or blank left null.
+-- Skipped: schools already loaded (ASU, UF, Michigan, Ohio State, Penn State, UT Austin, WVU, Purdue),
+-- online-only variants (ASU Digital Immersion, UF Online, Penn State World Campus), federal service
+-- academies (USAFA, USNA, USCGA, West Point, Merchant Marine), graduate/health-science-only campuses,
+-- online-only institutions, Puerto Rico campuses (Spanish-medium), CUNY Graduate Center.
+-- Totals after load: 548 US schools, 548 programmes, 361 with an SAT range.
+-- English minimums, WASSCE handling and Ghana waivers NOT loaded for these (unverified, stated in entry_note).

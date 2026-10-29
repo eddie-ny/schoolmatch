@@ -55,7 +55,11 @@ while True:
         print("Rate limit hit, waiting 60 seconds...")
         time.sleep(60)
         continue
-    r.raise_for_status()
+    if not r.ok:
+        # Show the server's own explanation (key problems come back as JSON with an error code).
+        print("HTTP", r.status_code)
+        print(r.text[:500].replace(PARAMS.get("api_key", "x"), "<key hidden>"))
+        raise SystemExit(1)
     data = r.json()
     results = data.get("results", [])
     rows.extend(results)

@@ -12,3 +12,7 @@
 -- online-only institutions, Puerto Rico campuses (Spanish-medium), CUNY Graduate Center.
 -- Totals after load: 548 US schools, 548 programmes, 361 with an SAT range.
 -- English minimums, WASSCE handling and Ghana waivers NOT loaded for these (unverified, stated in entry_note).
+-- Follow-up (2026-10-29): the Scorecard programme list (28,557 bachelor's programmes, CIP 4-digit) is loaded from
+-- generated files us_programmes_part1..9.sql (made by scripts/gen_us_programmes.py), then us_programmes_final.sql copies
+-- the SAT range onto each programme and DELETES the stand-in "General undergraduate entry" rows (user approved).
+-- Student notes carry admission rate, six-year completion, yearly cost, graduates per year, earnings; no source wording.

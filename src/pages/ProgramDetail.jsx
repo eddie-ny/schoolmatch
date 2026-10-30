@@ -99,9 +99,10 @@ export default function ProgramDetail() {
         {/* Hero picture with the programme card floating over it, then the key facts strip over its bottom edge. */}
         <div className="relative rounded-3xl overflow-hidden border border-neutral-200 bg-white">
           {school?.imageUrl && !imgBad
-            ? <img src={school.imageUrl} alt="" onError={() => setImgBad(true)} className="h-56 md:h-80 w-full object-cover" />
-            : <div className="h-56 md:h-80 bg-gradient-to-br from-brand-green via-brand-green-soft to-brand-orange-soft" aria-hidden="true" />}
-          <div className="absolute inset-x-4 bottom-4 md:inset-auto md:left-6 md:top-6 md:bottom-auto md:w-[22rem] bg-white rounded-2xl shadow-lg p-4 md:p-5 space-y-3">
+            ? <img src={school.imageUrl} alt="" onError={() => setImgBad(true)} className="absolute inset-0 h-full w-full object-cover" />
+            : <div className="absolute inset-0 bg-gradient-to-br from-brand-green via-brand-green-soft to-brand-orange-soft" aria-hidden="true" />}
+          <div className="relative p-4 md:p-6 pt-40 md:pt-6 pb-8 md:pb-14 md:min-h-[20rem]">
+            <div className="bg-white rounded-2xl shadow-lg p-4 md:p-5 space-y-3 md:max-w-[22rem]">
             <div className="flex items-start gap-3">
               <div className="flex flex-wrap gap-2 flex-1">
                 {p.level && <Badge>{p.level}</Badge>}
@@ -115,6 +116,7 @@ export default function ProgramDetail() {
             </Link>
             <h2 className="text-xl md:text-2xl font-extrabold leading-tight break-words">{p.name}</h2>
             {school?.website && <a href={school.website} target="_blank" rel="noreferrer" className="btn btn-orange w-full">Visit school website</a>}
+            </div>
           </div>
         </div>
         <div className="relative mx-3 md:mx-6 -mt-3 rounded-2xl border border-neutral-200 bg-white shadow-sm p-4 md:p-5 grid grid-cols-2 md:grid-cols-5 gap-x-6 gap-y-4">

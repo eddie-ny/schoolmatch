@@ -85,7 +85,7 @@ export default function SchoolDetail() {
             </select>
             <select className="input !w-auto !border-brand-green" value={level} onChange={(e) => setParam('level', e.target.value)} aria-label="Level">
               <option value="">All levels</option>
-              <option>Undergraduate</option><option>Diploma</option><option>Certificate</option><option>Masters</option>
+              <option>Undergraduate</option><option>Diploma</option><option>Certificate</option><option>Masters</option><option>Graduate Certificate</option>
             </select>
             {(q || field || level) && <button type="button" className="underline text-sm" onClick={() => setParams({}, { replace: true })}>Clear filters</button>}
           </div>

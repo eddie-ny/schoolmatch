@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext'
 import { useScope } from '../hooks/useScope'
 import { useSaved } from '../hooks/useSaved'
 import { PageTitle, Pagination, Spinner } from '../components/ui'
-import { ProgramResult, SearchBar, useFields, useProgramSearch, PAGE_SIZE } from '../components/Browse'
+import { ProgramResult, SearchBar, useCountries, useFields, useProgramSearch, PAGE_SIZE } from '../components/Browse'
 
 // Every programme, searched on the server one page at a time so the page opens fast however many there are.
 export default function Programs() {
@@ -11,12 +11,14 @@ export default function Programs() {
   const { scope, base, international } = useScope()
   const saved = useSaved()
   const fields = useFields(scope)
+  const countries = useCountries(scope)
   const [params, setParams] = useSearchParams()
   const q = params.get('q') || ''
   const field = params.get('field') || ''
   const level = params.get('level') || ''
+  const country = params.get('country') || ''
   const page = Math.max(1, parseInt(params.get('page'), 10) || 1)
-  const { rows, total, loading, error } = useProgramSearch({ scope, q, field, level, page })
+  const { rows, total, loading, error } = useProgramSearch({ scope, q, field, level, country, page })
   const pages = Math.ceil(total / PAGE_SIZE)
 
   const setParam = (k, v) => {
@@ -30,7 +32,7 @@ export default function Programs() {
 
   return (
     <div>
-      <PageTitle title={field ? `${field} programs` : 'Programs'} sub={international ? 'Bachelor\'s programs at universities abroad. Press the heart to keep one.' : 'Every program, at every university. Press the heart to keep one.'} />
+      <PageTitle title={field ? `${field} programs` : 'Programs'} sub={international ? 'Programs at universities abroad. Press the heart to keep one.' : 'Every program, at every university. Press the heart to keep one.'} />
       <SearchBar q={q} onQ={(v) => setParam('q', v)} />
       <div className="mt-5 grid lg:grid-cols-[16rem_1fr] gap-6 items-start">
         <aside className="card !p-4 space-y-4">
@@ -41,6 +43,15 @@ export default function Programs() {
               {fields.map((f) => <option key={f.field} value={f.field}>{f.field} ({Number(f.n).toLocaleString()})</option>)}
             </select>
           </label>
+          {international && (
+            <label className="block">
+              <span className="text-sm font-semibold">Country</span>
+              <select className="input mt-1" value={country} onChange={(e) => setParam('country', e.target.value)}>
+                <option value="">Any country</option>
+                {countries.map((c) => <option key={c.country} value={c.country}>{c.country}</option>)}
+              </select>
+            </label>
+          )}
           <label className="block">
             <span className="text-sm font-semibold">Level</span>
             <select className="input mt-1" value={level} onChange={(e) => setParam('level', e.target.value)}>
@@ -49,9 +60,10 @@ export default function Programs() {
               <option>Diploma</option>
               <option>Certificate</option>
               <option>Masters</option>
+              <option>Graduate Certificate</option>
             </select>
           </label>
-          {(q || field || level) && <button type="button" className="underline text-sm" onClick={() => setParams({}, { replace: true })}>Clear all filters</button>}
+          {(q || field || level || country) && <button type="button" className="underline text-sm" onClick={() => setParams({}, { replace: true })}>Clear all filters</button>}
         </aside>
         <div className="space-y-4">
           <p className="text-sm text-neutral-600" aria-live="polite">{loading ? 'Searching...' : `${total.toLocaleString()} program${total === 1 ? '' : 's'}${pages > 1 ? `, page ${Math.min(page, pages)} of ${pages.toLocaleString()}` : ''}`}</p>

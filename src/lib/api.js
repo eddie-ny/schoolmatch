@@ -728,7 +728,7 @@ function mapFull(f, school) {
   return {
     id: f.id, schoolId: f.school_id, schoolName: school?.name || '', name: f.name, level: f.level, field: f.field, demo: f.demo, mode: f.mode || 'Regular', campus: f.campus || '',
     international: school ? !isLocalCountry(school.country) : false,
-    feesUsd: f.fees_usd ?? null, feesGhs: f.fees_ghs ?? null, entryNote: f.entry_note || '', mastersFormat: f.masters_format || '', entryQualification: f.entry_qualification || '', minDegreeClass: f.min_degree_class || '', durationYears: f.duration_years ?? null,
+    feesUsd: f.fees_usd ?? null, feesGhs: f.fees_ghs ?? null, feeAmount: f.fee_amount != null ? Number(f.fee_amount) : null, feeCurrency: f.fee_currency || '', entryNote: f.entry_note || '', mastersFormat: f.masters_format || '', entryQualification: f.entry_qualification || '', minDegreeClass: f.min_degree_class || '', durationYears: f.duration_years ?? null,
     satPolicy: f.sat_policy || '', minWassceGrade: f.min_wassce_grade || '', minIelts: f.min_ielts != null ? Number(f.min_ielts) : null, minToefl: f.min_toefl ?? null, minDuolingo: f.min_duolingo ?? null,
     englishTestWaiver: !!f.english_test_waiver, foundationAvailable: !!f.foundation_available, verified: !!f.verified,
     requirements: (f.program_requirements || []).map((r) => ({ subject: r.subject, minGrade: r.min_grade })),
@@ -740,8 +740,8 @@ function mapFull(f, school) {
 const mapSchool = (x) => x && ({ id: x.id, name: x.name, country: x.country, type: x.type, city: x.city, website: x.website || '', category: x.category || '', logoUrl: x.logo_url || logoFor(x.name), verified: x.verified, demo: x.demo, programCount: x.program_count ?? 0, imageUrl: x.image_url || '', imageCredit: x.image_credit || '', logoCredit: x.logo_credit || '', description: x.description || '', descriptionCredit: x.description_credit || '' })
 
 // One page of programmes (grouped by school, name and level). Returns { rows, total }.
-export async function searchPrograms({ scope, q = '', field = '', level = '', school = null, limit = 24, offset = 0 }) {
-  const { data, error } = await supabase.rpc('search_programs', { p_scope: toScope(scope), p_q: q, p_field: field, p_level: level, p_school: school, p_limit: limit, p_offset: offset })
+export async function searchPrograms({ scope, q = '', field = '', level = '', school = null, country = '', limit = 24, offset = 0 }) {
+  const { data, error } = await supabase.rpc('search_programs_c', { p_scope: toScope(scope), p_q: q, p_field: field, p_level: level, p_school: school, p_country: country, p_limit: limit, p_offset: offset })
   fail(error, 'Could not load programs.')
   const rows = (data || []).map((r) => ({
     id: r.id, schoolId: r.school_id, name: r.name, level: r.level, field: r.field, variantCount: r.variants, modes: r.modes || [],

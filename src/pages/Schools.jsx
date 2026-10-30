@@ -17,6 +17,7 @@ export function Schools() {
   const [params, setParams] = useSearchParams()
   const q = params.get('q') || ''
   const where = params.get('where') || 'all'
+  const country = params.get('country') || ''
   const field = params.get('field') || ''
   const kind = params.get('kind') || ''
   const offers = params.get('offers') || ''
@@ -34,6 +35,7 @@ export function Schools() {
   const goPage = (n) => { const next = new URLSearchParams(params); if (n > 1) next.set('page', n); else next.delete('page'); setParams(next); window.scrollTo({ top: 0 }) }
 
   // Only schools with programmes are listed, and only the kinds that have at least one.
+  const countryList = useMemo(() => [...new Set(schools.filter((x) => x.programCount > 0 && !isLocal(x.country)).map((x) => x.country).filter(Boolean))].sort(), [schools])
   const hasKind = useMemo(() => new Set(schools.filter((x) => x.programCount > 0).map(schoolCategory)), [schools, programs])
 
   // A school is listed when its own details match the search OR one of its programs does.
@@ -43,6 +45,7 @@ export function Schools() {
     return schools
       .filter((s) => where === 'all' || (where === 'local' ? isLocal(s.country) : !isLocal(s.country)))
       .filter((s) => !kind || schoolCategory(s) === kind)
+      .filter((s) => !country || s.country === country)
       .map((s) => {
         const own = programs.filter((p) => p.schoolId === s.id)
         const schoolHit = !needle || (s.name + ' ' + (s.city || '') + ' ' + s.country).toLowerCase().includes(needle)
@@ -54,7 +57,7 @@ export function Schools() {
         return { s, count: s.programCount || own.length, show, keep: matched.length > 0 || (!field && !offers && schoolHit) }
       })
       .filter((x) => x.keep && x.count > 0)
-  }, [schools, programs, q, where, field, kind, offers])
+  }, [schools, programs, q, where, field, kind, offers, country])
 
   return (
     <div>
@@ -64,6 +67,10 @@ export function Schools() {
         {!international && <Segmented value={kind} onChange={(v) => setParam('kind', v)} options={[{ value: '', label: 'All schools' }, ...SCHOOL_CATEGORIES.filter((c) => hasKind.has(c.id)).map((c) => ({ value: c.id, label: c.label }))]} />}
         <div className="flex flex-wrap items-center gap-3">
           {SHOW_INTERNATIONAL && <Segmented value={where} onChange={(v) => setParam('where', v === 'all' ? '' : v)} options={[{ value: 'all', label: 'All' }, { value: 'local', label: 'Local' }, { value: 'intl', label: 'International' }]} />}
+          {international && <select className="input !w-auto !border-brand-orange" value={country} onChange={(e) => setParam('country', e.target.value)} aria-label="Country">
+            <option value="">Any country</option>
+            {countryList.map((c) => <option key={c}>{c}</option>)}
+          </select>}
           {!international && <select className="input !w-auto !border-brand-orange" value={field} onChange={(e) => setParam('field', e.target.value)} aria-label="Field of study">
             <option value="">Any field</option>
             {FIELDS.map((f) => <option key={f.id}>{f.id}</option>)}

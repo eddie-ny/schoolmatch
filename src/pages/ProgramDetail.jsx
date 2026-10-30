@@ -92,6 +92,7 @@ export default function ProgramDetail() {
   const masters = p.level === 'Masters'
   const feeUsd = variants.find((v) => v.feesUsd != null)?.feesUsd
   const feeGhs = variants.find((v) => v.feesGhs != null)?.feesGhs
+  const feeOther = variants.find((v) => v.feeAmount != null)
   const duration = variants.find((v) => v.durationYears != null)?.durationYears
   const satPolicy = variants.find((v) => v.satPolicy)?.satPolicy
   const where = [school?.city, school?.country].filter(Boolean).join(', ')
@@ -134,7 +135,7 @@ export default function ProgramDetail() {
           </div>
         </div>
         <div className="relative mx-3 md:mx-6 -mt-3 rounded-2xl border border-neutral-200 bg-white shadow-sm p-4 md:p-5 grid grid-cols-2 md:grid-cols-5 gap-x-6 gap-y-4">
-          <Fact label="Tuition per year">{feeUsd != null ? money(feeUsd, 'USD') : feeGhs != null ? money(feeGhs, 'GHS') : 'Not added yet'}</Fact>
+          <Fact label="Tuition per year">{feeUsd != null ? money(feeUsd, 'USD') : feeOther ? money(feeOther.feeAmount, feeOther.feeCurrency) : feeGhs != null ? money(feeGhs, 'GHS') : 'Not added yet'}</Fact>
           <Fact label="Duration">{duration != null ? `${duration} years` : 'Not added yet'}</Fact>
           <Fact label="Level">{p.level || 'Undergraduate'}</Fact>
           <Fact label="Campus location">{where}</Fact>
@@ -202,7 +203,7 @@ export default function ProgramDetail() {
 
             <section id="fees" className="space-y-2">
               <h2 className="text-xl font-bold">Fees and funding</h2>
-              <p className="text-neutral-800">{feeUsd != null ? `${money(feeUsd, 'USD')} per year.${abroad ? ' This is the price international students usually pay.' : ''}` : feeGhs != null ? `${money(feeGhs, 'GHS')} per year.` : 'The fee has not been added yet. Check with the school.'}</p>
+              <p className="text-neutral-800">{feeUsd != null ? `${money(feeUsd, 'USD')} per year.${abroad ? ' This is the price international students usually pay.' : ''}` : feeOther ? `${money(feeOther.feeAmount, feeOther.feeCurrency)} per year, worked out from the full course fee and the course length.` : feeGhs != null ? `${money(feeGhs, 'GHS')} per year.` : 'The fee has not been added yet. Check with the school.'}</p>
               <Link to={to('/scholarships')} className="underline text-sm">Look for scholarships</Link>
             </section>
           </div>

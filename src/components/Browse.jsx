@@ -16,17 +16,17 @@ export function useDebounced(value, ms = 350) {
 }
 
 // One page of programmes from the server. Reloads when the search, filters or page change.
-export function useProgramSearch({ scope, q, field, level, school = null, page, size = PAGE_SIZE }) {
+export function useProgramSearch({ scope, q, field, level, school = null, country = '', page, size = PAGE_SIZE }) {
   const [state, setState] = useState({ rows: [], total: 0, loading: true, error: '' })
   const dq = useDebounced(q)
   useEffect(() => {
     let live = true
     setState((s) => ({ ...s, loading: true, error: '' }))
-    searchPrograms({ scope, q: dq, field, level, school, limit: size, offset: (page - 1) * size })
+    searchPrograms({ scope, q: dq, field, level, school, country, limit: size, offset: (page - 1) * size })
       .then((r) => live && setState({ ...r, loading: false, error: '' }))
       .catch((e) => live && setState({ rows: [], total: 0, loading: false, error: e.message }))
     return () => { live = false }
-  }, [scope, dq, field, level, school, page, size])
+  }, [scope, dq, field, level, school, country, page, size])
   return state
 }
 
@@ -39,6 +39,17 @@ export function useFields(scope) {
     return () => { live = false }
   }, [scope])
   return fields
+}
+
+// The countries that have schools on this side of the site.
+export function useCountries(scope) {
+  const [list, setList] = useState([])
+  useEffect(() => {
+    let live = true
+    supabase.rpc('program_countries', { p_scope: scope === 'international' ? 'intl' : 'local' }).then(({ data }) => live && setList(data || []))
+    return () => { live = false }
+  }, [scope])
+  return list
 }
 
 const modeText = (modes) => (modes || []).filter((m) => m && m !== 'Regular').join(', ')

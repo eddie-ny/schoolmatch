@@ -3,6 +3,7 @@ export const SCHOOL_CATEGORIES = [
   { id: 'University', label: 'Universities', one: 'University' },
   { id: 'Technical University', label: 'Technical universities', one: 'Technical university' },
   { id: 'Nursing college', label: 'Nursing and midwifery colleges', one: 'Nursing and midwifery college' },
+  { id: 'Institute', label: 'Institutes and TAFE', one: 'Institute or TAFE' },
   { id: 'College of Education', label: 'Colleges of education', one: 'College of education' },
 ]
 

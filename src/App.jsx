@@ -18,6 +18,7 @@ const InternationalEligibility = lazy(() => import('./pages/InternationalEligibi
 const SatClasses = lazy(() => import('./pages/SatClasses'))
 const SatTest = lazy(() => import('./pages/SatTest'))
 const Scholarships = lazy(() => import('./pages/Scholarships'))
+const ScholarshipDetail = lazy(() => import('./pages/ScholarshipDetail'))
 const Eligibility = lazy(() => import('./pages/Eligibility'))
 const Login = lazy(() => import('./pages/Auth').then((m) => ({ default: m.Login })))
 const Signup = lazy(() => import('./pages/Auth').then((m) => ({ default: m.Signup })))
@@ -77,6 +78,7 @@ export default function App() {
         <Route path="/local/programs" element={<Programs />} />
         <Route path="/local/programs/:id" element={<ProgramDetail />} />
         <Route path="/local/scholarships" element={<Scholarships />} />
+        <Route path="/local/scholarships/:id" element={<ScholarshipDetail />} />
         <Route path="/local/eligibility" element={<Eligibility />} />
         <Route path="/international" element={<International />} />
         <Route path="/international/schools" element={<Schools />} />
@@ -84,6 +86,7 @@ export default function App() {
         <Route path="/international/programs" element={<Programs />} />
         <Route path="/international/programs/:id" element={<ProgramDetail />} />
         <Route path="/international/scholarships" element={<Scholarships />} />
+        <Route path="/international/scholarships/:id" element={<ScholarshipDetail />} />
         <Route path="/international/eligibility" element={<InternationalEligibility />} />
         <Route path="/international/sat" element={<SatTest />} />
         <Route path="/international/sat-classes" element={<SatClasses />} />

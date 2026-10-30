@@ -1,7 +1,8 @@
 // Result cards shared by Home, Find a School, School pages, Scholarships and Interested.
 import { useEffect, useRef, useState } from 'react'
 import { schoolCategory, schoolCategoryLabel } from '../lib/schoolCategory'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
+import { isLocal } from '../hooks/useCatalog'
 import { Badge, LockedRows, VerifiedBadges } from './ui'
 import { variantLabel } from '../lib/variants'
 import { logoFor } from '../lib/logos'
@@ -55,7 +56,7 @@ export function HeartButton({ active, onClick, label }) {
 
 // One programme at one university. The card keeps to the basics. Everything else opens when it is pressed.
 export function ProgramCard({ p, school, full, saved, onToggle, hideSchool = false }) {
-  const [open, setOpen] = useState(false)
+  const abroad = !!school?.country && school.country.toLowerCase() !== 'ghana'
   const variants = p.variants || [p]
   const many = variants.length > 1
   const masters = p.level === 'Masters' // masters entry is by degree class, so there is no WASSCE cut-off or subject list
@@ -115,41 +116,13 @@ export function ProgramCard({ p, school, full, saved, onToggle, hideSchool = fal
           <LockedRows rows={masters ? ['Degree class needed', 'Your chances'] : ['Cut-off aggregate', 'Entry requirements', 'Your chances']} />
         )}
         {full
-          ? <button type="button" className="btn btn-outline mt-auto" onClick={() => setOpen(true)} aria-haspopup="dialog">View details</button>
+          ? <Link to={`/${abroad ? 'international' : 'local'}/programs/${p.id}`} target="_blank" rel="noreferrer" className="btn btn-outline mt-auto">View programme information &rarr;</Link>
           : <Link to="/signup" className="btn btn-outline mt-auto">Read more</Link>}
       </article>
-      {open && <ProgramDetails p={p} variants={variants} school={school} onClose={() => setOpen(false)} />}
     </>
   )
 }
 
-// Everything we know about the programme, with each way of studying it in its own block.
-function ProgramDetails({ p, variants, school, onClose }) {
-  const box = useRef(null)
-  useEffect(() => {
-    const opener = document.activeElement
-    box.current?.focus()
-    const onKey = (e) => { if (e.key === 'Escape') onClose() }
-    window.addEventListener('keydown', onKey)
-    return () => { window.removeEventListener('keydown', onKey); if (opener && document.contains(opener)) opener.focus() }
-  }, [onClose])
-  return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 p-4" onClick={onClose}>
-      <div
-        ref={box} tabIndex={-1} role="dialog" aria-modal="true" aria-label={p.name}
-        className="bg-white rounded-2xl w-full max-w-lg max-h-[85vh] overflow-auto p-5 space-y-4 outline-none"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <ProgramBody p={p} variants={variants} school={school} />
-        <div className="flex flex-wrap gap-3">
-          <button className="btn btn-outline" onClick={onClose}>Close</button>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// The facts about a programme: school, badges, and one block per way of studying it. Used in the pop-up and on the programme page.
 export function ProgramBody({ p, variants = [p], school }) {
   const masters = p.level === 'Masters'
   return (
@@ -229,74 +202,26 @@ export function SchoolCard({ s, count, matches = [], to, signedIn }) {
   )
 }
 
-export function ScholarshipCard({ s, full }) {
-  const [open, setOpen] = useState(false)
+export function ScholarshipCard({ s }) {
+  const { pathname } = useLocation()
+  const base = pathname.startsWith('/international') || !isLocal(s.country) ? '/international' : '/local'
   return (
-    <>
-      <article className="card flex flex-col gap-3 hover:border-brand-orange transition-colors">
-        <div className="flex items-start gap-3">
-          <Monogram name={s.funder || s.name} />
-          <div className="min-w-0 flex-1">
-            <p className="font-semibold text-sm leading-tight break-words">{s.funder}</p>
-            <p className="text-sm text-neutral-600">{s.country}</p>
-          </div>
-        </div>
-        <h3 className="text-lg font-bold leading-snug break-words">{s.name}</h3>
-        <div className="flex flex-wrap gap-2">
-          <Badge tone="green">{s.fundingType} funding</Badge>
-          {s.gender && <Badge tone="orange">{s.gender === 'female' ? 'Women only' : 'Men only'}</Badge>}
-        </div>
-        <button className="btn btn-outline mt-auto" onClick={() => setOpen(true)} aria-haspopup="dialog">See details</button>
-      </article>
-      {open && <ScholarshipDetails s={s} full={full} onClose={() => setOpen(false)} />}
-    </>
-  )
-}
-
-// Full details and the site link, opened from the card.
-function ScholarshipDetails({ s, full, onClose }) {
-  const box = useRef(null)
-  useEffect(() => {
-    const opener = document.activeElement
-    box.current?.focus()
-    const onKey = (e) => { if (e.key === 'Escape') onClose() }
-    window.addEventListener('keydown', onKey)
-    return () => { window.removeEventListener('keydown', onKey); if (opener && document.contains(opener)) opener.focus() }
-  }, [onClose])
-  return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 p-4" onClick={onClose}>
-      <div
-        ref={box} tabIndex={-1} role="dialog" aria-modal="true" aria-label={s.name}
-        className="bg-white rounded-2xl w-full max-w-lg max-h-[85vh] overflow-auto p-5 space-y-4 outline-none"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-start gap-3">
-          <Monogram name={s.funder || s.name} />
-          <div className="min-w-0 flex-1">
-            <p className="font-semibold text-sm leading-tight break-words">{s.funder}</p>
-            <p className="text-sm text-neutral-600">{s.country}</p>
-          </div>
-        </div>
-        <h2 className="text-xl font-bold leading-snug break-words">{s.name}</h2>
-        <div className="flex flex-wrap gap-2">
-          <Badge tone="green">{s.fundingType} funding</Badge>
-          {s.level && full && <Badge>{s.level}</Badge>}
-        </div>
-        <VerifiedBadges item={s} />
-        {full ? (
-          <dl className="text-sm grid grid-cols-2 gap-x-4 gap-y-2">
-            {s.minAggregate != null && <><dt className="text-neutral-500">Best aggregate</dt><dd>{s.minAggregate}</dd></>}
-            {s.deadline && <><dt className="text-neutral-500">Deadline</dt><dd>{s.deadline}</dd></>}
-            {s.criteria && <><dt className="text-neutral-500">Who can apply</dt><dd className="break-words">{s.criteria}</dd></>}
-          </dl>
-        ) : (
-          <LockedRows rows={['Who can apply', 'Deadline']} />
-        )}
-        <div className="flex flex-wrap gap-3">
-          {full && s.link && <a className="btn btn-orange" href={s.link} target="_blank" rel="noreferrer">Visit site</a>}
-          <button className="btn btn-outline" onClick={onClose}>Close</button>
+    <article className="card flex flex-col gap-3 hover:border-brand-orange transition-colors">
+      <div className="flex items-start gap-3">
+        <Monogram name={s.funder || s.name} />
+        <div className="min-w-0 flex-1">
+          <p className="font-semibold text-sm leading-tight break-words">{s.funder}</p>
+          <p className="text-sm text-neutral-600">{s.country}</p>
         </div>
       </div>
-    </div>
+      <h3 className="text-lg font-bold leading-snug break-words">
+        <Link to={`${base}/scholarships/${s.id}`} target="_blank" rel="noreferrer" className="hover:underline">{s.name}</Link>
+      </h3>
+      <div className="flex flex-wrap gap-2">
+        <Badge tone="green">{s.fundingType} funding</Badge>
+        {s.gender && <Badge tone="orange">{s.gender === 'female' ? 'Women only' : 'Men only'}</Badge>}
+      </div>
+      <Link to={`${base}/scholarships/${s.id}`} target="_blank" rel="noreferrer" className="font-semibold text-sm text-brand-orange-ink hover:underline mt-auto self-end">View scholarship information &rarr;</Link>
+    </article>
   )
 }

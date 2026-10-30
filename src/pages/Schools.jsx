@@ -61,7 +61,7 @@ export function Schools() {
       <PageTitle title="Find a School" sub={international ? 'Universities abroad and their programs.' : 'Ghanaian universities and their programs.'} />
       <div className="space-y-3 mb-6">
         <input className="input" placeholder="Search by school, program (for example law), city or country" value={q} onChange={(e) => setParam('q', e.target.value)} />
-        <Segmented value={kind} onChange={(v) => setParam('kind', v)} options={[{ value: '', label: 'All schools' }, ...SCHOOL_CATEGORIES.filter((c) => hasKind.has(c.id)).map((c) => ({ value: c.id, label: c.label }))]} />
+        {!international && <Segmented value={kind} onChange={(v) => setParam('kind', v)} options={[{ value: '', label: 'All schools' }, ...SCHOOL_CATEGORIES.filter((c) => hasKind.has(c.id)).map((c) => ({ value: c.id, label: c.label }))]} />}
         <div className="flex flex-wrap items-center gap-3">
           {SHOW_INTERNATIONAL && <Segmented value={where} onChange={(v) => setParam('where', v === 'all' ? '' : v)} options={[{ value: 'all', label: 'All' }, { value: 'local', label: 'Local' }, { value: 'intl', label: 'International' }]} />}
           {!international && <select className="input !w-auto !border-brand-orange" value={field} onChange={(e) => setParam('field', e.target.value)} aria-label="Field of study">

@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { useCatalog } from '../hooks/useCatalog'
 import { useSaved } from '../hooks/useSaved'
 import { Gate, PagedGrid, PageTitle, Spinner } from '../components/ui'
-import { ProgramCard } from '../components/Cards'
+import { ProgramResult, asResult } from '../components/Browse'
 import { groupPrograms } from '../lib/variants'
 import { getProgramsFull } from '../lib/api'
 
@@ -58,7 +58,7 @@ export default function Interested() {
                 <h2 className="text-lg font-bold">{school?.name}</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {items.map((p) => (
-                    <ProgramCard key={p.id} p={p} school={school} full={full} saved onToggle={saved.toggleProgram} hideSchool />
+                    <ProgramResult key={p.id} p={asResult(p, school)} base={school && school.country?.toLowerCase() !== 'ghana' ? '/international' : '/local'} saved onToggle={saved.toggleProgram} />
                   ))}
                 </div>
               </section>

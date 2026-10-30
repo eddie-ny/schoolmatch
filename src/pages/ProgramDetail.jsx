@@ -7,6 +7,7 @@ import { BackLink, Badge, Gate, PageTitle, Spinner } from '../components/ui'
 import { HeartButton, Monogram } from '../components/Cards'
 import { getProgramGroup } from '../lib/api'
 import { variantLabel } from '../lib/variants'
+import { fullDegreeName } from '../lib/degreeNames'
 
 const SAT = { required: 'Required', optional: 'Optional', not_considered: 'Not considered' }
 const money = (n, cur) => `${cur} ${Number(n).toLocaleString()}`
@@ -40,7 +41,19 @@ function keyFacts(v, masters) {
   const out = []
   if (v.entryQualification) out.push(['What you need', v.entryQualification])
   if (!masters && v.cutoffAggregate != null) out.push(['Last year\'s cut-off', `Aggregate ${v.cutoffAggregate}${v.cutoffYear ? ` (${v.cutoffYear})` : ''}. A lower number is better, so your aggregate must be equal or lower.`])
-  if (!masters && v.requirements?.length) out.push(['Subjects you need', v.requirements.map((r) => `${r.subject}${r.minGrade ? ` (${r.minGrade} or better)` : ''}`).join(', ')])
+  if (!masters && v.requirements?.length) {
+    const CORE = ['English Language', 'Core Mathematics', 'Integrated Science', 'Social Studies']
+    const g = (r) => (r.minGrade ? ` (${r.minGrade} or better)` : '')
+    const core = []
+    for (const subj of ['English Language', 'Core Mathematics']) { const r = v.requirements.find((x) => x.subject === subj); if (r) core.push(`${subj}${g(r)}`) }
+    const sci = v.requirements.find((x) => x.subject === 'Integrated Science' || x.subject === 'Social Studies')
+    if (sci) core.push(`Integrated Science or Social Studies${g(sci)}`)
+    const elect = v.requirements.filter((x) => !CORE.includes(x.subject))
+    if (core.length) out.push(['Core subjects', core.join(', ')])
+    out.push(['Elective subjects', elect.length >= 3 ? elect.map((r) => `${r.subject}${g(r)}`).join(', ')
+      : elect.length ? `${elect.map((r) => `${r.subject}${g(r)}`).join(', ')}, and your best other elective${elect.length === 2 ? '' : 's'} to make three`
+      : 'Your 3 best electives, any subjects'])
+  }
   if (v.minWassceGrade && !v.requirements?.length) out.push(['WASSCE results', `${v.minWassceGrade} or better in your main subjects`])
   if (masters && v.mastersFormat) out.push(['How you study', v.mastersFormat])
   if (v.minDegreeClass) out.push(['Your first degree', `${v.minDegreeClass} or better`])
@@ -85,7 +98,7 @@ export default function ProgramDetail() {
   // A plain summary built only from facts we hold, so every programme page has key information.
   const modes = [...new Set(variants.map((v) => v.mode).filter((m) => m && m !== 'Regular'))]
   const summary = [
-    `${p.name} is ${/^[aeiou]/i.test(p.level || 'u') ? 'an' : 'a'} ${(p.level || 'undergraduate').toLowerCase()} programme${p.field ? ` in ${p.field}` : ''} at ${school?.name}${where ? ` (${where})` : ''}.`,
+    `${fullDegreeName(p.name)} is ${/^[aeiou]/i.test(p.level || 'u') ? 'an' : 'a'} ${(p.level || 'undergraduate').toLowerCase()} programme${p.field ? ` in ${p.field}` : ''} at ${school?.name}${where ? ` (${where})` : ''}.`,
     duration != null ? `It takes ${duration} years.` : '',
     modes.length ? `It can also be studied by ${modes.map((m) => m.toLowerCase()).join(', ')}.` : '',
   ].filter(Boolean).join(' ')

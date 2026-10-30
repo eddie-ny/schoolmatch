@@ -76,3 +76,9 @@ export function ProgramResult({ p, base, saved, onToggle }) {
 export function SearchBar({ q, onQ, placeholder = 'What do you want to study? (for example nursing, computer science, law)' }) {
   return <input className="input !border-2 !border-brand-green" placeholder={placeholder} value={q} onChange={(e) => onQ(e.target.value)} aria-label="Search programs" />
 }
+
+// Turns a full programme record plus its school into the shape the result card shows, so every list looks the same.
+export function asResult(p, school) {
+  return { ...p, schoolName: school?.name || p.schoolName, schoolCity: school?.city, schoolCountry: school?.country, schoolLogo: school?.logoUrl || p.schoolLogo,
+    modes: [p.mode || 'Regular'], variantCount: p.variants?.length || 1 }
+}

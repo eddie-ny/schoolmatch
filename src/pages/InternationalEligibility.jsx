@@ -4,7 +4,7 @@ import { useCatalog } from '../hooks/useCatalog'
 import { useSaved } from '../hooks/useSaved'
 import { useSearchParams } from 'react-router-dom'
 import { PageTitle, Segmented, Spinner, Badge, RequireAuth } from '../components/ui'
-import { ProgramCard } from '../components/Cards'
+import { ProgramResult, asResult } from '../components/Browse'
 import { DEGREE_CLASSES, GRADES } from '../lib/constants'
 import { useDebounced } from '../components/Browse'
 import { getProgramsFull, searchPrograms } from '../lib/api'
@@ -224,7 +224,7 @@ function InternationalEligibilityInner() {
                   ))}
                 </ul>
               )}
-              <ProgramCard p={p} school={schoolById[p.schoolId]} full={full} saved={saved.isSaved(p)} onToggle={saved.toggleProgram} />
+              <ProgramResult p={asResult(p, schoolById[p.schoolId])} base="/international" saved={saved.isSaved(p)} onToggle={saved.toggleProgram} />
             </div>
           ))}
         </div>

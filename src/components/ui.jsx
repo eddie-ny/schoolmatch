@@ -23,7 +23,8 @@ export function VerifiedBadges({ item }) {
 
 // Shown in place of detail for visitors and expired-trial users.
 export function Gate({ text }) {
-  const { user } = useAuth()
+  const { user, loading } = useAuth()
+  if (loading) return <Spinner />   // still checking who is signed in: show nothing flashy
   return (
     <div className="rounded-xl border border-dashed border-brand-orange p-4 bg-brand-orange/10">
       <p className="text-sm mb-3">{text || (user ? 'Subscribe to see the full details.' : 'Sign in to see more.')}</p>

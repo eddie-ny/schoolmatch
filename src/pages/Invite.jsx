@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { siWhatsapp, siTelegram, siFacebook, siX, siImessage, siGmail } from 'simple-icons'
 import { PageTitle } from '../components/ui'
 import { APP_NAME } from '../components/Layout'
 
@@ -12,12 +13,12 @@ export default function Invite() {
   const canShare = typeof navigator !== 'undefined' && !!navigator.share
 
   const targets = [
-    { label: 'WhatsApp', href: `https://wa.me/?text=${e(`${text} ${url}`)}` },
-    { label: 'Telegram', href: `https://t.me/share/url?url=${e(url)}&text=${e(text)}` },
-    { label: 'Facebook', href: `https://www.facebook.com/sharer/sharer.php?u=${e(url)}` },
-    { label: 'X (Twitter)', href: `https://twitter.com/intent/tweet?text=${e(text)}&url=${e(url)}` },
-    { label: 'Text message', href: `sms:?&body=${e(`${text} ${url}`)}` },
-    { label: 'Email', href: `mailto:?subject=${e(`Try ${APP_NAME}`)}&body=${e(`${text}\n\n${url}`)}` },
+    { icon: siWhatsapp, label: 'WhatsApp', href: `https://wa.me/?text=${e(`${text} ${url}`)}` },
+    { icon: siTelegram, label: 'Telegram', href: `https://t.me/share/url?url=${e(url)}&text=${e(text)}` },
+    { icon: siFacebook, label: 'Facebook', href: `https://www.facebook.com/sharer/sharer.php?u=${e(url)}` },
+    { icon: siX, label: 'X', href: `https://twitter.com/intent/tweet?text=${e(text)}&url=${e(url)}` },
+    { icon: siImessage, label: 'Text message', href: `sms:?&body=${e(`${text} ${url}`)}` },
+    { icon: siGmail, label: 'Email', href: `mailto:?subject=${e(`Try ${APP_NAME}`)}&body=${e(`${text}\n\n${url}`)}` },
   ]
 
   const share = async () => {
@@ -38,7 +39,10 @@ export default function Invite() {
         {canShare && <button className="btn btn-orange w-full" onClick={share}>Share</button>}
         <div className="grid grid-cols-2 gap-3">
           {targets.map((t) => (
-            <a key={t.label} className="btn btn-outline" href={t.href} target="_blank" rel="noopener noreferrer">{t.label}</a>
+            <a key={t.label} className="btn btn-outline !justify-start gap-3" href={t.href} target="_blank" rel="noopener noreferrer">
+              <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" className="shrink-0"><path d={t.icon.path} fill={t.label === 'X' ? '#000' : `#${t.icon.hex}`} /></svg>
+              <span>{t.label}</span>
+            </a>
           ))}
         </div>
         <button className="btn btn-green w-full" onClick={copy}>{copied ? 'Link copied' : 'Copy link'}</button>

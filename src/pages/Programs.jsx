@@ -58,7 +58,7 @@ export default function Programs() {
           {saved.error && <p className="text-red-700 text-sm" role="alert">{saved.error}</p>}
           {error && <p className="text-red-700 text-sm" role="alert">{error}</p>}
           {loading && rows.length === 0 ? <Spinner /> : (
-            <div className="grid grid-cols-1 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {rows.map((p) => <ProgramResult key={p.id} p={p} base={base} saved={saved.isSaved(p)} onToggle={saved.toggleProgram} />)}
             </div>
           )}

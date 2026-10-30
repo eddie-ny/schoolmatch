@@ -56,7 +56,7 @@ export default function Interested() {
             render={({ school, items }) => (
               <section key={school?.id || items[0].schoolId} className="space-y-3">
                 <h2 className="text-lg font-bold">{school?.name}</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {items.map((p) => (
                     <ProgramResult key={p.id} p={asResult(p, school)} base={school && school.country?.toLowerCase() !== 'ghana' ? '/international' : '/local'} saved onToggle={saved.toggleProgram} />
                   ))}

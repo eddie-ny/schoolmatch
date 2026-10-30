@@ -92,7 +92,7 @@ export default function SchoolDetail() {
           <p className="text-sm text-neutral-600" aria-live="polite">{loading ? 'Searching...' : `${total.toLocaleString()} program${total === 1 ? '' : 's'}`}</p>
           {error && <p className="text-red-700 text-sm" role="alert">{error}</p>}
           {loading && rows.length === 0 ? <Spinner /> : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {rows.map((p) => <ProgramResult key={p.id} p={p} base={base} saved={saved.isSaved(p)} onToggle={saved.toggleProgram} />)}
             </div>
           )}

@@ -79,7 +79,7 @@ export function Schools() {
         <p className="text-sm text-neutral-600">{loading ? 'Loading...' : `${list.length} result${list.length === 1 ? '' : 's'}`}</p>
       </div>
       {!loading && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {list.slice((page - 1) * PAGE, page * PAGE).map(({ s, count, show }) => {
             const query = new URLSearchParams()
             if (q) query.set('q', q)

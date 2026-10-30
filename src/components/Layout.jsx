@@ -99,7 +99,7 @@ export default function Layout() {
     <div className="min-h-screen flex flex-col">
       <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:bg-white focus:p-3 focus:m-2 focus:rounded-lg focus:font-semibold">Skip to content</a>
       <header className="border-b border-neutral-200/70 bg-white/90 backdrop-blur sticky top-0 z-20">
-        <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
+        <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
           <Link to="/" className="inline-flex flex-col justify-center min-h-11 leading-none" aria-label={side ? `WEMK ${side}, back to the start page` : 'WEMK home'}>
             <span className="font-heading font-bold text-xl">
               <span className="text-brand-orange">WE</span>
@@ -191,14 +191,14 @@ export default function Layout() {
         onCancel={() => setConfirmOut(false)}
       />
 
-      <main id="main" tabIndex={-1} className="flex-1 outline-none max-w-5xl w-full mx-auto px-4 py-6">
+      <main id="main" tabIndex={-1} className="flex-1 outline-none max-w-6xl w-full mx-auto px-4 py-6">
         <Suspense fallback={<Spinner className="min-h-[60vh]" />}>
           {mfaNeeded ? <MfaChallenge /> : <Outlet />}
         </Suspense>
       </main>
 
       <footer className="border-t border-neutral-200 text-sm text-neutral-600">
-        <div className="max-w-5xl mx-auto px-4 py-6 flex flex-col gap-2">
+        <div className="max-w-6xl mx-auto px-4 py-6 flex flex-col gap-2">
           <p>Starter data is unverified. Results are guidance, not a guarantee of admission.</p>
           <div className="flex flex-wrap gap-x-4 gap-y-1">
             <Link to="/" className="underline inline-flex items-center min-h-11">Switch Local or International</Link>

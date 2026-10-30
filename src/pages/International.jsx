@@ -66,7 +66,7 @@ export default function International() {
         {found.loading && found.rows.length === 0 ? <Spinner /> : found.rows.length === 0 ? (
           <p className="text-neutral-700">{study ? 'No programs match that yet. Try a broader word.' : `We are adding international ${level === 'Masters' ? 'masters' : 'bachelors'} programs. Check back soon.`}</p>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {found.rows.map((p) => <ProgramResult key={p.id} p={p} base="/international" saved={saved.isSaved(p)} onToggle={saved.toggleProgram} />)}
           </div>
         )}

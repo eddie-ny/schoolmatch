@@ -33,6 +33,7 @@ export default function ProgramDetail() {
   const { to, international } = useScope()
   const saved = useSaved()
   const [state, setState] = useState({ loading: true, data: null, error: '' })
+  const [imgBad, setImgBad] = useState(false)
 
   useEffect(() => {
     let live = true
@@ -63,13 +64,19 @@ export default function ProgramDetail() {
     modes.length ? `It can also be studied by ${modes.map((m) => m.toLowerCase()).join(', ')}.` : '',
   ].filter(Boolean).join(' ')
 
+  const abroad = !!school?.country && school.country.toLowerCase() !== 'ghana'
+  const crumbs = [[to('/programs'), 'All programmes'], p.field && [`${to('/programs')}?field=${encodeURIComponent(p.field)}`, p.field], school?.country && [null, school.country], school && [to(`/schools/${p.schoolId}`), school.name]].filter(Boolean)
+
   return (
     <div className="space-y-6">
       <PageTitle title={p.name} />
-      <div className="rounded-3xl overflow-hidden border border-neutral-200 bg-white">
-        <div className="h-32 md:h-44 bg-gradient-to-br from-brand-green via-brand-green-soft to-brand-orange-soft" aria-hidden="true" />
-        <div className="p-5 md:p-6 -mt-12 md:-mt-16">
-          <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm p-4 md:p-5 max-w-xl space-y-3">
+      <div>
+        {/* Hero picture with the programme card floating over it, then the key facts strip over its bottom edge. */}
+        <div className="relative rounded-3xl overflow-hidden border border-neutral-200 bg-white">
+          {school?.imageUrl && !imgBad
+            ? <img src={school.imageUrl} alt="" onError={() => setImgBad(true)} className="h-56 md:h-80 w-full object-cover" />
+            : <div className="h-56 md:h-80 bg-gradient-to-br from-brand-green via-brand-green-soft to-brand-orange-soft" aria-hidden="true" />}
+          <div className="absolute inset-x-4 bottom-4 md:inset-auto md:left-6 md:top-6 md:bottom-auto md:w-[22rem] bg-white rounded-2xl shadow-lg p-4 md:p-5 space-y-3">
             <div className="flex items-start gap-3">
               <div className="flex flex-wrap gap-2 flex-1">
                 {p.level && <Badge>{p.level}</Badge>}
@@ -79,25 +86,52 @@ export default function ProgramDetail() {
             </div>
             <Link to={to(`/schools/${p.schoolId}`)} className="flex items-center gap-3 hover:underline">
               <Monogram name={school?.name} logo={school?.logoUrl} />
-              <span className="min-w-0"><span className="block font-semibold text-sm break-words">{school?.name}</span><span className="block text-sm text-neutral-600">{where}</span></span>
+              <span className="min-w-0"><span className="block font-semibold text-sm break-words">{school?.name}</span><span className="block text-xs text-neutral-600">{where}</span></span>
             </Link>
-            <h2 className="text-2xl md:text-3xl font-extrabold leading-tight break-words">{p.name}</h2>
-            {school?.website && <a href={school.website} target="_blank" rel="noreferrer" className="btn btn-orange w-full sm:w-auto">Visit school website</a>}
+            <h2 className="text-xl md:text-2xl font-extrabold leading-tight break-words">{p.name}</h2>
+            {school?.website && <a href={school.website} target="_blank" rel="noreferrer" className="btn btn-orange w-full">Visit school website</a>}
           </div>
         </div>
-        <div className="border-t border-neutral-200 bg-neutral-50 p-4 md:px-6 flex flex-wrap gap-x-8 gap-y-3">
-          <Fact label="Tuition per year">{feeUsd != null ? money(feeUsd, 'USD') : feeGhs != null ? money(feeGhs, 'GHS') : null}</Fact>
-          <Fact label="Duration">{duration != null ? `${duration} years` : null}</Fact>
+        <div className="relative mx-3 md:mx-6 -mt-3 rounded-2xl border border-neutral-200 bg-white shadow-sm p-4 md:p-5 grid grid-cols-2 md:grid-cols-5 gap-x-6 gap-y-4">
+          <Fact label="Tuition per year">{feeUsd != null ? money(feeUsd, 'USD') : feeGhs != null ? money(feeGhs, 'GHS') : 'Not added yet'}</Fact>
+          <Fact label="Duration">{duration != null ? `${duration} years` : 'Not added yet'}</Fact>
           <Fact label="Level">{p.level || 'Undergraduate'}</Fact>
-          <Fact label="Location">{where}</Fact>
-          <Fact label="SAT">{satPolicy ? SAT[satPolicy] : null}</Fact>
+          <Fact label="Campus location">{where}</Fact>
+          <Fact label="SAT">{satPolicy ? SAT[satPolicy] : abroad ? 'Check the school' : 'Not needed'}</Fact>
         </div>
+      </div>
+
+      <nav aria-label="Breadcrumb" className="text-xs text-neutral-500 flex flex-wrap gap-x-1.5 gap-y-1">
+        {crumbs.map(([href, label], i) => (
+          <span key={label} className="flex items-center gap-1.5">
+            {i > 0 && <span aria-hidden="true">&rsaquo;</span>}
+            {href ? <Link to={href} className="hover:underline">{label}</Link> : <span>{label}</span>}
+          </span>
+        ))}
+        <span className="flex items-center gap-1.5"><span aria-hidden="true">&rsaquo;</span><span className="text-neutral-700">{p.name}</span></span>
+      </nav>
+
+      <div className="grid md:grid-cols-[1fr_20rem] gap-6 items-start">
+        <section className="space-y-2 min-w-0">
+          <h2 className="text-xl font-bold">About</h2>
+          <p className="text-neutral-800 break-words">{summary}</p>
+          {school?.description && <p className="text-neutral-700 break-words">{school.description}</p>}
+        </section>
+        <aside className="rounded-2xl border border-neutral-200 bg-white p-4 space-y-3 shadow-sm">
+          <Link to={to(`/schools/${p.schoolId}`)} className="flex items-center gap-3 hover:underline">
+            <Monogram name={school?.name} logo={school?.logoUrl} />
+            <span className="min-w-0"><span className="block font-semibold text-sm break-words">{school?.name}</span><span className="block text-xs text-neutral-600">{where}</span></span>
+          </Link>
+          {school?.programCount > 0 && <p className="text-sm text-neutral-600">{school.programCount.toLocaleString()} programmes at this school</p>}
+          <Link to={to(`/schools/${p.schoolId}`)} className="btn btn-outline w-full">See the school</Link>
+          {(school?.descriptionCredit || school?.imageCredit) && <p className="text-xs text-neutral-500">{[school.descriptionCredit, school.imageCredit].filter(Boolean).join(' | ')}</p>}
+        </aside>
       </div>
 
       {!full ? <Gate text="Subscribe to see entry requirements, fees and chances for this program." /> : (
         <div className="grid md:grid-cols-[12rem_1fr] gap-6 items-start">
           <nav className="hidden md:block sticky top-4 space-y-1 text-sm" aria-label="On this page">
-            {[['key', 'Key information'], ['entry', 'Entry requirements'], ['fees', 'Fees and funding'], ['school', 'About the school']].map(([a, t]) => (
+            {[['key', 'Key information'], ['entry', 'Entry requirements'], ['fees', 'Fees and funding']].map(([a, t]) => (
               <a key={a} href={`#${a}`} className="block rounded-lg px-3 py-2 hover:bg-neutral-100">{t}</a>
             ))}
           </nav>
@@ -139,11 +173,6 @@ export default function ProgramDetail() {
               <Link to={to('/scholarships')} className="underline text-sm">Look for scholarships</Link>
             </section>
 
-            <section id="school" className="space-y-2">
-              <h2 className="text-xl font-bold">About the school</h2>
-              <p className="text-neutral-800">{school?.name}{where ? `, ${where}` : ''}.{school?.programCount ? ` ${school.programCount.toLocaleString()} programs listed.` : ''}</p>
-              <Link to={to(`/schools/${p.schoolId}`)} className="btn btn-outline">See all programs at this school</Link>
-            </section>
           </div>
         </div>
       )}

@@ -44,18 +44,18 @@ export default function SchoolDetail() {
         {school.imageUrl && !imgBad
           ? <img src={school.imageUrl} alt="" loading="lazy" onError={() => setImgBad(true)} className="h-32 md:h-48 w-full object-cover" />
           : <div className="h-32 md:h-48 bg-gradient-to-br from-brand-green via-brand-green-soft to-brand-orange-soft" aria-hidden="true" />}
-        <div className="p-5 md:p-6 -mt-10 flex flex-col md:flex-row md:items-end gap-4">
-          <Monogram name={school.name} logo={school.logoUrl} kind={schoolCategory(school)} className="!w-20 !h-20 !rounded-2xl shadow-sm" />
-          <div className="flex-1 min-w-0">
+        <div className="p-5 md:p-6 flex flex-col md:flex-row md:items-start gap-4">
+          <Monogram name={school.name} logo={school.logoUrl} kind={schoolCategory(school)} className="!w-20 !h-20 md:!w-28 md:!h-28 !rounded-2xl shadow-md border border-neutral-200 bg-white -mt-14 md:-mt-16 md:order-last shrink-0" />
+          <div className="flex-1 min-w-0 space-y-2">
             <h1 className="text-2xl md:text-3xl font-extrabold leading-tight break-words">{school.name}</h1>
             <p className="text-neutral-600">{where}</p>
-            <div className="flex flex-wrap gap-2 mt-2">
+            <div className="flex flex-wrap gap-2">
               <Badge>{schoolCategoryLabel(school)}</Badge>
               {school.type && <Badge>{school.type}</Badge>}
               {school.verified === false && <Badge>Unverified</Badge>}
             </div>
+            {school.website && <a href={school.website} target="_blank" rel="noreferrer" className="btn btn-orange mt-2">Visit university website</a>}
           </div>
-          {school.website && <a href={school.website} target="_blank" rel="noreferrer" className="btn btn-orange">Visit university website</a>}
         </div>
         <div className="border-t border-neutral-200 bg-neutral-50 grid grid-cols-2 sm:grid-cols-3 text-center">
           <div className="p-4"><p className="text-2xl font-extrabold">{school.programCount.toLocaleString()}</p><p className="text-sm text-neutral-600">Programs</p></div>

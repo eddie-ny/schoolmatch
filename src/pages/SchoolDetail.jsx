@@ -40,7 +40,9 @@ export default function SchoolDetail() {
     <div className="space-y-6">
       <BackLink to={to('/schools')}>Back to schools</BackLink>
       <div className="rounded-3xl overflow-hidden border border-neutral-200 bg-white">
-        <div className="h-32 md:h-48 bg-gradient-to-br from-brand-green via-brand-green-soft to-brand-orange-soft" aria-hidden="true" />
+        {school.imageUrl
+          ? <img src={school.imageUrl} alt="" loading="lazy" className="h-32 md:h-48 w-full object-cover" />
+          : <div className="h-32 md:h-48 bg-gradient-to-br from-brand-green via-brand-green-soft to-brand-orange-soft" aria-hidden="true" />}
         <div className="p-5 md:p-6 -mt-10 flex flex-col md:flex-row md:items-end gap-4">
           <Monogram name={school.name} logo={school.logoUrl} kind={schoolCategory(school)} className="!w-20 !h-20 !rounded-2xl shadow-sm" />
           <div className="flex-1 min-w-0">
@@ -60,6 +62,14 @@ export default function SchoolDetail() {
           <div className="p-4 border-l border-neutral-200 hidden sm:block"><p className="text-2xl font-extrabold">{school.city || '-'}</p><p className="text-sm text-neutral-600">City</p></div>
         </div>
       </div>
+
+      {school.description && (
+        <section className="space-y-1">
+          <h2 className="text-xl font-bold">About {school.name}</h2>
+          <p className="text-neutral-800 break-words">{school.description}</p>
+          {(school.descriptionCredit || school.imageCredit || school.logoCredit) && <p className="text-xs text-neutral-500">{[school.descriptionCredit, school.imageCredit, school.logoCredit].filter(Boolean).join(' | ')}</p>}
+        </section>
+      )}
 
       {!full ? (
         <><p>{school.programCount} program{school.programCount === 1 ? '' : 's'} listed.</p><Gate /></>

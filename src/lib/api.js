@@ -737,7 +737,7 @@ function mapFull(f, school) {
   }
 }
 
-const mapSchool = (x) => x && ({ id: x.id, name: x.name, country: x.country, type: x.type, city: x.city, website: x.website || '', category: x.category || '', logoUrl: x.logo_url || logoFor(x.name), verified: x.verified, demo: x.demo, programCount: x.program_count ?? 0 })
+const mapSchool = (x) => x && ({ id: x.id, name: x.name, country: x.country, type: x.type, city: x.city, website: x.website || '', category: x.category || '', logoUrl: x.logo_url || logoFor(x.name), verified: x.verified, demo: x.demo, programCount: x.program_count ?? 0, imageUrl: x.image_url || '', imageCredit: x.image_credit || '', logoCredit: x.logo_credit || '', description: x.description || '', descriptionCredit: x.description_credit || '' })
 
 // One page of programmes (grouped by school, name and level). Returns { rows, total }.
 export async function searchPrograms({ scope, q = '', field = '', level = '', school = null, limit = 24, offset = 0 }) {
@@ -754,10 +754,10 @@ export async function searchPrograms({ scope, q = '', field = '', level = '', sc
 export async function getSchool(id) {
   const [s, f] = await Promise.all([
     supabase.from('schools_summary').select('*').eq('id', id).maybeSingle(),
-    supabase.from('schools').select('website').eq('id', id).maybeSingle(),
+    supabase.from('schools').select('website, image_url, image_credit, logo_credit, description, description_credit').eq('id', id).maybeSingle(),
   ])
   fail(s.error, 'Could not load the school.')
-  return s.data ? mapSchool({ ...s.data, website: f.data?.website }) : null
+  return s.data ? mapSchool({ ...s.data, ...(f.data || {}) }) : null
 }
 
 // Every way of studying one programme (all rows with the same school, name and level), with requirements and cut-offs.

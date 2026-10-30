@@ -17,6 +17,7 @@ export default function SchoolDetail() {
   const saved = useSaved()
   const [params, setParams] = useSearchParams()
   const [school, setSchool] = useState(undefined)
+  const [imgBad, setImgBad] = useState(false)
   const q = params.get('q') || ''
   const field = params.get('field') || ''
   const level = params.get('level') || ''
@@ -40,8 +41,8 @@ export default function SchoolDetail() {
     <div className="space-y-6">
       <BackLink to={to('/schools')}>Back to schools</BackLink>
       <div className="rounded-3xl overflow-hidden border border-neutral-200 bg-white">
-        {school.imageUrl
-          ? <img src={school.imageUrl} alt="" loading="lazy" className="h-32 md:h-48 w-full object-cover" />
+        {school.imageUrl && !imgBad
+          ? <img src={school.imageUrl} alt="" loading="lazy" onError={() => setImgBad(true)} className="h-32 md:h-48 w-full object-cover" />
           : <div className="h-32 md:h-48 bg-gradient-to-br from-brand-green via-brand-green-soft to-brand-orange-soft" aria-hidden="true" />}
         <div className="p-5 md:p-6 -mt-10 flex flex-col md:flex-row md:items-end gap-4">
           <Monogram name={school.name} logo={school.logoUrl} kind={schoolCategory(school)} className="!w-20 !h-20 !rounded-2xl shadow-sm" />

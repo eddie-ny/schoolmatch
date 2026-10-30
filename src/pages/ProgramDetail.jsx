@@ -42,6 +42,7 @@ function keyFacts(v, masters) {
   if (!masters && v.cutoffAggregate != null) out.push(['Last year\'s cut-off', `Aggregate ${v.cutoffAggregate}${v.cutoffYear ? ` (${v.cutoffYear})` : ''}. A lower number is better, so your aggregate must be equal or lower.`])
   if (!masters && v.requirements?.length) out.push(['Subjects you need', v.requirements.map((r) => `${r.subject}${r.minGrade ? ` (${r.minGrade} or better)` : ''}`).join(', ')])
   if (v.minWassceGrade && !v.requirements?.length) out.push(['WASSCE results', `${v.minWassceGrade} or better in your main subjects`])
+  if (masters && v.mastersFormat) out.push(['How you study', v.mastersFormat])
   if (v.minDegreeClass) out.push(['Your first degree', `${v.minDegreeClass} or better`])
   if (v.satPolicy) out.push(['SAT test', v.satPolicy === 'required' ? `You must send a score.${v.satLow != null ? ` Most admitted students score ${v.satLow} to ${v.satHigh ?? v.satLow}.` : ''}` : v.satPolicy === 'optional' ? `You can choose to send a score.${v.satLow != null ? ` Most admitted students who do score ${v.satLow} to ${v.satHigh ?? v.satLow}.` : ''}` : 'The school does not use SAT scores.'])
   const eng = [v.minIelts != null && `IELTS ${v.minIelts}`, v.minToefl != null && `TOEFL ${v.minToefl}`, v.minDuolingo != null && `Duolingo ${v.minDuolingo}`].filter(Boolean)

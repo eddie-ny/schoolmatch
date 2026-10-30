@@ -5,6 +5,7 @@ Run (Windows PowerShell), in the folder that has scorecard_schools.csv:
     pip install requests
     python fetch_school_media.py            # all schools (takes about 15 minutes)
     python fetch_school_media.py 5          # test with the first 5 schools only
+    python fetch_school_media.py 0 ghana ghana_media.csv      # the Ghana schools, read from the WEMK database
 
 Writes school_media.csv (one row per school) and school_media_report.txt (schools where nothing was found).
 Only images with a free licence (Creative Commons or public domain) are kept. Every image and text keeps its credit line.
@@ -12,7 +13,7 @@ Only images with a free licence (Creative Commons or public domain) are kept. Ev
 import csv, re, sys, time
 import requests
 
-LIMIT = int(sys.argv[1]) if len(sys.argv) > 1 else None
+LIMIT = int(sys.argv[1]) if len(sys.argv) > 1 and int(sys.argv[1]) > 0 else None
 S = requests.Session()
 S.headers["User-Agent"] = "WEMK-school-media/1.0 (eaacquah3002@gmail.com)"
 WP = "https://en.wikipedia.org/w/api.php"
@@ -35,19 +36,54 @@ def get(url, **params):
     return {}
 
 
-def words(t):
-    return {w for w in re.findall(r"[a-z]+", t.lower()) if w not in {"the", "of", "at", "and", "university", "college", "state", "in"}}
+SPORT = re.compile(r"football|basketball|baseball|softball|volleyball|hockey|athletic|\b(men|women)'s\b|\bteam\b|\bseason\b|rivalry|alumni|\blist of\b|\bhistory of\b|\bpeople\b|disaster|collapse|\bsystem\b|\b\d{4}\b", re.I)
+INST = re.compile(r"^[^.]{0,250}\b(is|was|are) (a|an|the|one of)\b[^.]{0,250}\b(universit|college|institute|polytechnic|academy|school)", re.I)
+
+
+def variants(name):
+    n = name.replace("&", "and").replace("  ", " ")
+    n = re.sub(r"[-\s]+Main Campus$", "", n).strip()
+    out = [n]
+    if re.search(r"[A-Za-z]-[A-Z]", n):
+        out.append(re.sub(r"(?<=[a-z])-(?=[A-Z])", ", ", n))      # University of California-Los Angeles -> ..., Los Angeles
+        out.append(re.sub(r"(?<=[a-z])-(?=[A-Z])", " at ", n))
+        out.append(re.sub(r"(?<=[a-z])-(?=[A-Z])", " ", n))
+    if n.lower().startswith("the "):
+        out.append(n[4:])
+    out.append(name.strip())
+    return list(dict.fromkeys(out))
+
+
+def good_page(p, name):
+    title, text = p.get("title", ""), p.get("extract", "") or ""
+    if "missing" in p or "disambiguation" in (p.get("pageprops") or {}) or "disambiguation" in p:
+        return False
+    if SPORT.search(title) or not INST.search(text[:500]):
+        return False
+    want = {w for w in re.findall(r"[a-z]+", name.lower()) if w not in {"the", "of", "at", "and", "main", "campus"}}
+    got = {w for w in re.findall(r"[a-z]+", (title + " " + text[:200]).lower())}
+    return bool(want) and len(want & got) / len(want) >= 0.6
+
+
+def fetch_titles(titles):
+    d = get(WP, action="query", titles="|".join(titles), prop="pageprops|extracts", exintro=1, explaintext=1, exsentences=3,
+            ppprop="wikibase_item|disambiguation", redirects=1, exlimit="max")
+    return list((d.get("query", {}).get("pages", {})).values())
 
 
 def find_page(name, city, state):
-    d = get(WP, action="query", generator="search", gsrsearch=f"{name} {city} {state}", gsrlimit=3, prop="pageprops|extracts",
-            exintro=1, explaintext=1, exsentences=3, ppprop="wikibase_item", redirects=1)
-    pages = sorted((d.get("query", {}).get("pages", {})).values(), key=lambda p: p.get("index", 99))
-    want = words(name)
+    # 1. exact titles (fast and reliable), 2. a search, checked the same way
+    pages = fetch_titles(variants(name)[:8])
+    order = {v.lower(): i for i, v in enumerate(variants(name))}
+    pages.sort(key=lambda p: order.get(p.get("title", "").lower(), 99))
     for p in pages:
-        title, text = p.get("title", ""), p.get("extract", "")
-        got = words(title)
-        if want and len(want & got) / len(want) >= 0.6 and re.search(r"universit|college|institute|school|polytechnic", text[:400], re.I):
+        if good_page(p, name):
+            return p
+    d = get(WP, action="query", generator="search", gsrsearch=f'{name} {city}', gsrlimit=8, prop="pageprops|extracts",
+            exintro=1, explaintext=1, exsentences=3, ppprop="wikibase_item|disambiguation", redirects=1)
+    hits = sorted((d.get("query", {}).get("pages", {})).values(), key=lambda p: p.get("index", 99))
+    for p in hits:
+        if good_page(p, name):
             return p
     return None
 
@@ -78,12 +114,22 @@ def commons(filename, width):
         return info.get("thumburl") or info.get("url"), credit
 
 
-rows = list(csv.DictReader(open("scorecard_schools.csv", encoding="utf-8")))
+INPUT = sys.argv[2] if len(sys.argv) > 2 else "scorecard_schools.csv"
+OUTPUT = sys.argv[3] if len(sys.argv) > 3 else "school_media.csv"
+if INPUT == "ghana":   # the Ghana schools straight from the WEMK database (public read key, the same one the website uses)
+    r = S.get("https://zzuoqdeeegzmgtuvspgz.supabase.co/rest/v1/schools_summary", params={"select": "id,name,city", "country": "ilike.ghana", "limit": 1000},
+              headers={"apikey": "sb_publishable_W0zf4b36Y7qPcTK32CgwAQ_MmFfEanR"}, timeout=60)
+    r.raise_for_status()
+    rows = [{"id": x["id"], "name": x["name"], "city": x["city"] or "", "state": "Ghana"} for x in r.json()]
+else:
+    rows = list(csv.DictReader(open(INPUT, encoding="utf-8")))
+if rows and "school.name" in rows[0]:   # the Scorecard file; convert to id, name, city, state
+    rows = [{"id": r["id"], "name": r["school.name"], "city": r["school.city"], "state": r["school.state"]} for r in rows]
 if LIMIT:
     rows = rows[:LIMIT]
 out, missing = [], []
 for i, r in enumerate(rows, 1):
-    name, city, state = r["school.name"], r["school.city"], r["school.state"]
+    name, city, state = r["name"], r["city"], r.get("state", "")
     rec = {"school_id": r["id"], "name": name, "city": city, "state": state, "wikipedia": "", "logo_url": "", "logo_credit": "",
            "image_url": "", "image_credit": "", "description": "", "description_credit": ""}
     page = find_page(name, city, state)
@@ -107,8 +153,8 @@ for i, r in enumerate(rows, 1):
     print(f"{i}/{len(rows)} {name}: logo={'Y' if rec['logo_url'] else 'n'} photo={'Y' if rec['image_url'] else 'n'} text={'Y' if rec['description'] else 'n'}")
     time.sleep(0.3)
 
-with open("school_media.csv", "w", newline="", encoding="utf-8") as f:
+with open(OUTPUT, "w", newline="", encoding="utf-8") as f:
     w = csv.DictWriter(f, fieldnames=list(out[0].keys()))
     w.writeheader(); w.writerows(out)
-open("school_media_report.txt", "w", encoding="utf-8").write("\n".join(missing))
+open(OUTPUT.replace(".csv", "_report.txt"), "w", encoding="utf-8").write("\n".join(missing))
 print(f"Done. {len(out)} schools. {len(missing)} are missing something, listed in school_media_report.txt.")

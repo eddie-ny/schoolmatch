@@ -55,6 +55,13 @@ export default function ProgramDetail() {
   const duration = variants.find((v) => v.durationYears != null)?.durationYears
   const satPolicy = variants.find((v) => v.satPolicy)?.satPolicy
   const where = [school?.city, school?.country].filter(Boolean).join(', ')
+  // A plain summary built only from facts we hold, so every programme page has key information.
+  const modes = [...new Set(variants.map((v) => v.mode).filter((m) => m && m !== 'Regular'))]
+  const summary = [
+    `${p.name} is ${/^[aeiou]/i.test(p.level || 'u') ? 'an' : 'a'} ${(p.level || 'undergraduate').toLowerCase()} programme${p.field ? ` in ${p.field}` : ''} at ${school?.name}${where ? ` (${where})` : ''}.`,
+    duration != null ? `It takes ${duration} years.` : '',
+    modes.length ? `It can also be studied by ${modes.map((m) => m.toLowerCase()).join(', ')}.` : '',
+  ].filter(Boolean).join(' ')
 
   return (
     <div className="space-y-6">
@@ -97,6 +104,7 @@ export default function ProgramDetail() {
           <div className="space-y-8 min-w-0">
             <section id="key" className="space-y-2">
               <h2 className="text-xl font-bold">Key information</h2>
+              <p className="text-neutral-800 break-words">{summary}</p>
               {p.entryNote && <p className="text-neutral-800 whitespace-pre-line break-words">{p.entryNote}</p>}
               {variants.length > 1 && (
                 <p className="text-sm text-neutral-600">You can study this program in {variants.length} ways: {variants.map(variantLabel).join('; ')}. Details for each are below.</p>

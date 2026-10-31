@@ -127,6 +127,7 @@ function ProfileInner() {
             <option>Masters</option>
             <option>Diploma</option>
             <option>Certificate</option>
+            <option>Graduate Certificate</option>
           </select>
         </Field>
         <Field label="Field you are interested in (optional)">

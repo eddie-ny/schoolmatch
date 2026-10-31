@@ -71,6 +71,21 @@ function bucket(daily, days) {
   return { rows, unit: 'week' }
 }
 
+const LEVEL_NAMES = ['Bachelors', 'Masters', 'Diploma', 'Certificate', 'Graduate Certificate']
+const LEVEL_ALIAS = { Undergraduate: 'Bachelors' }
+
+// Shows every level, even those nobody has chosen yet, so staff see the zeros too.
+function allLevels(rows) {
+  const n = Object.fromEntries(LEVEL_NAMES.map((l) => [l, 0]))
+  const other = []
+  for (const r of rows || []) {
+    const k = LEVEL_ALIAS[r.label] || r.label
+    if (k in n) n[k] += r.n
+    else other.push({ label: k, n: r.n })
+  }
+  return [...LEVEL_NAMES.map((l) => ({ label: l, n: n[l] })), ...other]
+}
+
 function Bars({ title, rows }) {
   const max = Math.max(1, ...rows.map((r) => r.n))
   return (
@@ -225,9 +240,9 @@ function ChartPanel() {
         ]} />}
       </div>
       <div className="grid md:grid-cols-2 gap-3">
-        {study ? <Bars title="What students want to study (from profiles), by level" rows={study.byLevel} /> : <p className="text-sm text-neutral-600">The profile question is not switched on in the database yet.</p>}
+        {study ? <Bars title="What students want to study (from profiles), by level" rows={allLevels(study.byLevel)} /> : <p className="text-sm text-neutral-600">The profile question is not switched on in the database yet.</p>}
         {study && <Bars title="What students want to study (from profiles), by field" rows={study.byField} />}
-        {interest && <Bars title={`Programmes saved by level, ${p.label.toLowerCase()}`} rows={interest.byLevel} />}
+        {interest && <Bars title={`Programmes saved by level, ${p.label.toLowerCase()}`} rows={allLevels(interest.byLevel)} />}
         {interest && <Bars title={`Programmes saved by field, ${p.label.toLowerCase()} (top 10)`} rows={interest.byField} />}
       </div>
     </div>

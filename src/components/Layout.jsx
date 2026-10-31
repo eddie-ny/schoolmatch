@@ -121,6 +121,7 @@ export default function Layout() {
               <UserMenu user={user} onSignOut={() => setConfirmOut(true)} />
             ) : (
               <>
+                <NavLink to="/pricing" className={({ isActive }) => `inline-flex items-center min-h-11 text-sm font-medium ${isActive ? 'text-brand-orange' : 'hover:text-brand-green'}`}>Pricing</NavLink>
                 <Link to="/login" className="btn btn-outline !min-h-10">Sign in</Link>
                 <Link to="/signup" className="btn btn-orange !min-h-10">Sign up</Link>
               </>
@@ -148,9 +149,12 @@ export default function Layout() {
                 <button onClick={() => setConfirmOut(true)} className="py-3 text-left font-medium">Sign out</button>
               </>
             ) : (
-              <div className="flex gap-3 pt-2">
+              <div className="flex flex-col gap-1 pt-2">
+                <NavLink to="/pricing" className="py-3 font-medium">Pricing</NavLink>
+                <div className="flex gap-3">
                 <Link to="/login" className="btn btn-outline flex-1">Sign in</Link>
                 <Link to="/signup" className="btn btn-orange flex-1">Sign up</Link>
+                </div>
               </div>
             )}
           </div>

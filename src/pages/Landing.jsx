@@ -16,6 +16,7 @@ export default function Landing() {
         <div className="space-y-5">
           <h1 className="text-3xl md:text-5xl font-extrabold leading-tight">Find where you can study, and whether you qualify.</h1>
           <p className="text-lg text-neutral-700">Pick your path. We show the schools and programs you can get into.</p>
+          <p className="text-sm text-neutral-700">First 24 hours free. <Link to="/pricing" className="underline font-semibold inline-block py-2">See plans and pricing</Link></p>
           <div className="grid sm:grid-cols-2 gap-3">
             <Link to="/local" className="card border-2 border-brand-green hover:bg-brand-green-soft flex flex-col">
               <p className="text-xl font-bold">Local</p>

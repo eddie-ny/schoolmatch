@@ -170,7 +170,8 @@ export function ProgramBody({ p, variants = [p], school }) {
   )
 }
 
-export function SchoolCard({ s, count, matches = [], to, signedIn }) {
+export function SchoolCard({ s, count, matches = [], matched, to, signedIn }) {
+  const more = (matched ?? matches.length) - Math.min(matches.length, 3)
   return (
     <article className="card flex flex-col gap-3 hover:border-brand-orange transition-colors">
       <div className="flex items-start gap-3">
@@ -190,9 +191,9 @@ export function SchoolCard({ s, count, matches = [], to, signedIn }) {
         <div className="text-sm">
           <p className="text-neutral-500">Matching programs</p>
           <ul className="list-disc pl-5">
-            {matches.slice(0, 3).map((p) => <li key={p.id}>{p.name}</li>)}
+            {matches.slice(0, 3).map((p) => <li key={p.id || p}>{p.name || p}</li>)}
           </ul>
-          {matches.length > 3 && <p className="text-neutral-500">and {matches.length - 3} more</p>}
+          {more > 0 && <p className="text-neutral-500">and {more} more</p>}
         </div>
       )}
       {signedIn

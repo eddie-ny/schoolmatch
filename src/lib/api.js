@@ -313,41 +313,23 @@ async function fetchAll(table, columns, filter = (q) => q) {
 
 export async function loadCatalog() {
   const quiet = (q) => q.then((r) => (r.error ? { data: [] } : r)) // no access to the full tables is normal, not an error
-  const [sS, sP, sC, fS, fP, fC] = await Promise.all([
+  // Programmes are no longer downloaded here. Pages search them on the server, a page at a time.
+  const [sS, sC, fS, fC] = await Promise.all([
     supabase.from('schools_summary').select('*'),
-    fetchAll('programs_summary', '*', (q) => q.ilike('school_country', 'ghana')),
     supabase.from('scholarships_summary').select('*'),
     quiet(supabase.from('schools').select('*')),
-    quiet(fetchAll('programs', '*, schools!inner(country), program_requirements(subject, min_grade), program_cutoffs(year, cutoff_aggregate, sat_low, sat_high)', (q) => q.ilike('schools.country', 'ghana'))),
     quiet(supabase.from('scholarships').select('*')),
   ])
-  fail(sS.error || sP.error || sC.error, 'Could not load the catalogue.')
+  fail(sS.error || sC.error, 'Could not load the catalogue.')
 
   const fullSchools = Object.fromEntries((fS.data || []).map((x) => [x.id, x]))
-  const fullPrograms = Object.fromEntries((fP.data || []).map((x) => [x.id, x]))
   const fullSch = Object.fromEntries((fC.data || []).map((x) => [x.id, x]))
 
   const schools = sS.data.map((x) => {
     const f = fullSchools[x.id] || x
     return { id: x.id, name: x.name, country: x.country, type: x.type, city: x.city, website: f.website || '', category: x.category || f.category || '', logoUrl: x.logo_url || logoFor(x.name), verified: x.verified, demo: x.demo, programCount: x.program_count ?? 0 }
   })
-  const schoolById = Object.fromEntries(schools.map((x) => [x.id, x]))
-
-  const programs = sP.data.map((x) => {
-    const f = fullPrograms[x.id]
-    const school = schoolById[x.school_id]
-    const latest = [...(f?.program_cutoffs || [])].sort((a, b) => b.year - a.year)[0]
-    return {
-      id: x.id, schoolId: x.school_id, schoolName: school?.name || '', name: x.name, level: x.level, field: x.field, demo: x.demo, mode: x.mode || 'Regular', campus: x.campus || '',
-      international: school ? !isLocalCountry(school.country) : false,
-      feesUsd: f?.fees_usd ?? null, feesGhs: f?.fees_ghs ?? null, entryNote: f?.entry_note || '', entryQualification: f?.entry_qualification || x.entry_qualification || '', minDegreeClass: f?.min_degree_class || '', durationYears: f?.duration_years ?? null,
-      satPolicy: f?.sat_policy || '', minWassceGrade: f?.min_wassce_grade || '', minIelts: f?.min_ielts != null ? Number(f.min_ielts) : null, minToefl: f?.min_toefl ?? null, minDuolingo: f?.min_duolingo ?? null, sourceUrl: f?.intl_source_url || '',
-      englishTestWaiver: !!f?.english_test_waiver, foundationAvailable: !!f?.foundation_available, verified: !!f?.verified,
-      requirements: (f?.program_requirements || []).map((r) => ({ subject: r.subject, minGrade: r.min_grade })),
-      cutoffAggregate: latest?.cutoff_aggregate ?? null, cutoffYear: latest?.year ?? null,
-      satLow: latest?.sat_low ?? null, satHigh: latest?.sat_high ?? null,
-    }
-  })
+  const programs = []
 
   const scholarships = sC.data.map((x) => {
     const f = fullSch[x.id] || {}
@@ -479,10 +461,11 @@ export async function deleteDemoData() {
 export async function listEligibilityPrograms() {
   // group_name is the common programme name ("Law") shared by every school that offers it. Until the database has it,
   // fall back to the programme's own name so the page keeps working.
-  let progsRes = await fetchAll('programs_summary', 'id, school_id, name, level, field, demo, group_name, mode, campus, entry_qualification')
-  if (progsRes.error) progsRes = await fetchAll('programs_summary', 'id, school_id, name, level, field, demo, group_name, mode, campus')
-  if (progsRes.error) progsRes = await fetchAll('programs_summary', 'id, school_id, name, level, field, demo, group_name')
-  if (progsRes.error) progsRes = await fetchAll('programs_summary', 'id, school_id, name, level, field, demo')
+  const ghana = (q) => q.ilike('school_country', 'ghana')
+  let progsRes = await fetchAll('programs_summary', 'id, school_id, name, level, field, demo, group_name, mode, campus, entry_qualification', ghana)
+  if (progsRes.error) progsRes = await fetchAll('programs_summary', 'id, school_id, name, level, field, demo, group_name, mode, campus', ghana)
+  if (progsRes.error) progsRes = await fetchAll('programs_summary', 'id, school_id, name, level, field, demo, group_name', ghana)
+  if (progsRes.error) progsRes = await fetchAll('programs_summary', 'id, school_id, name, level, field, demo', ghana)
   const { data: progs, error: e1 } = progsRes
   const { data: schools, error: e2 } = await supabase.from('schools_summary').select('id, name, country')
   fail(e1 || e2, 'Could not load programs.')
@@ -740,12 +723,40 @@ function mapFull(f, school) {
 const mapSchool = (x) => x && ({ id: x.id, name: x.name, country: x.country, type: x.type, city: x.city, website: x.website || '', category: x.category || '', logoUrl: x.logo_url || logoFor(x.name), verified: x.verified, demo: x.demo, programCount: x.program_count ?? 0, imageUrl: x.image_url || '', imageCredit: x.image_credit || '', logoCredit: x.logo_credit || '', description: x.description || '', descriptionCredit: x.description_credit || '' })
 
 // One page of programmes (grouped by school, name and level). Returns { rows, total }.
-export async function searchPrograms({ scope, q = '', field = '', level = '', school = null, country = '', limit = 24, offset = 0 }) {
+async function searchProgramsRaw({ scope, q = '', field = '', level = '', school = null, country = '', limit = 24, offset = 0 }) {
   const { data, error } = await supabase.rpc('search_programs_c', { p_scope: toScope(scope), p_q: q, p_field: field, p_level: level, p_school: school, p_country: country, p_limit: limit, p_offset: offset })
   fail(error, 'Could not load programs.')
   const rows = (data || []).map((r) => ({
     id: r.id, schoolId: r.school_id, name: r.name, level: r.level, field: r.field, variantCount: r.variants, modes: r.modes || [],
     schoolName: r.school_name, schoolCity: r.school_city, schoolCountry: r.school_country, schoolLogo: r.school_logo || logoFor(r.school_name),
+  }))
+  return { rows, total: data?.[0] ? Number(data[0].total) : 0 }
+}
+
+// Results are remembered for the visit, so going back to a list does not search again. Failures are not kept.
+const SEARCH_TTL = 10 * 60 * 1000
+const searchCache = new Map()
+function remember(name, fn) {
+  return (args) => {
+    const key = `${name}|${JSON.stringify(args)}`
+    const hit = searchCache.get(key)
+    if (hit && Date.now() - hit.at < SEARCH_TTL) return hit.promise
+    const promise = fn(args)
+    searchCache.set(key, { at: Date.now(), promise })
+    promise.catch(() => searchCache.delete(key))
+    if (searchCache.size > 300) searchCache.delete(searchCache.keys().next().value)
+    return promise
+  }
+}
+export const clearSearchCache = () => searchCache.clear()
+
+// One page of schools from the server. Each comes with how many of its programs match the search and filters.
+async function searchSchoolsRaw({ scope, q = '', field = '', level = '', kind = '', country = '', limit = 12, offset = 0 }) {
+  const { data, error } = await supabase.rpc('search_schools', { p_scope: toScope(scope), p_q: q, p_field: field, p_level: level, p_kind: kind, p_country: country, p_limit: limit, p_offset: offset })
+  fail(error, 'Could not load schools.')
+  const rows = (data || []).map((r) => ({
+    school: { id: r.id, name: r.name, country: r.country, city: r.city, type: r.type, category: r.category || '', logoUrl: r.logo_url || logoFor(r.name), verified: r.verified, programCount: r.program_count },
+    count: r.program_count, matched: r.matched || 0, matches: r.matches || [],
   }))
   return { rows, total: data?.[0] ? Number(data[0].total) : 0 }
 }
@@ -785,3 +796,6 @@ export async function getProgramsFull(ids) {
   }
   return out
 }
+
+export const searchPrograms = remember('p', searchProgramsRaw)
+export const searchSchools = remember('s', searchSchoolsRaw)

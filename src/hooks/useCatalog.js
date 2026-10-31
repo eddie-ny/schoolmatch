@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { loadCatalog } from '../lib/api'
+import { loadCatalog, clearSearchCache } from '../lib/api'
 import { useAuth } from '../context/AuthContext'
 import { SHOW_INTERNATIONAL } from '../lib/constants'
 
@@ -45,7 +45,7 @@ function getCatalog(key) {
   return entry
 }
 
-export function clearCatalogCache() { cached = null }
+export function clearCatalogCache() { cached = null; clearSearchCache() }
 
 export function useCatalog() {
   const { user, access } = useAuth()

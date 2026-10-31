@@ -75,8 +75,8 @@ export function HeroArt() {
 export default function Home() {
   const { user, access } = useAuth()
   const nav = useNavigate()
-  const { schools, programs, scholarships, loading } = useCatalog()
-  const progCount = useMemo(() => { const m = {}; programs.forEach((p) => { m[p.schoolId] = (m[p.schoolId] || 0) + 1 }); return m }, [programs])
+  const { schools, scholarships, loading } = useCatalog()
+  const progCount = useMemo(() => Object.fromEntries(schools.map((x) => [x.id, x.programCount || 0])), [schools])
   const [where, setWhere] = useState('all')
   const [funding, setFunding] = useState('all')
   const [browse, setBrowse] = useState('schools')

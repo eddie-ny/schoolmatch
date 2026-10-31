@@ -1,3 +1,4 @@
+import { clearSearchCache } from '../lib/api'
 import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useScope } from '../hooks/useScope'
@@ -68,7 +69,7 @@ export default function Programs() {
         <div className="space-y-4">
           <p className="text-sm text-neutral-600" aria-live="polite">{loading ? 'Searching...' : `${total.toLocaleString()} program${total === 1 ? '' : 's'}${pages > 1 ? `, page ${Math.min(page, pages)} of ${pages.toLocaleString()}` : ''}`}</p>
           {saved.error && <p className="text-red-700 text-sm" role="alert">{saved.error}</p>}
-          {error && <p className="text-red-700 text-sm" role="alert">{error}</p>}
+          {error && <p className="text-red-700 text-sm" role="alert">{error} <button type="button" className="underline font-semibold" onClick={() => { clearSearchCache(); window.location.reload() }}>Try again</button></p>}
           {loading && rows.length === 0 ? <Spinner /> : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {rows.map((p) => <ProgramResult key={p.id} p={p} base={base} saved={saved.isSaved(p)} onToggle={saved.toggleProgram} />)}

@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { useCatalog, isLocal } from '../hooks/useCatalog'
+import { useCatalog, isLocal, clearCatalogCache } from '../hooks/useCatalog'
 import { FIELDS, SHOW_INTERNATIONAL } from '../lib/constants'
 import { Segmented, Spinner } from '../components/ui'
 import { SchoolCard, ScholarshipCard } from '../components/Cards'
@@ -75,7 +75,7 @@ export function HeroArt() {
 export default function Home() {
   const { user, access } = useAuth()
   const nav = useNavigate()
-  const { schools, scholarships, loading } = useCatalog()
+  const { schools, scholarships, loading, error } = useCatalog()
   const progCount = useMemo(() => Object.fromEntries(schools.map((x) => [x.id, x.programCount || 0])), [schools])
   const [where, setWhere] = useState('all')
   const [funding, setFunding] = useState('all')
@@ -163,6 +163,11 @@ export default function Home() {
 
         {loading ? (
           <Spinner />
+        ) : error ? (
+          <div role="alert" className="space-y-2">
+            <p className="text-red-700 text-sm">{error}</p>
+            <button type="button" className="btn btn-outline" onClick={() => { clearCatalogCache(); window.location.reload() }}>Try again</button>
+          </div>
         ) : results.length === 0 ? (
           <p className="text-neutral-600">Nothing matches these filters yet.</p>
         ) : (

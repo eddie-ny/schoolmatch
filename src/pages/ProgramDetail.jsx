@@ -1,3 +1,4 @@
+import { thumbUrl } from '../lib/thumb'
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
@@ -114,7 +115,7 @@ export default function ProgramDetail() {
         {/* Hero picture with the programme card floating over it, then the key facts strip over its bottom edge. */}
         <div className="relative rounded-3xl overflow-hidden border border-neutral-200 bg-white">
           {school?.imageUrl && !imgBad
-            ? <img src={school.imageUrl} alt="" onError={() => setImgBad(true)} className="absolute inset-0 h-full w-full object-cover" />
+            ? <img src={thumbUrl(school.imageUrl, 960)} alt="" decoding="async" onError={() => setImgBad(true)} className="absolute inset-0 h-full w-full object-cover" />
             : <div className="absolute inset-0 bg-gradient-to-br from-brand-green via-brand-green-soft to-brand-orange-soft" aria-hidden="true" />}
           <div className="relative p-4 md:p-6 pt-40 md:pt-6 pb-8 md:pb-14 md:min-h-[20rem]">
             <div className="bg-white rounded-2xl shadow-lg p-4 md:p-5 space-y-3 md:max-w-[22rem]">

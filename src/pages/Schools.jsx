@@ -1,3 +1,4 @@
+import { clearSearchCache } from '../lib/api'
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
@@ -70,7 +71,7 @@ export function Schools() {
         </div>
         <p className="text-sm text-neutral-600" aria-live="polite">{loading ? 'Searching...' : `${total.toLocaleString()} result${total === 1 ? '' : 's'}`}</p>
       </div>
-      {error && <p className="text-red-700 text-sm mb-3" role="alert">{error}</p>}
+      {error && <p className="text-red-700 text-sm mb-3" role="alert">{error} <button type="button" className="underline font-semibold" onClick={() => { clearSearchCache(); window.location.reload() }}>Try again</button></p>}
       {loading && rows.length === 0 ? <Spinner /> : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {rows.map(({ school, count, matches, matched }) => {

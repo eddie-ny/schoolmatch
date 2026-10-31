@@ -734,6 +734,14 @@ async function searchProgramsRaw({ scope, q = '', field = '', level = '', school
 }
 
 // Results are remembered for the visit, so going back to a list does not search again. Failures are not kept.
+// A search can fail for a moment (slow database, weak connection). Try again twice before giving up, so visitors do not see a blank list.
+export async function retrying(fn, tries = 3) {
+  let last
+  for (let i = 0; i < tries; i++) {
+    try { return await fn() } catch (e) { last = e; await new Promise((r) => setTimeout(r, 500 * (i + 1))) }
+  }
+  throw last
+}
 const SEARCH_TTL = 10 * 60 * 1000
 const searchCache = new Map()
 function remember(name, fn) {
@@ -741,7 +749,7 @@ function remember(name, fn) {
     const key = `${name}|${JSON.stringify(args)}`
     const hit = searchCache.get(key)
     if (hit && Date.now() - hit.at < SEARCH_TTL) return hit.promise
-    const promise = fn(args)
+    const promise = retrying(() => fn(args))
     searchCache.set(key, { at: Date.now(), promise })
     promise.catch(() => searchCache.delete(key))
     if (searchCache.size > 300) searchCache.delete(searchCache.keys().next().value)

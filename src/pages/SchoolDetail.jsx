@@ -1,3 +1,4 @@
+import { thumbUrl } from '../lib/thumb'
 import { useEffect, useState } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
@@ -42,7 +43,7 @@ export default function SchoolDetail() {
       <BackLink to={to('/schools')}>Back to schools</BackLink>
       <div className="rounded-3xl overflow-hidden border border-neutral-200 bg-white">
         {school.imageUrl && !imgBad
-          ? <img src={school.imageUrl} alt="" loading="lazy" onError={() => setImgBad(true)} className="h-32 md:h-48 w-full object-cover" />
+          ? <img src={thumbUrl(school.imageUrl, 960)} alt="" decoding="async" onError={() => setImgBad(true)} className="h-32 md:h-48 w-full object-cover" />
           : <div className="h-32 md:h-48 bg-gradient-to-br from-brand-green via-brand-green-soft to-brand-orange-soft" aria-hidden="true" />}
         <div className="p-5 md:p-6 flex flex-col md:flex-row md:items-start gap-4">
           <Monogram name={school.name} logo={school.logoUrl} kind={schoolCategory(school)} className="!w-20 !h-20 md:!w-28 md:!h-28 !rounded-2xl shadow-md border border-neutral-200 bg-white -mt-14 md:-mt-16 md:order-last shrink-0" />

@@ -1,3 +1,4 @@
+import { thumbUrl } from '../lib/thumb'
 // Result cards shared by Home, Find a School, School pages, Scholarships and Interested.
 import { useEffect, useRef, useState } from 'react'
 import { schoolCategory, schoolCategoryLabel } from '../lib/schoolCategory'
@@ -15,6 +16,7 @@ const KIND_ICONS = {
 }
 export function Monogram({ name, logo, kind, className = '' }) {
   const [broken, setBroken] = useState(false)
+  const [full, setFull] = useState(false)
   logo = logo || logoFor(name)
   if ((!logo || broken) && KIND_ICONS[kind]) {
     return (
@@ -26,7 +28,7 @@ export function Monogram({ name, logo, kind, className = '' }) {
   if (logo && !broken) {
     return (
       <span aria-hidden="true" className={`shrink-0 w-12 h-12 rounded-xl border border-neutral-200 bg-white flex items-center justify-center overflow-hidden ${className}`}>
-        <img src={logo} alt="" loading="lazy" className="max-w-full max-h-full object-contain p-1" onError={() => setBroken(true)} />
+        <img src={full ? logo : thumbUrl(logo, 250)} alt="" loading="lazy" decoding="async" className="max-w-full max-h-full object-contain p-1" onError={() => (!full && thumbUrl(logo, 250) !== logo ? setFull(true) : setBroken(true))} />
       </span>
     )
   }

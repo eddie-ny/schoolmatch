@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { loadCatalog, clearSearchCache } from '../lib/api'
+import { loadCatalog, clearSearchCache, retrying } from '../lib/api'
 import { useAuth } from '../context/AuthContext'
 import { SHOW_INTERNATIONAL } from '../lib/constants'
 
@@ -39,13 +39,14 @@ function shape(c) {
 function getCatalog(key) {
   if (cached && cached.key === key && Date.now() - cached.at < TTL) return cached
   const entry = { key, at: Date.now(), value: null }
-  entry.promise = loadCatalog().then((c) => (entry.value = shape(c)))
+  entry.promise = retrying(() => loadCatalog()).then((c) => (entry.value = shape(c)))
   entry.promise.catch(() => { if (cached === entry) cached = null })
   cached = entry
   return entry
 }
 
 export function clearCatalogCache() { cached = null; clearSearchCache() }
+export function retryCatalog() { cached = null }
 
 export function useCatalog() {
   const { user, access } = useAuth()

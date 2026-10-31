@@ -6,7 +6,7 @@ import { useSearchParams } from 'react-router-dom'
 import { PageTitle, Segmented, Spinner, Badge, RequireAuth } from '../components/ui'
 import { ProgramResult, asResult } from '../components/Browse'
 import { DEGREE_CLASSES, GRADES } from '../lib/constants'
-import { useDebounced } from '../components/Browse'
+import { useDebounced, useCountries } from '../components/Browse'
 import { getProgramsFull, searchPrograms } from '../lib/api'
 
 // Eligibility for the International path.
@@ -115,6 +115,11 @@ function InternationalEligibilityInner() {
   const [study, setStudy] = useState(params.get('program') || '')
   const dStudy = useDebounced(study)
   const [pool, setPool] = useState({ items: [], total: 0, busy: false })
+  // The student can choose up to 5 countries. None chosen means every country.
+  const MAX_COUNTRIES = 5
+  const [picked, setPicked] = useState([])
+  const countryList = useCountries('international')
+  const pickedKey = picked.join('|')
   const full = access.level === 'full'
   const schoolById = useMemo(() => Object.fromEntries(intl.schools.map((s) => [s.id, s])), [intl.schools])
   const masters = level === 'Masters'
@@ -127,11 +132,17 @@ function InternationalEligibilityInner() {
     if (!ready) { setPool({ items: [], total: 0, busy: false }); return }
     let live = true
     setPool((x) => ({ ...x, busy: true }))
-    searchPrograms({ scope: 'intl', q: dStudy, level: masters ? 'Masters' : 'Undergraduate', limit: 60, offset: 0 })
-      .then(async (r) => { const items = await getProgramsFull(r.rows.map((x) => x.id)); if (live) setPool({ items, total: r.total, busy: false }) })
+    const places = picked.length ? picked : ['']
+    Promise.all(places.map((country) => searchPrograms({ scope: 'intl', q: dStudy, level: masters ? 'Masters' : 'Undergraduate', country, limit: Math.max(12, Math.floor(60 / places.length)), offset: 0 })))
+      .then(async (rs) => {
+        const ids = [...new Set(rs.flatMap((r) => r.rows.map((x) => x.id)))]
+        const total = rs.reduce((n, r) => n + r.total, 0)
+        const items = await getProgramsFull(ids)
+        if (live) setPool({ items, total, busy: false })
+      })
       .catch(() => live && setPool({ items: [], total: 0, busy: false }))
     return () => { live = false }
-  }, [ready, masters, dStudy])
+  }, [ready, masters, dStudy, pickedKey])
 
   const rows = useMemo(() => {
     if (!ready) return []
@@ -157,6 +168,20 @@ function InternationalEligibilityInner() {
           <span className="block text-sm font-semibold mb-1">What do you want to study?</span>
           <input className="input" placeholder="For example nursing, computer science, law" value={study} onChange={(e) => setStudy(e.target.value)} />
         </label>
+        <div>
+          <span className="block text-sm font-semibold mb-1">Countries you want (up to {MAX_COUNTRIES})</span>
+          <div className="flex flex-wrap items-center gap-2">
+            {picked.map((c) => (
+              <button key={c} type="button" className="rounded-full border-2 border-brand-orange bg-brand-orange-soft px-3 py-1 text-sm font-semibold" onClick={() => setPicked((p) => p.filter((x) => x !== c))} aria-label={`Remove ${c}`}>{c} ✕</button>
+            ))}
+            {picked.length < MAX_COUNTRIES && (
+              <select className="input !w-auto" value="" onChange={(e) => e.target.value && setPicked((p) => [...p, e.target.value])} aria-label="Add a country">
+                <option value="">{picked.length ? 'Add another country' : 'Any country. Choose to narrow.'}</option>
+                {countryList.filter((c) => !picked.includes(c.country)).map((c) => <option key={c.country} value={c.country}>{c.country}</option>)}
+              </select>
+            )}
+          </div>
+        </div>
         {masters ? (
           <div className="grid sm:grid-cols-2 gap-3">
             <label className="block">

@@ -51,19 +51,31 @@ export default function Pricing() {
   }
 
   return (
-    <div className="max-w-2xl">
+    <div className="max-w-4xl">
       <PageTitle title="Pricing" sub="Start with the 24-hour free trial. Subscribe for full details." />
-      <div className="grid grid-cols-2 gap-4 mb-5">
-        {plans.map((p) => (
-          <button
-            key={p.id}
-            onClick={() => setPlan(p.id)}
-            className={`card text-left min-h-24 border-2 bg-white ${plan === p.id ? 'border-brand-orange bg-brand-orange-soft' : ''}`}
-          >
-            <p className="font-heading font-bold text-lg">{p.label}</p>
-            <p className="text-sm text-neutral-600">{p.price_minor ? money(p.price_minor, p.currency) : 'Price to be set'}</p>
-          </button>
-        ))}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
+        {plans.map((p) => {
+          const base = plans.find((x) => x.months === 1)
+          const perMonth = p.price_minor / p.months
+          const save = base?.price_minor && p.months > 1 ? Math.round((1 - perMonth / base.price_minor) * 100) : 0
+          const best = p.months === Math.max(...plans.map((x) => x.months))
+          const on = plan === p.id
+          return (
+            <button
+              key={p.id}
+              type="button"
+              onClick={() => setPlan(p.id)}
+              aria-pressed={on}
+              className={`relative card text-left border-2 bg-white flex flex-col gap-1 pt-6 transition ${on ? 'border-brand-orange bg-brand-orange-soft shadow-md' : 'border-neutral-200 hover:border-brand-orange/60'}`}
+            >
+              {best && <span className="absolute -top-3 left-4 rounded-full bg-brand-orange px-3 py-0.5 text-xs font-bold text-white">Best value</span>}
+              <p className="font-heading font-bold text-lg">{p.label}</p>
+              <p className="text-3xl font-bold leading-tight">{p.price_minor ? money(p.price_minor, p.currency) : 'Price to be set'}</p>
+              {p.price_minor > 0 && p.months > 1 && <p className="text-sm text-neutral-600">{money(Math.round(perMonth), p.currency)} a month</p>}
+              {save > 0 && <span className="mt-1 self-start rounded-full bg-brand-green-soft px-2.5 py-0.5 text-xs font-bold text-neutral-800">Save {save}%</span>}
+            </button>
+          )
+        })}
       </div>
 
       <div className="card space-y-4 bg-white">
@@ -76,6 +88,9 @@ export default function Pricing() {
         ) : (
           <Link to="/signup" className="btn btn-orange w-full">Sign up to subscribe</Link>
         )}
+        <p className="text-sm text-neutral-700 bg-brand-orange-soft rounded-xl p-3">
+          For your safety: do not let your browser or phone save your card or Mobile Money details. Enter them each time on Paystack's page, and never share your PIN or OTP with anyone, including us.
+        </p>
         <p className="text-xs text-neutral-500">
           You pay on Paystack's secure page by card or Mobile Money. Your plan starts only after Paystack confirms the payment to our server. If you subscribe again before your plan ends, the new time is added to the end of it. Auto-renew is not available yet.
         </p>

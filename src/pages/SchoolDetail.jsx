@@ -5,7 +5,8 @@ import { useAuth } from '../context/AuthContext'
 import { useScope } from '../hooks/useScope'
 import { useSaved } from '../hooks/useSaved'
 import { BackLink, Badge, Gate, Pagination, Spinner } from '../components/ui'
-import { Monogram } from '../components/Cards'
+import { Monogram, ScholarshipCard } from '../components/Cards'
+import { useCatalog } from '../hooks/useCatalog'
 import { ProgramResult, SearchBar, useFields, useProgramSearch, PAGE_SIZE } from '../components/Browse'
 import { getSchool } from '../lib/api'
 import { schoolCategory, schoolCategoryLabel } from '../lib/schoolCategory'
@@ -15,6 +16,8 @@ export default function SchoolDetail() {
   const { id } = useParams()
   const { user, access } = useAuth()
   const { scope, base, to } = useScope()
+  const cat = useCatalog()
+  const schoolScholarships = [...cat.scholarships, ...(cat.intl?.scholarships || [])].filter((x) => String(x.schoolId) === String(id))
   const saved = useSaved()
   const [params, setParams] = useSearchParams()
   const [school, setSchool] = useState(undefined)
@@ -70,6 +73,16 @@ export default function SchoolDetail() {
           <h2 className="text-xl font-bold">About {school.name}</h2>
           <p className="text-neutral-800 break-words">{school.description}</p>
           {(school.descriptionCredit || school.imageCredit || school.logoCredit) && <p className="text-xs text-neutral-500">{[school.descriptionCredit, school.imageCredit, school.logoCredit].filter(Boolean).join(' | ')}</p>}
+        </section>
+      )}
+
+      {schoolScholarships.length > 0 && (
+        <section className="space-y-3">
+          <h2 className="text-xl font-bold">Scholarships at {school.name}</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {schoolScholarships.map((x) => <ScholarshipCard key={x.id} s={x} />)}
+          </div>
+          <p className="text-sm text-neutral-600">Check Eligibility also tells you which of these you fit.</p>
         </section>
       )}
 

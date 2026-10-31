@@ -2,8 +2,9 @@ import { useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useEffect } from 'react'
-import { listEligibilityPrograms, checkEligibility, checkMastersEligibility, checkTopupEligibility } from '../lib/api'
+import { listSchoolScholarships, listEligibilityPrograms, checkEligibility, checkMastersEligibility, checkTopupEligibility } from '../lib/api'
 import { CORE_SUBJECTS, ELECTIVE_SUBJECTS, GRADES, DISCLAIMER, FIELDS, SHOW_INTERNATIONAL, DEGREE_CLASSES } from '../lib/constants'
+import { matchScholarship } from '../lib/scholarshipMatch'
 import { Badge, Field, Gate, PagedGrid, PageTitle, RequireAuth, Segmented, Spinner } from '../components/ui'
 
 const labelTone = {
@@ -38,7 +39,32 @@ function GradeSelect({ value, onChange }) {
   )
 }
 
-function ResultCard({ item, highlight }) {
+const schState = { meets: ['You fit', 'green'], below: ['Not a fit', 'orange'], unknown: ['Check details', 'gray'], closed: ['Closed', 'gray'] }
+
+// Scholarships at this school, each checked against what the student entered.
+function SchoolScholarships({ list, me }) {
+  if (!list?.length) return null
+  const rows = list.map((s) => ({ s, m: matchScholarship(s, me) })).sort((a, b) => ['meets', 'unknown', 'below', 'closed'].indexOf(a.m.state) - ['meets', 'unknown', 'below', 'closed'].indexOf(b.m.state))
+  return (
+    <div className="rounded-xl bg-neutral-50 border border-neutral-200 p-3 space-y-2">
+      <p className="text-sm font-semibold">Scholarships at this school ({rows.length})</p>
+      <ul className="space-y-2">
+        {rows.map(({ s, m }) => (
+          <li key={s.id} className="text-sm">
+            <div className="flex flex-wrap items-center gap-2">
+              <Link to={`/local/scholarships/${s.id}`} target="_blank" rel="noreferrer" className="font-semibold hover:underline">{s.name}</Link>
+              <Badge tone={schState[m.state][1]}>{schState[m.state][0]}</Badge>
+              <Badge>{s.fundingType} funding</Badge>
+            </div>
+            <ul className="list-disc ml-5 text-neutral-700">{m.reasons.slice(0, 3).map((r) => <li key={r}>{r}</li>)}</ul>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
+function ResultCard({ item, highlight, scholarships, me }) {
   const [more, setMore] = useState(false)
   const classLabel = ['Meets stated class', 'Below stated class', 'Class not published', 'Meets stated CGPA', 'Below stated CGPA', 'Asks for CGPA'].includes(item.label)
   // One short line that says what the school wants. The long text sits behind Details.
@@ -65,6 +91,7 @@ function ResultCard({ item, highlight }) {
       {item.failures && item.failures.length > 0 && (
         <ul className="list-disc ml-5 text-sm text-neutral-700">{item.failures.slice(0, 3).map((f) => <li key={f}>{f}</li>)}</ul>
       )}
+      {scholarships && !outOfReach(item) && <SchoolScholarships list={scholarships} me={{ ...me, aggregate: item.aggregate ?? null }} />}
       {long.length > 0 && (
         <div>
           <button type="button" className="text-sm underline" onClick={() => setMore(!more)} aria-expanded={more}>{more ? 'Hide details' : 'Details'}</button>
@@ -150,6 +177,17 @@ function EligibilityInner() {
   const [field, setField] = useState('')
   const [programName, setProgramName] = useState('')
   const [output, setOutput] = useState(null)
+  // Scholarships that belong to the schools in the results, fetched once per search.
+  const [schol, setSchol] = useState({ bySchool: {}, schoolOf: {} })
+  useEffect(() => {
+    let live = true
+    const all = [...(output?.targets || []), ...(output?.others || [])]
+    if (!output || output.locked || !all.length) { setSchol({ bySchool: {}, schoolOf: {} }); return }
+    listSchoolScholarships(all.map((r) => r.programId)).then((x) => live && setSchol(x)).catch(() => {})
+    return () => { live = false }
+  }, [output])
+  const schFor = (r) => schol.bySchool[schol.schoolOf[r.programId]]
+  const me = { gender: user?.profile?.gender || '', sat: sat || user?.results?.sat || '' }
   const [error, setError] = useState('')
 
   const scoped = useMemo(
@@ -347,15 +385,15 @@ function EligibilityInner() {
           <p>Your qualification: <b>{output.yourQualification}</b>. Each school sets its own entry rules, so confirm with the school before you apply.</p>
           <h3 className="font-semibold">Schools offering {output.programName}</h3>
           {output.targets.length === 0 && <p className="text-neutral-600">No schools offer this top-up program yet.</p>}
-          <PagedGrid items={output.targets} render={(r) => <ResultCard key={r.programId} item={r} highlight />} />
+          <PagedGrid items={output.targets} render={(r) => <ResultCard key={r.programId} item={r} highlight scholarships={schFor(r)} me={me} />} />
           <h3 className="font-semibold">All top-up programs you qualify for</h3>
           <p className="text-sm text-neutral-600">Every top-up program your qualification fits, including ones you did not choose. Tap a program name to open its page.</p>
           {output.others.filter((r) => !outOfReach(r)).length === 0 && <p className="text-neutral-600">No other top-up programs match your qualification yet.</p>}
-          <PagedGrid items={output.others.filter((r) => !outOfReach(r))} render={(r) => <ResultCard key={r.programId} item={r} />} />
+          <PagedGrid items={output.others.filter((r) => !outOfReach(r))} render={(r) => <ResultCard key={r.programId} item={r} scholarships={schFor(r)} me={me} />} />
           {output.others.some(outOfReach) && (
             <details className="card">
               <summary className="font-semibold cursor-pointer">Top-up programs you do not qualify for yet ({output.others.filter(outOfReach).length})</summary>
-              <PagedGrid items={output.others.filter(outOfReach)} render={(r) => <ResultCard key={r.programId} item={r} />} />
+              <PagedGrid items={output.others.filter(outOfReach)} render={(r) => <ResultCard key={r.programId} item={r} scholarships={schFor(r)} me={me} />} />
             </details>
           )}
         </section>
@@ -367,15 +405,15 @@ function EligibilityInner() {
           <p>Your first-degree class: <b>{output.yourClass}</b>. Each school sets its own entry rules, so confirm with the school before you apply.</p>
           <h3 className="font-semibold">Schools offering {output.programName}</h3>
           {output.targets.length === 0 && <p className="text-neutral-600">No schools offer this masters program yet.</p>}
-          <PagedGrid items={byClass(output.targets)} render={(r) => <ResultCard key={r.programId} item={r} highlight />} />
+          <PagedGrid items={byClass(output.targets)} render={(r) => <ResultCard key={r.programId} item={r} highlight scholarships={schFor(r)} me={me} />} />
           <h3 className="font-semibold">All masters programs you qualify for</h3>
           <p className="text-sm text-neutral-600">Every masters program your degree class fits, including ones you did not choose. Programs that state no minimum class are included, so check with the school. Tap a program name to open its page.</p>
           {output.others.filter((r) => !outOfReach(r)).length === 0 && <p className="text-neutral-600">No other masters programs match your degree class yet.</p>}
-          <PagedGrid items={byClass(output.others.filter((r) => !outOfReach(r)))} render={(r) => <ResultCard key={r.programId} item={r} />} />
+          <PagedGrid items={byClass(output.others.filter((r) => !outOfReach(r)))} render={(r) => <ResultCard key={r.programId} item={r} scholarships={schFor(r)} me={me} />} />
           {output.others.some(outOfReach) && (
             <details className="card">
               <summary className="font-semibold cursor-pointer">Masters programs you do not qualify for yet ({output.others.filter(outOfReach).length})</summary>
-              <PagedGrid items={output.others.filter(outOfReach)} render={(r) => <ResultCard key={r.programId} item={r} />} />
+              <PagedGrid items={output.others.filter(outOfReach)} render={(r) => <ResultCard key={r.programId} item={r} scholarships={schFor(r)} me={me} />} />
             </details>
           )}
         </section>
@@ -397,18 +435,18 @@ function EligibilityInner() {
           {output.targets.length > 0 && qualified.length === 0 && (
             <p className="text-neutral-600">{longShots.length > 0 ? 'None of these schools is a realistic match for your aggregate yet. The ones where you meet the entry requirements but are well above the cut-off are listed below.' : 'You do not meet the entry requirements for any school offering this program yet. What is missing for each school is listed below.'}</p>
           )}
-          <PagedGrid items={qualified} render={(r) => <ResultCard key={r.programId} item={r} highlight />} />
+          <PagedGrid items={qualified} render={(r) => <ResultCard key={r.programId} item={r} highlight scholarships={schFor(r)} me={me} />} />
           {longShots.length > 0 && (
             <details className="card" open={qualified.length === 0 && notYet.length === 0}>
               <summary className="font-semibold cursor-pointer">Schools offering {output.programName} where your aggregate is well above the cut-off ({longShots.length})</summary>
               <p className="text-sm text-neutral-600 mt-2">You meet the entry requirements, but admission is unlikely with your aggregate.</p>
-              <PagedGrid items={longShots} render={(r) => <ResultCard key={r.programId} item={r} />} />
+              <PagedGrid items={longShots} render={(r) => <ResultCard key={r.programId} item={r} scholarships={schFor(r)} me={me} />} />
             </details>
           )}
           {notYet.length > 0 && (
             <details className="card" open={qualified.length === 0 && longShots.length === 0}>
               <summary className="font-semibold cursor-pointer">Schools offering {output.programName} that you do not qualify for yet ({notYet.length})</summary>
-              <PagedGrid items={notYet} render={(r) => <ResultCard key={r.programId} item={r} />} />
+              <PagedGrid items={notYet} render={(r) => <ResultCard key={r.programId} item={r} scholarships={schFor(r)} me={me} />} />
             </details>
           )}
 
@@ -419,17 +457,17 @@ function EligibilityInner() {
               : 'These are every program your results qualify for, including ones you did not choose. Tap a program name to open its page.'}
           </p>
           {othersQualify.length === 0 && <p className="text-neutral-600">No other programs match your results yet.</p>}
-          <PagedGrid items={othersQualify} render={(r) => <ResultCard key={r.programId} item={r} />} />
+          <PagedGrid items={othersQualify} render={(r) => <ResultCard key={r.programId} item={r} scholarships={schFor(r)} me={me} />} />
           {othersLong.length > 0 && (
             <details className="card">
               <summary className="font-semibold cursor-pointer">Other programs where your aggregate is well above the cut-off ({othersLong.length})</summary>
-              <PagedGrid items={othersLong} render={(r) => <ResultCard key={r.programId} item={r} />} />
+              <PagedGrid items={othersLong} render={(r) => <ResultCard key={r.programId} item={r} scholarships={schFor(r)} me={me} />} />
             </details>
           )}
           {othersNot.length > 0 && (
             <details className="card">
               <summary className="font-semibold cursor-pointer">Programs you do not qualify for yet ({othersNot.length})</summary>
-              <PagedGrid items={othersNot} render={(r) => <ResultCard key={r.programId} item={r} />} />
+              <PagedGrid items={othersNot} render={(r) => <ResultCard key={r.programId} item={r} scholarships={schFor(r)} me={me} />} />
             </details>
           )}
           <p className="text-xs text-neutral-500">{DISCLAIMER}</p>

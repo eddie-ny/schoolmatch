@@ -337,6 +337,7 @@ export async function loadCatalog() {
     const f = fullSch[x.id] || {}
     return {
       id: x.id, name: x.name, funder: x.funder, country: x.country, fundingType: x.funding_type, verified: x.verified, demo: x.demo,
+      schoolId: x.school_id ?? f.school_id ?? null, field: f.field || '', sourceUrl: f.source_url || '', awardNote: f.award_note || '',
       gender: x.gender ?? f.gender ?? null, // 'female' or 'male' when only that gender can apply
       level: f.level || '', minAggregate: f.min_aggregate ?? null, minSat: f.min_sat ?? null,
       criteria: f.criteria || '', deadline: f.deadline || '', link: f.link || '',
@@ -457,6 +458,22 @@ export async function deleteDemoData() {
   }
   fail((await supabase.from('schools').delete().eq('demo', true)).error, 'Could not remove sample schools (they may still have real programs).')
   fail((await supabase.from('scholarships').delete().eq('demo', true)).error, 'Could not remove sample scholarships.')
+}
+
+// Scholarships that belong to the schools behind a set of programme results, with the school each programme is at.
+// Needs a full plan (the database decides). Returns empty if the school link is not set up yet, so eligibility still works.
+export async function listSchoolScholarships(programIds) {
+  const ids = [...new Set(programIds.filter(Boolean))]
+  if (!ids.length) return { bySchool: {}, schoolOf: {} }
+  const { data: progs } = await supabase.from('programs_summary').select('id, school_id').in('id', ids)
+  const schoolOf = Object.fromEntries((progs || []).map((p) => [p.id, p.school_id]))
+  const schoolIds = [...new Set(Object.values(schoolOf))]
+  if (!schoolIds.length) return { bySchool: {}, schoolOf }
+  const { data, error } = await supabase.from('scholarships').select('id, name, funder, country, funding_type, level, min_aggregate, min_sat, gender, deadline, link, criteria, school_id, field, award_note').in('school_id', schoolIds)
+  if (error) return { bySchool: {}, schoolOf }
+  const bySchool = {}
+  for (const x of data || []) (bySchool[x.school_id] ||= []).push({ id: x.id, name: x.name, funder: x.funder, country: x.country, fundingType: x.funding_type, level: x.level || '', minAggregate: x.min_aggregate, minSat: x.min_sat, gender: x.gender, deadline: x.deadline || '', link: x.link || '', criteria: x.criteria || '', schoolId: x.school_id, field: x.field || '', awardNote: x.award_note || '' })
+  return { bySchool, schoolOf }
 }
 
 // Program names for the eligibility pickers. Only the teaser columns, which visitors may read.

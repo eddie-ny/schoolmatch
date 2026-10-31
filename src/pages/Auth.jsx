@@ -51,6 +51,7 @@ export function Login() {
         <Field label="Password"><PasswordInput required autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} /></Field>
         {error && <p className="text-red-700 text-sm">{error}</p>}
         <button className="btn btn-orange w-full" disabled={busy}>{busy ? 'Signing in...' : 'Sign in'}</button>
+        <p className="text-xs text-neutral-600 bg-neutral-100 rounded-xl p-3">On a phone or computer that other people use, do not let the browser save your password. Sign out when you finish.</p>
         <p className="text-sm"><Link to="/forgot-password" className="underline inline-block py-3">Forgot your password?</Link></p>
         <p className="text-sm">New here? <Link to="/signup" className="underline font-semibold inline-block py-2">Create an account</Link></p>
       </form>
@@ -190,6 +191,7 @@ export function Signup() {
 
         {error && <p className="text-red-700 text-sm">{error}</p>}
         <button className="btn btn-orange w-full" disabled={busy}>{busy ? 'Creating...' : 'Create account'}</button>
+        <p className="text-xs text-neutral-600 bg-neutral-100 rounded-xl p-3">On a phone or computer that other people use, do not let the browser save your password. Sign out when you finish.</p>
         <p className="text-sm">Already have an account? <Link to="/login" className="underline font-semibold inline-block py-2">Sign in</Link></p>
       </form>
     </div>

@@ -64,8 +64,14 @@ function summarise(checks) {
   return { text: 'Meets the requirements', tone: 'green', order: 0 }
 }
 
-function mastersLabel(p, cls) {
-  if (!p.minDegreeClass) return { text: 'No minimum class stated', tone: 'gray', order: 2 }
+function mastersLabel(p, cls, gpa) {
+  const g = parseFloat(gpa)
+  // A GPA only counts when the student gave one and the school states a minimum.
+  if (p.minGpa != null && Number.isFinite(g) && g < p.minGpa) return { text: `Below the stated GPA (${p.minGpa.toFixed(2)})`, tone: 'orange', order: 3 }
+  if (!p.minDegreeClass) {
+    if (p.minGpa != null) return Number.isFinite(g) ? { text: 'Meets the stated GPA', tone: 'green', order: 0 } : { text: `Needs a GPA of ${p.minGpa.toFixed(2)}. Enter yours to check.`, tone: 'gray', order: 2 }
+    return { text: 'No minimum class stated', tone: 'gray', order: 2 }
+  }
   return rank(cls) !== -1 && rank(cls) <= rank(p.minDegreeClass)
     ? { text: 'Meets the stated class', tone: 'green', order: 0 }
     : { text: `Below the stated class (${p.minDegreeClass})`, tone: 'orange', order: 3 }
@@ -100,6 +106,7 @@ function InternationalEligibilityInner() {
     return v && /^\d{3,4}$/.test(v) ? v : ''
   })
   const [cls, setCls] = useState('')
+  const [gpa, setGpa] = useState('')
   const [grades, setGrades] = useState(() => gradesFromSaved(user?.results))
   const [note, setNote] = useState('')
   const [test, setTest] = useState('none')
@@ -132,12 +139,12 @@ function InternationalEligibilityInner() {
     return pool.items
       .filter((p) => masters === (p.level === 'Masters'))
       .map((p) => {
-        if (masters) return { p, lab: mastersLabel(p, cls), checks: [] }
+        if (masters) return { p, lab: mastersLabel(p, cls, gpa), checks: [] }
         const checks = bachelorsChecks(p, me)
         return { p, lab: summarise(checks), checks }
       })
       .sort((a, b) => a.lab.order - b.lab.order || a.p.name.localeCompare(b.p.name))
-  }, [pool.items, masters, cls, grades, satNum, test, score, ready])
+  }, [pool.items, masters, cls, gpa, grades, satNum, test, score, ready])
 
   const setGrade = (i, v) => setGrades((g) => g.map((x, j) => (j === i ? v : x)))
 
@@ -151,13 +158,20 @@ function InternationalEligibilityInner() {
           <input className="input" placeholder="For example nursing, computer science, law" value={study} onChange={(e) => setStudy(e.target.value)} />
         </label>
         {masters ? (
-          <label className="block">
-            <span className="block text-sm font-semibold mb-1">Your first degree class</span>
-            <select className="input" value={cls} onChange={(e) => setCls(e.target.value)}>
-              <option value="">Choose one</option>
-              {DEGREE_CLASSES.map((c) => <option key={c}>{c}</option>)}
-            </select>
-          </label>
+          <div className="grid sm:grid-cols-2 gap-3">
+            <label className="block">
+              <span className="block text-sm font-semibold mb-1">Your first degree class</span>
+              <select className="input" value={cls} onChange={(e) => setCls(e.target.value)}>
+                <option value="">Choose one</option>
+                {DEGREE_CLASSES.map((c) => <option key={c}>{c}</option>)}
+              </select>
+            </label>
+            <label className="block">
+              <span className="block text-sm font-semibold mb-1">Your GPA out of 4.0 (optional)</span>
+              <input className="input" inputMode="decimal" placeholder="For example 3.4" value={gpa} onChange={(e) => setGpa(e.target.value.replace(/[^0-9.]/g, '').slice(0, 4))} />
+              <span className="block text-xs text-neutral-600 mt-1">Some schools state a minimum GPA. Leave it blank if you do not know it.</span>
+            </label>
+          </div>
         ) : (
           <>
             <div>

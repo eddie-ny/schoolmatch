@@ -91,10 +91,10 @@ export function ProgramCard({ p, school, full, saved, onToggle, hideSchool = fal
         </div>
         {full ? (
           masters ? (
-            p.minDegreeClass && (
+            (p.minDegreeClass || p.minGpa != null) && (
               <dl className="text-sm grid grid-cols-2 gap-x-4 gap-y-1">
-                <dt className="text-neutral-500">Degree class needed</dt>
-                <dd>{p.minDegreeClass}</dd>
+                {p.minDegreeClass && (<><dt className="text-neutral-500">Degree class needed</dt><dd>{p.minDegreeClass}</dd></>)}
+                {p.minGpa != null && (<><dt className="text-neutral-500">Minimum GPA</dt><dd>{p.minGpa.toFixed(2)} out of 4.0</dd></>)}
               </dl>
             )
           ) : p.entryQualification ? (
@@ -161,6 +161,7 @@ export function ProgramBody({ p, variants = [p], school }) {
             {(v.minIelts != null || v.minToefl != null || v.minDuolingo != null || v.englishTestWaiver) && (<><dt className="text-neutral-500">English</dt><dd>{[v.englishTestWaiver && 'No test needed for Ghanaian citizens', v.minIelts != null && `IELTS ${v.minIelts}`, v.minToefl != null && `TOEFL ${v.minToefl}`, v.minDuolingo != null && `Duolingo ${v.minDuolingo}`].filter(Boolean).join(', ')}</dd></>)}
             {v.durationYears != null && (<><dt className="text-neutral-500">Duration</dt><dd>{v.durationYears} years</dd></>)}
             {v.minDegreeClass && (<><dt className="text-neutral-500">Degree class needed</dt><dd>{v.minDegreeClass}</dd></>)}
+            {v.minGpa != null && (<><dt className="text-neutral-500">Minimum GPA</dt><dd>{v.minGpa.toFixed(2)} out of 4.0</dd></>)}
             {v.feesGhs != null && (<><dt className="text-neutral-500">Fees</dt><dd>GHS {Number(v.feesGhs).toLocaleString()}</dd></>)}
             {v.feesUsd != null && (<><dt className="text-neutral-500">Fees</dt><dd>USD {Number(v.feesUsd).toLocaleString()}</dd></>)}
           </dl>

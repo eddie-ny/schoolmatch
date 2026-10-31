@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { SHS_PROGRAMS } from '../lib/constants'
+import { FIELDS, SHS_PROGRAMS } from '../lib/constants'
 import { Badge, Field, PageTitle, RequireAuth, SectionLabel } from '../components/ui'
 import { saveAccount } from '../lib/api'
 import { timeLeft } from '../lib/access'
@@ -118,6 +118,21 @@ function ProfileInner() {
             <option>Self-funded</option>
             <option>Partial funding</option>
             <option>Fully funded</option>
+          </select>
+        </Field>
+        <Field label="What do you want to study? (optional)">
+          <select className="input" value={p.studyLevel || ''} onChange={(e) => setP({ ...p, studyLevel: e.target.value })}>
+            <option value="">Level</option>
+            <option>Bachelors</option>
+            <option>Masters</option>
+            <option>Diploma</option>
+            <option>Certificate</option>
+          </select>
+        </Field>
+        <Field label="Field you are interested in (optional)">
+          <select className="input" value={p.studyField || ''} onChange={(e) => setP({ ...p, studyField: e.target.value })}>
+            <option value="">Choose a field</option>
+            {FIELDS.map((f) => <option key={f.id}>{f.id}</option>)}
           </select>
         </Field>
         <Field label="Desired programs (optional)"><input className="input" placeholder="e.g. Computer Science, Engineering" value={p.desiredPrograms} onChange={(e) => setP({ ...p, desiredPrograms: e.target.value })} /></Field>

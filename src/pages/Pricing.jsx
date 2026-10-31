@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { listPlans, startCheckout, verifyPayment } from '../lib/api'
+import { getRate, listPlans, startCheckout, verifyPayment } from '../lib/api'
 import { PageTitle } from '../components/ui'
 
+const usd = (cents) => `USD ${(cents / 100).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`
 const money = (minor, currency) => `${currency} ${(minor / 100).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`
 
 export default function Pricing() {
@@ -15,7 +16,8 @@ export default function Pricing() {
   const [msg, setMsg] = useState('')
   const [error, setError] = useState('')
 
-  useEffect(() => { listPlans().then(setPlans).catch((e) => setError(e.message)) }, [])
+  const [rate, setRate] = useState(null)
+  useEffect(() => { listPlans().then(setPlans).catch((e) => setError(e.message)); getRate().then(setRate).catch(() => {}) }, [])
 
   // Paystack sends the person back here with ?reference=... . We ask the server to confirm it.
   const reference = params.get('reference') || params.get('trxref')
@@ -56,8 +58,11 @@ export default function Pricing() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
         {plans.map((p) => {
           const base = plans.find((x) => x.months === 1)
-          const perMonth = p.price_minor / p.months
-          const save = base?.price_minor && p.months > 1 ? Math.round((1 - perMonth / base.price_minor) * 100) : 0
+          const hasUsd = p.price_usd_cents > 0
+          const main = hasUsd ? p.price_usd_cents : p.price_minor
+          const baseMain = hasUsd ? base?.price_usd_cents : base?.price_minor
+          const perMonth = main / p.months
+          const save = baseMain && p.months > 1 ? Math.round((1 - perMonth / baseMain) * 100) : 0
           const best = p.months === Math.max(...plans.map((x) => x.months))
           const on = plan === p.id
           return (
@@ -70,8 +75,9 @@ export default function Pricing() {
             >
               {best && <span className="absolute -top-3 left-4 rounded-full bg-brand-orange px-3 py-0.5 text-xs font-bold text-white">Best value</span>}
               <p className="font-heading font-bold text-lg">{p.label}</p>
-              <p className="text-3xl font-bold leading-tight">{p.price_minor ? money(p.price_minor, p.currency) : 'Price to be set'}</p>
-              {p.price_minor > 0 && p.months > 1 && <p className="text-sm text-neutral-600">{money(Math.round(perMonth), p.currency)} a month</p>}
+              <p className="text-3xl font-bold leading-tight">{main ? (hasUsd ? usd(main) : money(main, p.currency)) : 'Price to be set'}</p>
+              {hasUsd && p.price_minor > 0 && <p className="text-sm text-neutral-600">about {money(p.price_minor, p.currency)}</p>}
+              {main > 0 && p.months > 1 && <p className="text-sm text-neutral-600">{hasUsd ? usd(Math.round(perMonth)) : money(Math.round(perMonth), p.currency)} a month</p>}
               {save > 0 && <span className="mt-1 self-start rounded-full bg-brand-green-soft px-2.5 py-0.5 text-xs font-bold text-neutral-800">Save {save}%</span>}
             </button>
           )
@@ -91,6 +97,9 @@ export default function Pricing() {
         <p className="text-sm text-neutral-700 bg-brand-orange-soft rounded-xl p-3">
           For your safety: do not let your browser or phone save your card or Mobile Money details. Enter them each time on Paystack's page, and never share your PIN or OTP with anyone, including us.
         </p>
+        {chosen?.price_usd_cents > 0 && rate && (
+          <p className="text-xs text-neutral-500">Prices are in US dollars. Paystack charges the cedi amount shown, worked out at GHS {rate.perUsd.toFixed(2)} to USD 1 (updated {new Date(rate.updatedAt).toLocaleDateString()}). Your bank may add its own charges.</p>
+        )}
         <p className="text-xs text-neutral-500">
           You pay on Paystack's secure page by card or Mobile Money. Your plan starts only after Paystack confirms the payment to our server. If you subscribe again before your plan ends, the new time is added to the end of it. Auto-renew is not available yet.
         </p>

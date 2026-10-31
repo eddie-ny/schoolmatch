@@ -192,6 +192,8 @@ export async function getCurrentUser() {
       shsProgram: p.shs_program || '',
       fundingType: p.funding_type || '',
       desiredPrograms: p.desired_programs || '',
+      studyLevel: p.study_level || '',
+      studyField: p.study_field || '',
       gender: p.gender || '',
     },
     parent: parent.data ? { name: parent.data.name, phone: parent.data.phone, email: parent.data.email, confirmedAt: parent.data.confirmed_at } : null,
@@ -203,16 +205,16 @@ export async function getCurrentUser() {
 
 // ---------- Profile ----------
 export async function saveProfile(userId, profile) {
-  const { error } = await supabase
-    .from('profiles')
-    .update({
-      shs_attended: profile.shsAttended,
-      shs_program: profile.shsProgram,
-      funding_type: profile.fundingType || null,
-      desired_programs: profile.desiredPrograms,
-      gender: profile.gender || null,
-    })
-    .eq('id', userId)
+  const base = {
+    shs_attended: profile.shsAttended,
+    shs_program: profile.shsProgram,
+    funding_type: profile.fundingType || null,
+    desired_programs: profile.desiredPrograms,
+    gender: profile.gender || null,
+  }
+  let { error } = await supabase.from('profiles').update({ ...base, study_level: profile.studyLevel || null, study_field: profile.studyField || null }).eq('id', userId)
+  // If the database does not have the study columns yet, save everything else so the student is not blocked.
+  if (error && /study_(level|field)/.test(error.message || '')) ({ error } = await supabase.from('profiles').update(base).eq('id', userId))
   fail(error, 'Could not save your profile.')
 }
 
@@ -532,9 +534,39 @@ export async function importPlans(rows) {
 }
 
 export async function listPlans() {
-  const { data, error } = await supabase.from('plans').select('id, label, months, price_minor, currency').order('sort')
-  fail(error, 'Could not load plans.')
+  let res = await supabase.from('plans').select('id, label, months, price_minor, currency, price_usd_cents').order('sort')
+  if (res.error) res = await supabase.from('plans').select('id, label, months, price_minor, currency').order('sort') // USD column not added yet
+  fail(res.error, 'Could not load plans.')
+  return res.data
+}
+
+// The GHS per USD rate used to turn USD prices into the amount charged. Null until the database has it.
+export async function getRate() {
+  const { data } = await supabase.from('fx_rates').select('per_usd, updated_at, source').eq('currency', 'GHS').maybeSingle()
+  return data ? { perUsd: Number(data.per_usd), updatedAt: data.updated_at, source: data.source || '' } : null
+}
+
+// Owner only. The database refuses anyone else.
+export async function ownerGrantPlan(userId, plan, reason) {
+  const { data, error } = await supabase.rpc('admin_grant_plan', { p_user: userId, p_plan: plan, p_reason: reason || null })
+  fail(error, 'Could not give the plan.')
   return data
+}
+export async function ownerEndPlan(userId, reason) {
+  fail((await supabase.rpc('admin_end_plan', { p_user: userId, p_reason: reason || null })).error, 'Could not end the plan.')
+}
+export async function ownerSetRate(rate) {
+  fail((await supabase.rpc('admin_set_rate', { p_rate: rate })).error, 'Could not save the rate.')
+}
+export async function getAccessBreakdown() {
+  const { data, error } = await supabase.rpc('admin_access_breakdown')
+  fail(error, 'Could not load the access numbers.')
+  return data
+}
+export async function getStudyInterest() {
+  const { data, error } = await supabase.rpc('admin_study_interest')
+  fail(error, 'Could not load what students want to study.')
+  return data || { byLevel: [], byField: [] }
 }
 
 // The server looks up the price itself. The browser only says which plan.

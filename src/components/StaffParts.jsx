@@ -1,7 +1,7 @@
 // Pieces shared by the Admin page and the Support page.
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { activateAccount, acceptParent, createParentLink, cancelInvite, deleteAccount, listArchive, getAdminStats, getAdminChart, getAdminInterest, inviteStaff, listInvites, listStaff, setStaffRole, staffCreateStudent, staffUpdateProfile } from '../lib/api'
+import { activateAccount, acceptParent, createParentLink, cancelInvite, deleteAccount, listArchive, listPlans, ownerGrantPlan, ownerEndPlan, getAccessBreakdown, getStudyInterest, getAdminStats, getAdminChart, getAdminInterest, inviteStaff, listInvites, listStaff, setStaffRole, staffCreateStudent, staffUpdateProfile } from '../lib/api'
 import { Badge, ConfirmDialog, Field, Spinner } from './ui'
 
 const ROLE_LABEL = { owner: 'Super admin', admin: 'Admin', support: 'Support' }
@@ -89,44 +89,147 @@ function Bars({ title, rows }) {
   )
 }
 
-// The chart staff can change: what to count and over how long. Below it, what students are saving by level and field.
+// A line chart with up to two measures. The second one gets its own scale on the right, so a small count is not flattened by a big one.
+function LineChart({ rows, a, b, unit }) {
+  const w = 640, h = 220, left = 36, right = b ? 36 : 12, top = 12, bottom = 26
+  const nice = (m) => Math.max(1, Math.ceil(m / 4) * 4 || 4)
+  const maxA = nice(Math.max(...rows.map((r) => r.a)))
+  const maxB = b ? nice(Math.max(...rows.map((r) => r.b))) : 1
+  const x = (i) => left + (rows.length <= 1 ? 0 : (i / (rows.length - 1)) * (w - left - right))
+  const y = (v, m) => top + (1 - v / m) * (h - top - bottom)
+  const path = (k, m) => rows.map((r, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(r[k], m).toFixed(1)}`).join(' ')
+  const ticks = [0, 1, 2, 3, 4]
+  const step = Math.max(1, Math.round(rows.length / 7))
+  return (
+    <svg viewBox={`0 0 ${w} ${h}`} className="w-full h-auto" role="img" aria-label={`${a.label}${b ? ` and ${b.label}` : ''} per ${unit}`}>
+      {ticks.map((t) => (
+        <g key={t}>
+          <line x1={left} x2={w - right} y1={y((t / 4) * maxA, maxA)} y2={y((t / 4) * maxA, maxA)} stroke="currentColor" opacity="0.12" />
+          <text x={left - 6} y={y((t / 4) * maxA, maxA) + 3} fontSize="10" textAnchor="end" fill="#C0392B">{Math.round((t / 4) * maxA)}</text>
+          {b && <text x={w - right + 6} y={y((t / 4) * maxB, maxB) + 3} fontSize="10" fill="#1F5FA8">{Math.round((t / 4) * maxB)}</text>}
+        </g>
+      ))}
+      {rows.map((r, i) => i % step === 0 && <text key={r.day} x={x(i)} y={h - 8} fontSize="10" textAnchor="middle" fill="currentColor" opacity="0.65">{String(r.day).slice(5)}</text>)}
+      <path d={path('a', maxA)} fill="none" stroke="#C0392B" strokeWidth="2.5" strokeLinejoin="round" />
+      {b && <path d={path('b', maxB)} fill="none" stroke="#1F5FA8" strokeWidth="2.5" strokeLinejoin="round" />}
+      {rows.length <= 40 && rows.map((r, i) => (
+        <g key={r.day}>
+          <title>{`${r.day}: ${a.label} ${r.a}${b ? `, ${b.label} ${r.b}` : ''}`}</title>
+          <circle cx={x(i)} cy={y(r.a, maxA)} r="3.5" fill="#C0392B" />
+          {b && <circle cx={x(i)} cy={y(r.b, maxB)} r="3.5" fill="#1F5FA8" />}
+        </g>
+      ))}
+    </svg>
+  )
+}
+
+// A ring with a legend, for how people are split by access.
+function Ring({ title, parts }) {
+  const total = parts.reduce((t, p) => t + p.n, 0)
+  const r = 52, c = 2 * Math.PI * r
+  let off = 0
+  return (
+    <div className="card space-y-3 min-w-0">
+      <p className="font-semibold">{title}</p>
+      <div className="relative mx-auto w-40 h-40">
+        <svg viewBox="0 0 140 140" className="w-full h-full -rotate-90" role="img" aria-label={`${title}. ${parts.map((p) => `${p.label} ${p.n}`).join(', ')}`}>
+          <circle cx="70" cy="70" r={r} fill="none" stroke="#EEE" strokeWidth="16" />
+          {total > 0 && parts.map((p) => {
+            const len = (p.n / total) * c
+            const el = <circle key={p.label} cx="70" cy="70" r={r} fill="none" stroke={p.color} strokeWidth="16" strokeDasharray={`${len} ${c - len}`} strokeDashoffset={-off} />
+            off += len
+            return el
+          })}
+        </svg>
+        <div className="absolute inset-0 flex flex-col items-center justify-center"><span className="text-2xl font-bold">{total}</span><span className="text-xs text-neutral-600">total</span></div>
+      </div>
+      <ul className="space-y-1 text-sm">
+        {parts.map((p) => (
+          <li key={p.label} className="flex items-center justify-between gap-2"><span className="flex items-center gap-2"><span className="inline-block w-2.5 h-2.5 rounded-full" style={{ background: p.color }} />{p.label}</span><span className="font-semibold">{p.n}</span></li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
+// The chart staff can change: what to count (up to two things), and over how long. Beside it, how people are split by access.
+// Below it, what students want to study (from their profile) and what they save.
 function ChartPanel() {
   const [metric, setMetric] = useState('signups')
+  const [metric2, setMetric2] = useState('subscriptions')
   const [days, setDays] = useState(30)
-  const [daily, setDaily] = useState(null)
+  const [data, setData] = useState(null)
   const [interest, setInterest] = useState(null)
+  const [study, setStudy] = useState(null)
+  const [access, setAccess] = useState(null)
   const [err, setErr] = useState('')
   useEffect(() => {
     let live = true
-    setDaily(null); setErr('')
-    getAdminChart(metric, days).then((d) => live && setDaily(d)).catch((e) => live && setErr(e.message))
+    setData(null); setErr('')
+    Promise.all([getAdminChart(metric, days), metric2 ? getAdminChart(metric2, days) : Promise.resolve(null)])
+      .then(([x, y]) => live && setData({ x, y }))
+      .catch((e) => live && setErr(e.message))
     return () => { live = false }
-  }, [metric, days])
+  }, [metric, metric2, days])
   useEffect(() => {
     let live = true
     getAdminInterest(days).then((d) => live && setInterest(d)).catch(() => live && setInterest({ byLevel: [], byField: [] }))
     return () => { live = false }
   }, [days])
-  const m = MEASURES.find((x) => x.id === metric)
+  useEffect(() => {
+    let live = true
+    getStudyInterest().then((d) => live && setStudy(d)).catch(() => live && setStudy(null))
+    getAccessBreakdown().then((d) => live && setAccess(d)).catch(() => live && setAccess(null))
+    return () => { live = false }
+  }, [])
+  const A = MEASURES.find((x) => x.id === metric)
+  const B = MEASURES.find((x) => x.id === metric2)
   const p = PERIODS.find((x) => x.d === days)
-  const b = daily ? bucket(daily, days) : null
+  let rows = null, unit = 'day'
+  if (data) {
+    const joined = data.x.map((r, i) => ({ day: r.day, n: r.n, m: data.y ? data.y[i]?.n || 0 : 0 }))
+    const g = bucket(joined, days)
+    unit = g.unit
+    rows = g.rows.map((r) => ({ day: r.day, a: r.n, b: r.m }))
+  }
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap gap-3">
-        <select className="input !w-auto" value={metric} onChange={(e) => setMetric(e.target.value)} aria-label="What to count">
+        <select className="input !w-auto" value={metric} onChange={(e) => setMetric(e.target.value)} aria-label="First thing to count">
           {MEASURES.map((x) => <option key={x.id} value={x.id}>{x.label}</option>)}
+        </select>
+        <select className="input !w-auto" value={metric2} onChange={(e) => setMetric2(e.target.value)} aria-label="Second thing to count">
+          <option value="">Nothing to compare</option>
+          {MEASURES.filter((x) => x.id !== metric).map((x) => <option key={x.id} value={x.id}>{`Compare with ${x.label.toLowerCase()}`}</option>)}
         </select>
         <select className="input !w-auto" value={days} onChange={(e) => setDays(Number(e.target.value))} aria-label="Time period">
           {PERIODS.map((x) => <option key={x.d} value={x.d}>{x.label}</option>)}
         </select>
       </div>
-      {err ? <p className="text-red-700 text-sm" role="alert">{err}</p> : !b ? <p className="text-sm text-neutral-600">Loading chart...</p> : <DailyChart daily={b.rows} unit={b.unit} title={`${m.label} per ${b.unit}, ${p.label.toLowerCase()}`} />}
-      {interest && (
-        <div className="grid md:grid-cols-2 gap-3">
-          <Bars title={`Programmes saved by level, ${p.label.toLowerCase()}`} rows={interest.byLevel} />
-          <Bars title={`Programmes saved by field, ${p.label.toLowerCase()} (top 10)`} rows={interest.byField} />
-        </div>
-      )}
+      <div className="grid lg:grid-cols-[1fr_18rem] gap-3">
+        <figure className="card min-w-0 space-y-2">
+          <figcaption className="flex flex-wrap items-center justify-between gap-2">
+            <span className="font-semibold">Activity per {unit}, {p.label.toLowerCase()}</span>
+            <span className="flex items-center gap-3 text-xs">
+              <span className="flex items-center gap-1"><span className="inline-block w-3 h-0.5 bg-[#C0392B]" />{A.label}</span>
+              {metric2 && <span className="flex items-center gap-1"><span className="inline-block w-3 h-0.5 bg-[#1F5FA8]" />{B.label} (right scale)</span>}
+            </span>
+          </figcaption>
+          {err ? <p className="text-red-700 text-sm" role="alert">{err}</p> : !rows ? <p className="text-sm text-neutral-600">Loading chart...</p> : <LineChart rows={rows} a={A} b={metric2 ? B : null} unit={unit} />}
+        </figure>
+        {access && <Ring title="People by access" parts={[
+          { label: 'Subscribed', n: access.subscribed, color: '#5E9E4E' },
+          { label: 'Free trial', n: access.trial, color: '#2F6FB5' },
+          { label: 'Trial ended', n: access.expired, color: '#C0392B' },
+          { label: 'No trial', n: access.none, color: '#B8892B' },
+        ]} />}
+      </div>
+      <div className="grid md:grid-cols-2 gap-3">
+        {study ? <Bars title="What students want to study (from profiles), by level" rows={study.byLevel} /> : <p className="text-sm text-neutral-600">The profile question is not switched on in the database yet.</p>}
+        {study && <Bars title="What students want to study (from profiles), by field" rows={study.byField} />}
+        {interest && <Bars title={`Programmes saved by level, ${p.label.toLowerCase()}`} rows={interest.byLevel} />}
+        {interest && <Bars title={`Programmes saved by field, ${p.label.toLowerCase()} (top 10)`} rows={interest.byField} />}
+      </div>
     </div>
   )
 }
@@ -144,8 +247,8 @@ export function StatsPanel() {
   return (
     <section className="space-y-3" aria-label="Numbers">
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-        {tiles.map(([label, n]) => (
-          <div key={label} className="card !p-4">
+        {tiles.map(([label, n], i) => (
+          <div key={label} className={`card !p-4 border-l-4 ${['border-l-[#C0392B]', 'border-l-[#2F6FB5]', 'border-l-[#5E9E4E]', 'border-l-[#B8892B]', 'border-l-[#6B4FA0]'][i % 5]}`}>
             <p className="text-2xl font-bold">{n}</p>
             <p className="text-sm text-neutral-600">{label}</p>
           </div>
@@ -259,8 +362,53 @@ function EditStudent({ u, onClose, onSaved }) {
   )
 }
 
-export function SignupsSection({ users: allUsers, canDisable, onToggle, err, reload, canEditStaff, canDelete }) {
+// Owner only. Gives a plan (adds time if they still have some, restarts it if it has expired) or ends it.
+function PlanPanel({ u, onClose, onDone }) {
+  const [plans, setPlans] = useState([])
+  const [plan, setPlan] = useState('1m')
+  const [reason, setReason] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [msg, setMsg] = useState('')
+  const [err, setErr] = useState('')
+  useEffect(() => { listPlans().then(setPlans).catch((e) => setErr(e.message)) }, [])
+  const now = Date.now()
+  const live = u.subscription?.status === 'active' && new Date(u.subscription.expiresAt).getTime() > now
+  const run = async (fn, ok) => {
+    setBusy(true); setErr(''); setMsg('')
+    try { const r = await fn(); setMsg(ok(r)); onDone() } catch (e) { setErr(e.message) }
+    setBusy(false)
+  }
+  return (
+    <div className="card space-y-3" role="group" aria-label={`Plan for ${u.fullName}`}>
+      <p className="font-semibold">Plan for {u.fullName}</p>
+      <p className="text-sm text-neutral-600">
+        {live ? `Current plan: ${u.subscription.plan}, ends ${new Date(u.subscription.expiresAt).toLocaleDateString()}.` : u.subscription ? `Last plan: ${u.subscription.plan} (${u.subscription.status}), ended ${new Date(u.subscription.expiresAt).toLocaleDateString()}.` : 'No plan yet.'}
+      </p>
+      <div className="grid sm:grid-cols-2 gap-3">
+        <label className="block"><span className="block text-sm font-semibold mb-1">Plan to give</span>
+          <select className="input" value={plan} onChange={(e) => setPlan(e.target.value)}>
+            {plans.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
+          </select>
+        </label>
+        <label className="block"><span className="block text-sm font-semibold mb-1">Reason (kept in the activity log)</span>
+          <input className="input" value={reason} onChange={(e) => setReason(e.target.value)} placeholder="For example paid by bank transfer" />
+        </label>
+      </div>
+      <p className="text-xs text-neutral-600">{live ? 'This adds the time to the end of their current plan.' : 'Their plan is not running, so this starts a new plan from now.'}</p>
+      {msg && <p className="text-sm text-green-700" role="status">{msg}</p>}
+      {err && <p className="text-sm text-red-700" role="alert">{err}</p>}
+      <div className="flex flex-wrap gap-2">
+        <button className="btn btn-orange" disabled={busy} onClick={() => run(() => ownerGrantPlan(u.id, plan, reason), (d) => `Done. Plan runs until ${new Date(d).toLocaleDateString()}.`)}>{live ? 'Add this plan' : u.subscription ? 'Reactivate with this plan' : 'Give this plan'}</button>
+        {live && <button className="btn btn-outline !border-red-300 text-red-700" disabled={busy} onClick={() => run(() => ownerEndPlan(u.id, reason), () => 'Plan ended.')}>End plan now</button>}
+        <button className="btn btn-outline" onClick={onClose}>Close</button>
+      </div>
+    </div>
+  )
+}
+
+export function SignupsSection({ users: allUsers, canDisable, onToggle, err, reload, canEditStaff, canDelete, canPlan }) {
   const [editing, setEditing] = useState(null)
+  const [planFor, setPlanFor] = useState(null)
   const [actTarget, setActTarget] = useState(null)
   const [actErr, setActErr] = useState('')
   const runActivate = async () => {
@@ -320,6 +468,7 @@ export function SignupsSection({ users: allUsers, canDisable, onToggle, err, rel
         {reload && <AddStudent onDone={done} />}
       </div>
       {editing && <EditStudent u={editing} onClose={() => setEditing(null)} onSaved={done} />}
+      {planFor && <PlanPanel u={planFor} onClose={() => setPlanFor(null)} onDone={() => reload && reload()} />}
       <ul className="md:hidden space-y-3" aria-label="Sign-ups">
         {users.map((u) => {
           const { subbed, trial, label } = accessLabel(u)
@@ -334,6 +483,7 @@ export function SignupsSection({ users: allUsers, canDisable, onToggle, err, rel
                 <span className="text-neutral-600">{u.profileComplete ? 'Profile complete' : 'Profile incomplete'}</span>
               </p>
               {canEdit(u) && <button className="btn btn-outline w-full" onClick={() => setEditing(u)}>Edit details</button>}
+              {canPlan && !u.staffRole && <button className="btn btn-outline w-full" onClick={() => setPlanFor(u)}>Plan</button>}
               {canActivate(u) && <button className="btn btn-outline w-full" onClick={() => setActTarget(u)}>Activate account</button>}
               {canToggle(u) && !u.unconfirmed && <button className="btn btn-outline w-full" onClick={() => onToggle(u)}>{u.disabled ? 'Reactivate account' : 'Disable account'}</button>}
               {canRemove(u) && <button className="btn btn-outline w-full !border-red-300 text-red-700" onClick={() => setDelTarget(u)}>Delete account</button>}
@@ -363,6 +513,7 @@ export function SignupsSection({ users: allUsers, canDisable, onToggle, err, rel
                   <td className="p-3 align-top">{accountBadge(u)}</td>
                   <td className="p-3 align-top"><div className="grid grid-cols-2 gap-2 w-[15rem]">
                     {canEdit(u) && <button className="btn btn-outline !min-h-11 !py-1" onClick={() => setEditing(u)}>Edit</button>}
+                    {canPlan && !u.staffRole && <button className="btn btn-outline !min-h-11 !py-1" onClick={() => setPlanFor(u)}>Plan</button>}
                     {canActivate(u) && <button className="btn btn-outline !min-h-11 !py-1" onClick={() => setActTarget(u)}>Activate</button>}
                     {canToggle(u) && !u.unconfirmed && <button className="btn btn-outline !min-h-11 !py-1" onClick={() => onToggle(u)}>{u.disabled ? 'Reactivate' : 'Disable'}</button>}
                     {canRemove(u) && <button className="btn btn-outline !min-h-11 !py-1 !border-red-300 text-red-700" onClick={() => setDelTarget(u)}>Delete</button>}

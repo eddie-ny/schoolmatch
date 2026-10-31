@@ -74,10 +74,10 @@ function DataSection() {
   )
 }
 
-function Overview({ base, isAdmin, users, pending, log, canSeeAll }) {
+function Overview({ base, isAdmin, users, pending, log, canSeeAll, canRate }) {
   return (
     <div className="space-y-8">
-      {isAdmin ? <StatsPanel /> : (
+      {isAdmin ? <StatsPanel canRate={canRate} /> : (
         <div className="grid grid-cols-2 gap-3">
           <Link to={`${base}/people`} className="card !p-4"><p className="text-2xl font-bold">{users.length}</p><p className="text-sm text-neutral-600">People</p></Link>
           <Link to={`${base}/parents`} className="card !p-4"><p className="text-2xl font-bold">{pending.length}</p><p className="text-sm text-neutral-600">Waiting for a parent</p></Link>
@@ -157,7 +157,7 @@ export default function StaffArea({ base }) {
         onCancel={() => setTarget(null)}
       />
       <Routes>
-        <Route index element={<Overview base={base} isAdmin={isAdminArea} users={users} pending={pending} log={log} canSeeAll={canSeeAll} />} />
+        <Route index element={<Overview base={base} isAdmin={isAdminArea} users={users} pending={pending} log={log} canSeeAll={canSeeAll} canRate={owner && isAdminArea} />} />
         <Route path="people" element={<SignupsSection users={users} canDisable={isAdminArea} onToggle={isAdminArea ? setTarget : () => {}} err={err} reload={load} canEditStaff={isAdminArea} canDelete={owner && isAdminArea} canPlan={owner && isAdminArea} />} />
         <Route path="parents" element={<ParentsSection pending={pending} canAccept={isAdminArea} reload={load} />} />
         {owner && isAdminArea && <Route path="team" element={<TeamSection />} />}

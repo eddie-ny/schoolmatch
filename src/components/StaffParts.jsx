@@ -1,7 +1,7 @@
 // Pieces shared by the Admin page and the Support page.
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { activateAccount, acceptParent, createParentLink, cancelInvite, deleteAccount, listArchive, listPlans, ownerGrantPlan, ownerEndPlan, getAccessBreakdown, getStudyInterest, getAdminStats, getAdminChart, getAdminInterest, inviteStaff, listInvites, listStaff, setStaffRole, staffCreateStudent, staffUpdateProfile } from '../lib/api'
+import { activateAccount, acceptParent, createParentLink, cancelInvite, deleteAccount, listArchive, listPlans, getRate, ownerSetRate, ownerGrantPlan, ownerEndPlan, getAccessBreakdown, getStudyInterest, getAdminStats, getAdminChart, getAdminInterest, inviteStaff, listInvites, listStaff, setStaffRole, staffCreateStudent, staffUpdateProfile } from '../lib/api'
 import { Badge, ConfirmDialog, Field, Spinner } from './ui'
 
 const ROLE_LABEL = { owner: 'Super admin', admin: 'Admin', support: 'Support' }
@@ -234,7 +234,51 @@ function ChartPanel() {
   )
 }
 
-export function StatsPanel() {
+// Owner only. Customers pay the cedi amount, so this must follow the market. Saving it recomputes every plan's GHS price from its USD price.
+function RatePanel() {
+  const [rate, setRate] = useState(null)
+  const [plans, setPlans] = useState([])
+  const [val, setVal] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [msg, setMsg] = useState('')
+  const [err, setErr] = useState('')
+  const load = () => Promise.all([getRate(), listPlans()]).then(([r, p]) => { setRate(r); setPlans(p); setVal(r ? String(r.perUsd) : '') }).catch((e) => setErr(e.message))
+  useEffect(() => { load() }, [])
+  const n = Number(val)
+  const ok = Number.isFinite(n) && n >= 1 && n <= 100
+  const preview = (p) => (p.price_usd_cents > 0 && ok ? Math.round((p.price_usd_cents / 100) * n) : null)
+  const save = async () => {
+    setBusy(true); setErr(''); setMsg('')
+    try { await ownerSetRate(n); setMsg('Saved. New prices are live.'); await load() } catch (e) { setErr(e.message) }
+    setBusy(false)
+  }
+  if (!rate) return err ? <p className="text-red-700 text-sm" role="alert">{err}</p> : null
+  return (
+    <section className="card space-y-3" aria-label="Exchange rate">
+      <p className="font-semibold">Exchange rate (owner only)</p>
+      <p className="text-sm text-neutral-600">Prices are in US dollars. Paystack charges cedis at this rate. Set {rate.perUsd.toFixed(2)} on {new Date(rate.updatedAt).toLocaleDateString()}{rate.source ? ` (${rate.source})` : ''}. Check today's rate, for example on tradingeconomics.com/ghana/currency, before saving.</p>
+      <div className="flex flex-wrap items-end gap-3">
+        <label className="block"><span className="block text-sm font-semibold mb-1">GHS for USD 1</span>
+          <input className="input !w-36" inputMode="decimal" value={val} onChange={(e) => setVal(e.target.value.replace(/[^0-9.]/g, '').slice(0, 6))} />
+        </label>
+        <button className="btn btn-orange" disabled={busy || !ok || n === rate.perUsd} onClick={save}>Save rate</button>
+      </div>
+      <ul className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
+        {plans.filter((p) => p.price_usd_cents > 0).map((p) => (
+          <li key={p.id} className="rounded-xl border border-neutral-200 p-2">
+            <p className="font-semibold">{p.label}</p>
+            <p>USD {p.price_usd_cents / 100}</p>
+            <p className="text-neutral-600">now GHS {p.price_minor / 100}{preview(p) != null && preview(p) !== p.price_minor / 100 ? `, after saving GHS ${preview(p)}` : ''}</p>
+          </li>
+        ))}
+      </ul>
+      {msg && <p className="text-sm text-green-700" role="status">{msg}</p>}
+      {err && <p className="text-sm text-red-700" role="alert">{err}</p>}
+    </section>
+  )
+}
+
+export function StatsPanel({ canRate }) {
   const [s, setS] = useState(null)
   const [err, setErr] = useState('')
   useEffect(() => { getAdminStats().then(setS).catch((e) => setErr(e.message)) }, [])
@@ -255,6 +299,7 @@ export function StatsPanel() {
         ))}
       </div>
       <ChartPanel />
+      {canRate && <RatePanel />}
     </section>
   )
 }

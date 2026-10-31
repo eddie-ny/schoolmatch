@@ -1,7 +1,7 @@
 // Pieces shared by the Admin page and the Support page.
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { activateAccount, acceptParent, createParentLink, cancelInvite, deleteAccount, listArchive, getAdminStats, inviteStaff, listInvites, listStaff, setStaffRole, staffCreateStudent, staffUpdateProfile } from '../lib/api'
+import { activateAccount, acceptParent, createParentLink, cancelInvite, deleteAccount, listArchive, getAdminStats, getAdminChart, getAdminInterest, inviteStaff, listInvites, listStaff, setStaffRole, staffCreateStudent, staffUpdateProfile } from '../lib/api'
 import { Badge, ConfirmDialog, Field, Spinner } from './ui'
 
 const ROLE_LABEL = { owner: 'Super admin', admin: 'Admin', support: 'Support' }
@@ -24,15 +24,15 @@ export function NeedMfa({ what }) {
 }
 
 // ---------- Numbers and chart ----------
-function DailyChart({ daily }) {
+function DailyChart({ daily, title, unit = 'day' }) {
   const max = Math.max(1, ...daily.map((d) => d.n))
   const w = 600, h = 140, pad = 4
   const bw = (w - pad * 2) / daily.length
   const total = daily.reduce((s, d) => s + d.n, 0)
   return (
     <figure className="card space-y-2 min-w-0">
-      <figcaption className="font-semibold">New sign-ups per day, last 30 days (total {total}, busiest day {max})</figcaption>
-      <svg viewBox={`0 0 ${w} ${h + 18}`} className="w-full h-auto" role="img" aria-label={`New sign-ups per day for the last 30 days. Total ${total}. Busiest day had ${max}.`}>
+      <figcaption className="font-semibold">{title} (total {total}, busiest {unit} {max})</figcaption>
+      <svg viewBox={`0 0 ${w} ${h + 18}`} className="w-full h-auto" role="img" aria-label={`${title}. Total ${total}. Busiest ${unit} had ${max}.`}>
         <line x1="0" x2={w} y1={h} y2={h} stroke="currentColor" opacity="0.25" />
         {daily.map((d, i) => {
           const bh = (d.n / max) * (h - 12)
@@ -41,7 +41,7 @@ function DailyChart({ daily }) {
               <title>{`${d.day}: ${d.n}`}</title>
               <rect x={pad + i * bw + 1} y={h - bh} width={Math.max(bw - 2, 1)} height={bh} rx="2" fill="#5E9E4E" />
               {d.n > 0 && <text x={pad + i * bw + bw / 2} y={h - bh - 3} fontSize="11" fontWeight="600" textAnchor="middle" fill="currentColor">{d.n}</text>}
-              {i % 5 === 0 && i !== 0 && i !== daily.length - 1 && <text x={pad + i * bw + bw / 2} y={h + 14} fontSize="10" textAnchor="middle" fill="currentColor" opacity="0.6">{String(d.day).slice(5)}</text>}
+              {i % Math.max(1, Math.round(daily.length / 6)) === 0 && i !== 0 && i !== daily.length - 1 && <text x={pad + i * bw + bw / 2} y={h + 14} fontSize="10" textAnchor="middle" fill="currentColor" opacity="0.6">{String(d.day).slice(5)}</text>}
             </g>
           )
         })}
@@ -49,6 +49,85 @@ function DailyChart({ daily }) {
         <text x={w} y={h + 14} fontSize="10" textAnchor="end" fill="currentColor" opacity="0.7">{String(daily[daily.length - 1]?.day || '').slice(5)}</text>
       </svg>
     </figure>
+  )
+}
+
+const MEASURES = [
+  { id: 'signups', label: 'New sign-ups' },
+  { id: 'subscriptions', label: 'New subscriptions' },
+  { id: 'payments', label: 'Payments received' },
+  { id: 'saved', label: 'Programmes saved (hearts)' },
+]
+const PERIODS = [{ d: 7, label: 'Last 7 days' }, { d: 30, label: 'Last 30 days' }, { d: 90, label: 'Last 90 days' }, { d: 180, label: 'Last 6 months' }, { d: 365, label: 'Last year' }]
+
+// Groups days into weeks when the period is long, so the bars stay readable.
+function bucket(daily, days) {
+  if (days <= 90) return { rows: daily, unit: 'day' }
+  const rows = []
+  for (let i = 0; i < daily.length; i += 7) {
+    const part = daily.slice(i, i + 7)
+    rows.push({ day: part[0].day, n: part.reduce((t, x) => t + x.n, 0) })
+  }
+  return { rows, unit: 'week' }
+}
+
+function Bars({ title, rows }) {
+  const max = Math.max(1, ...rows.map((r) => r.n))
+  return (
+    <div className="card space-y-2 min-w-0">
+      <p className="font-semibold">{title}</p>
+      {rows.length === 0 && <p className="text-sm text-neutral-600">Nothing in this period yet.</p>}
+      <ul className="space-y-1.5">
+        {rows.map((r) => (
+          <li key={r.label} className="text-sm">
+            <div className="flex justify-between gap-2"><span className="truncate">{r.label}</span><span className="font-semibold">{r.n}</span></div>
+            <div className="h-2 rounded-full bg-neutral-100"><div className="h-2 rounded-full bg-brand-green" style={{ width: `${(r.n / max) * 100}%` }} /></div>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
+// The chart staff can change: what to count and over how long. Below it, what students are saving by level and field.
+function ChartPanel() {
+  const [metric, setMetric] = useState('signups')
+  const [days, setDays] = useState(30)
+  const [daily, setDaily] = useState(null)
+  const [interest, setInterest] = useState(null)
+  const [err, setErr] = useState('')
+  useEffect(() => {
+    let live = true
+    setDaily(null); setErr('')
+    getAdminChart(metric, days).then((d) => live && setDaily(d)).catch((e) => live && setErr(e.message))
+    return () => { live = false }
+  }, [metric, days])
+  useEffect(() => {
+    let live = true
+    getAdminInterest(days).then((d) => live && setInterest(d)).catch(() => live && setInterest({ byLevel: [], byField: [] }))
+    return () => { live = false }
+  }, [days])
+  const m = MEASURES.find((x) => x.id === metric)
+  const p = PERIODS.find((x) => x.d === days)
+  const b = daily ? bucket(daily, days) : null
+  return (
+    <div className="space-y-3">
+      <div className="flex flex-wrap gap-3">
+        <select className="input !w-auto" value={metric} onChange={(e) => setMetric(e.target.value)} aria-label="What to count">
+          {MEASURES.map((x) => <option key={x.id} value={x.id}>{x.label}</option>)}
+        </select>
+        <select className="input !w-auto" value={days} onChange={(e) => setDays(Number(e.target.value))} aria-label="Time period">
+          {PERIODS.map((x) => <option key={x.d} value={x.d}>{x.label}</option>)}
+        </select>
+      </div>
+      {err ? <p className="text-red-700 text-sm" role="alert">{err}</p> : !b ? <p className="text-sm text-neutral-600">Loading chart...</p> : <DailyChart daily={b.rows} unit={b.unit} title={`${m.label} per ${b.unit}, ${p.label.toLowerCase()}`} />}
+      {interest && (
+        <div className="grid md:grid-cols-2 gap-3">
+          <Bars title={`Programmes saved by level, ${p.label.toLowerCase()}`} rows={interest.byLevel} />
+          <Bars title={`Programmes saved by field, ${p.label.toLowerCase()} (top 10)`} rows={interest.byField} />
+        </div>
+      )}
+    </div>
   )
 }
 
@@ -72,7 +151,7 @@ export function StatsPanel() {
           </div>
         ))}
       </div>
-      <DailyChart daily={s.daily} />
+      <ChartPanel />
     </section>
   )
 }

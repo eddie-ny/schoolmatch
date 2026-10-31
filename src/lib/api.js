@@ -668,6 +668,18 @@ export async function getAdminStats() {
   return data
 }
 
+export async function getAdminChart(metric, days) {
+  const { data, error } = await supabase.rpc('admin_chart', { p_metric: metric, p_days: days })
+  fail(error, 'Could not load the chart.')
+  return data || []
+}
+
+export async function getAdminInterest(days) {
+  const { data, error } = await supabase.rpc('admin_interest', { p_days: days })
+  fail(error, 'Could not load what students are looking at.')
+  return data || { byLevel: [], byField: [] }
+}
+
 export async function listAuditLog(limit = 200) {
   const { data, error } = await supabase.from('audit_log').select('id, at, actor_id, actor_role, action, target_user, detail').order('id', { ascending: false }).limit(limit)
   fail(error, 'Could not load the activity log.')

@@ -120,7 +120,7 @@ function InternationalEligibilityInner() {
   const masters = level === 'Masters'
   const satNum = sat === '' ? 0 : Number(sat)
   const satBad = sat !== '' && (satNum < 400 || satNum > 1600)
-  const ready = masters ? !!cls : go && !satBad
+  const ready = masters ? go && !!cls : go && !satBad
 
   // The programmes come from the server, only those matching what the student wants to study (up to 60 at a time).
   useEffect(() => {
@@ -171,6 +171,10 @@ function InternationalEligibilityInner() {
               <input className="input" inputMode="decimal" placeholder="For example 3.4" value={gpa} onChange={(e) => setGpa(e.target.value.replace(/[^0-9.]/g, '').slice(0, 4))} />
               <span className="block text-xs text-neutral-600 mt-1">Some schools state a minimum GPA. Leave it blank if you do not know it.</span>
             </label>
+            <div className="sm:col-span-2">
+              <button type="button" className="btn btn-orange" disabled={!cls} onClick={() => setGo(true)}>Check my eligibility</button>
+              {!cls && <p className="text-xs text-neutral-600 mt-1">Choose your degree class first.</p>}
+            </div>
           </div>
         ) : (
           <>
@@ -221,7 +225,7 @@ function InternationalEligibilityInner() {
         )}
       </div>
       {loading || pool.busy ? <Spinner /> : !ready ? (
-        <p className="text-neutral-700">{masters ? 'Choose your degree class to see the programs.' : 'Fill in what you have and press Check my eligibility. You can leave out the SAT and English test.'}</p>
+        <p className="text-neutral-700">{masters ? 'Choose your degree class, then press Check my eligibility.' : 'Fill in what you have and press Check my eligibility. You can leave out the SAT and English test.'}</p>
       ) : rows.length === 0 ? (
         <p className="text-neutral-700">{study ? 'No programs match that search. Try a broader word.' : `We are adding international ${masters ? 'masters' : 'bachelors'} programs. Check back soon.`}</p>
       ) : (

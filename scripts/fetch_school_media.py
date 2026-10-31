@@ -6,6 +6,7 @@ Run (Windows PowerShell), in the folder that has scorecard_schools.csv:
     python fetch_school_media.py            # all schools (takes about 15 minutes)
     python fetch_school_media.py 5          # test with the first 5 schools only
     python fetch_school_media.py 0 ghana ghana_media.csv      # the Ghana schools, read from the WEMK database
+    python fetch_school_media.py 0 db:Australia australia_media.csv   # any country already in the database
 
 Writes school_media.csv (one row per school) and school_media_report.txt (schools where nothing was found).
 Only images with a free licence (Creative Commons or public domain) are kept. Every image and text keeps its credit line.
@@ -116,11 +117,11 @@ def commons(filename, width):
 
 INPUT = sys.argv[2] if len(sys.argv) > 2 else "scorecard_schools.csv"
 OUTPUT = sys.argv[3] if len(sys.argv) > 3 else "school_media.csv"
-if INPUT == "ghana":   # the Ghana schools straight from the WEMK database (public read key, the same one the website uses)
-    r = S.get("https://zzuoqdeeegzmgtuvspgz.supabase.co/rest/v1/schools_summary", params={"select": "id,name,city", "country": "ilike.ghana", "limit": 1000},
+if INPUT == "ghana" or INPUT.startswith("db:"):   # the Ghana schools straight from the WEMK database (public read key, the same one the website uses)
+    r = S.get("https://zzuoqdeeegzmgtuvspgz.supabase.co/rest/v1/schools_summary", params={"select": "id,name,city", "country": "ilike." + (INPUT[3:] if INPUT.startswith("db:") else "ghana"), "limit": 1000},
               headers={"apikey": "sb_publishable_W0zf4b36Y7qPcTK32CgwAQ_MmFfEanR"}, timeout=60)
     r.raise_for_status()
-    rows = [{"id": x["id"], "name": x["name"], "city": x["city"] or "", "state": "Ghana"} for x in r.json()]
+    rows = [{"id": x["id"], "name": x["name"], "city": x["city"] or "", "state": ""} for x in r.json()]
 else:
     rows = list(csv.DictReader(open(INPUT, encoding="utf-8")))
 if rows and "school.name" in rows[0]:   # the Scorecard file; convert to id, name, city, state

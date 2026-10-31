@@ -711,7 +711,7 @@ function mapFull(f, school) {
   return {
     id: f.id, schoolId: f.school_id, schoolName: school?.name || '', name: f.name, level: f.level, field: f.field, demo: f.demo, mode: f.mode || 'Regular', campus: f.campus || '',
     international: school ? !isLocalCountry(school.country) : false,
-    feesUsd: f.fees_usd ?? null, feesGhs: f.fees_ghs ?? null, feeAmount: f.fee_amount != null ? Number(f.fee_amount) : null, feeCurrency: f.fee_currency || '', entryNote: f.entry_note || '', mastersFormat: f.masters_format || '', entryQualification: f.entry_qualification || '', minDegreeClass: f.min_degree_class || '', minGpa: f.min_gpa != null ? Number(f.min_gpa) : null, durationYears: f.duration_years ?? null,
+    feesUsd: f.fees_usd ?? null, feesGhs: f.fees_ghs ?? null, feeAmount: f.fee_amount != null ? Number(f.fee_amount) : null, feeCurrency: f.fee_currency || '', entryNote: f.entry_note || '', mastersFormat: f.masters_format || '', entryQualification: f.entry_qualification || '', minDegreeClass: f.min_degree_class || '', minGpa: f.min_gpa != null ? Number(f.min_gpa) : null, grePolicy: f.gre_policy || '', minGre: f.min_gre ?? null, credentialEval: f.credential_eval || '', durationYears: f.duration_years ?? null,
     satPolicy: f.sat_policy || '', minWassceGrade: f.min_wassce_grade || '', minIelts: f.min_ielts != null ? Number(f.min_ielts) : null, minToefl: f.min_toefl ?? null, minDuolingo: f.min_duolingo ?? null,
     englishTestWaiver: !!f.english_test_waiver, foundationAvailable: !!f.foundation_available, verified: !!f.verified,
     requirements: (f.program_requirements || []).map((r) => ({ subject: r.subject, minGrade: r.min_grade })),

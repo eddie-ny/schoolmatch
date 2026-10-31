@@ -59,6 +59,8 @@ function keyFacts(v, masters) {
   if (masters && v.mastersFormat) out.push(['How you study', v.mastersFormat])
   if (v.minDegreeClass) out.push(['Your first degree', `${v.minDegreeClass} or better`])
   if (v.minGpa != null) out.push(['Minimum GPA', `${v.minGpa.toFixed(2)} out of 4.0`])
+  if (masters && v.grePolicy) out.push(['GRE test', v.grePolicy === 'required' ? `You must send a score.${v.minGre ? ` Minimum total ${v.minGre}.` : ''}` : v.grePolicy === 'optional' ? `You can choose to send a score.${v.minGre ? ` Minimum total ${v.minGre} if you do.` : ''}` : 'The school does not use GRE scores.'])
+  if (masters && v.credentialEval) out.push(['Degree evaluation (WES)', v.credentialEval === 'required' ? 'The school asks for your degree to be evaluated, for example by WES, before you apply.' : v.credentialEval === 'accepted' ? 'The school accepts an evaluation such as WES but does not require one.' : 'No evaluation needed.'])
   if (v.satPolicy) out.push(['SAT test', v.satPolicy === 'required' ? `You must send a score.${v.satLow != null ? ` Most admitted students score ${v.satLow} to ${v.satHigh ?? v.satLow}.` : ''}` : v.satPolicy === 'optional' ? `You can choose to send a score.${v.satLow != null ? ` Most admitted students who do score ${v.satLow} to ${v.satHigh ?? v.satLow}.` : ''}` : 'The school does not use SAT scores.'])
   const eng = [v.minIelts != null && `IELTS ${v.minIelts}`, v.minToefl != null && `TOEFL ${v.minToefl}`, v.minDuolingo != null && `Duolingo ${v.minDuolingo}`].filter(Boolean)
   if (v.englishTestWaiver || eng.length) out.push(['English test', [v.englishTestWaiver && 'Not needed if you are a Ghanaian citizen.', eng.length && `Otherwise, one of: ${eng.join(' or ')}.`].filter(Boolean).join(' ')])

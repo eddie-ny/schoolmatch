@@ -57,6 +57,11 @@ export default function SchoolDetail() {
               <Badge>{schoolCategoryLabel(school)}</Badge>
               {school.type && <Badge>{school.type}</Badge>}
               {school.verified === false && <Badge>Unverified</Badge>}
+              {schoolScholarships.length > 0 && (
+                <a href="#scholarships" className={`inline-block text-xs font-semibold px-2.5 py-1 rounded-full hover:underline ${schoolScholarships.some((x) => x.fundingType === 'Full') ? 'bg-brand-green text-neutral-900' : 'bg-brand-green/25 text-neutral-800'}`}>
+                  {schoolScholarships.some((x) => x.fundingType === 'Full') ? 'Fully funded scholarship available' : schoolScholarships.length > 1 ? `${schoolScholarships.length} scholarships available` : 'Scholarship available'}
+                </a>
+              )}
             </div>
             {school.website && <a href={school.website} target="_blank" rel="noreferrer" className="btn btn-orange mt-2">Visit university website</a>}
           </div>

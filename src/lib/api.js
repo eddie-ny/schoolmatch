@@ -866,5 +866,14 @@ export async function getProgramsFull(ids) {
   return out
 }
 
+// Programme ids at a given set of schools, for the schools that have scholarships. Used so those programmes can be shown first.
+export async function listProgramsAtSchools({ schoolIds, q = '', level = '', limit = 40 }) {
+  if (!schoolIds.length) return []
+  let query = supabase.from('programs_summary').select('id').in('school_id', schoolIds).limit(limit)
+  if (level) query = query.eq('level', level)
+  if (q.trim()) query = query.ilike('name', `%${q.trim().replace(/[%_,]/g, ' ')}%`)
+  const { data, error } = await query
+  return error ? [] : (data || []).map((x) => x.id)
+}
 export const searchPrograms = remember('p', searchProgramsRaw)
 export const searchSchools = remember('s', searchSchoolsRaw)

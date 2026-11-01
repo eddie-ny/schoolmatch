@@ -1,5 +1,6 @@
 // Building blocks for browsing programmes, in the style students expect from big study sites:
 // a result card, a search hook that asks the server for one page, and a field filter list.
+import { ScholarshipBadge } from './ScholarshipBadge'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Badge } from './ui'
@@ -73,6 +74,7 @@ export function ProgramResult({ p, base, saved, onToggle }) {
       <div className="flex flex-wrap gap-2">
         {p.level && <Badge>{p.level}</Badge>}
         {p.field && <Badge>{p.field}</Badge>}
+        <ScholarshipBadge schoolId={p.schoolId} base={base} masters={p.level === 'Masters'} />
         {modeText(p.modes) && <Badge>{modeText(p.modes)}</Badge>}
         {p.variantCount > 1 && <Badge>{p.variantCount} ways to study</Badge>}
       </div>

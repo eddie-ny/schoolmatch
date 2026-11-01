@@ -7,7 +7,9 @@ import { PageTitle, Segmented, Spinner, Badge, RequireAuth } from '../components
 import { ProgramResult, asResult } from '../components/Browse'
 import { DEGREE_CLASSES, GRADES } from '../lib/constants'
 import { useDebounced, useCountries } from '../components/Browse'
-import { getProgramsFull, searchPrograms } from '../lib/api'
+import { getProgramsFull, listProgramsAtSchools, searchPrograms } from '../lib/api'
+import { forLevel, useSchoolScholarships } from '../hooks/useSchoolScholarships'
+import { fundingRank } from '../lib/scholarshipSections'
 
 // Eligibility for the International path.
 // Bachelors: WASSCE grades, SAT score and English proof, checked against each school's published rules.
@@ -122,6 +124,8 @@ function InternationalEligibilityInner() {
   const pickedKey = picked.join('|')
   const full = access.level === 'full'
   const schoolById = useMemo(() => Object.fromEntries(intl.schools.map((s) => [s.id, s])), [intl.schools])
+  const { bySchool } = useSchoolScholarships()
+  const scholarshipKey = Object.keys(bySchool).length
   const masters = level === 'Masters'
   const satNum = sat === '' ? 0 : Number(sat)
   const satBad = sat !== '' && (satNum < 400 || satNum > 1600)
@@ -133,16 +137,22 @@ function InternationalEligibilityInner() {
     let live = true
     setPool((x) => ({ ...x, busy: true }))
     const places = picked.length ? picked : ['']
-    Promise.all(places.map((country) => searchPrograms({ scope: 'intl', q: dStudy, level: masters ? 'Masters' : 'Undergraduate', country, limit: Math.max(12, Math.floor(60 / places.length)), offset: 0 })))
-      .then(async (rs) => {
-        const ids = [...new Set(rs.flatMap((r) => r.rows.map((x) => x.id)))]
+    // Schools that have a scholarship are fetched on their own as well, so their programmes are not lost in a long list.
+    const level = masters ? 'Masters' : 'Undergraduate'
+    const withAid = Object.keys(bySchool).filter((id) => schoolById[id] && (!picked.length || picked.includes(schoolById[id].country)))
+    Promise.all([
+      Promise.all(places.map((country) => searchPrograms({ scope: 'intl', q: dStudy, level, country, limit: Math.max(12, Math.floor(60 / places.length)), offset: 0 }))),
+      listProgramsAtSchools({ schoolIds: withAid, q: dStudy, level, limit: 60 }),
+    ])
+      .then(async ([rs, aidIds]) => {
+        const ids = [...new Set([...rs.flatMap((r) => r.rows.map((x) => x.id)), ...aidIds])]
         const total = rs.reduce((n, r) => n + r.total, 0)
         const items = await getProgramsFull(ids)
         if (live) setPool({ items, total, busy: false })
       })
       .catch(() => live && setPool({ items: [], total: 0, busy: false }))
     return () => { live = false }
-  }, [ready, masters, dStudy, pickedKey])
+  }, [ready, masters, dStudy, pickedKey, scholarshipKey])
 
   const rows = useMemo(() => {
     if (!ready) return []
@@ -154,8 +164,10 @@ function InternationalEligibilityInner() {
         const checks = bachelorsChecks(p, me)
         return { p, lab: summarise(checks), checks }
       })
-      .sort((a, b) => a.lab.order - b.lab.order || a.p.name.localeCompare(b.p.name))
-  }, [pool.items, masters, cls, gpa, grades, satNum, test, score, ready])
+      // Programmes at a school with a scholarship come first, fully funded before partial. Inside each group the closest fit comes first.
+      .map((r) => ({ ...r, aid: Math.min(9, ...forLevel(bySchool[r.p.schoolId], masters).map((x) => fundingRank(x.fundingType))) }))
+      .sort((a, b) => a.aid - b.aid || a.lab.order - b.lab.order || a.p.name.localeCompare(b.p.name))
+  }, [pool.items, masters, cls, gpa, grades, satNum, test, score, ready, bySchool])
 
   const setGrade = (i, v) => setGrades((g) => g.map((x, j) => (j === i ? v : x)))
 

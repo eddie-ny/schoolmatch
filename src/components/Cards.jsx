@@ -7,6 +7,8 @@ import { isLocal } from '../hooks/useCatalog'
 import { Badge, LockedRows, VerifiedBadges } from './ui'
 import { variantLabel } from '../lib/variants'
 import { logoFor } from '../lib/logos'
+import { ScholarshipBadge } from './ScholarshipBadge'
+import { useSchoolScholarships } from '../hooks/useSchoolScholarships'
 
 // The school's logo when we have one, otherwise a square with its initials.
 // Kinds of school that have too many members to collect a logo for each one get a shared icon instead of initials.
@@ -87,6 +89,7 @@ export function ProgramCard({ p, school, full, saved, onToggle, hideSchool = fal
         <div className="flex flex-wrap gap-2">
           {p.level && <Badge>{p.level}</Badge>}
           {p.field && <Badge>{p.field}</Badge>}
+          <ScholarshipBadge schoolId={p.schoolId} base={abroad ? '/international' : '/local'} masters={p.level === 'Masters'} />
           {p.demo && <Badge tone="orange">Sample data</Badge>}
         </div>
         {full ? (
@@ -187,6 +190,7 @@ export function SchoolCard({ s, count, matches = [], matched, to, signedIn }) {
       <div className="flex flex-wrap gap-2">
         <Badge>{schoolCategoryLabel(s)}</Badge>
         {s.type && <Badge>{s.type}</Badge>}
+        <ScholarshipBadge schoolId={s.id} base={isLocal(s.country) ? '/local' : '/international'} />
         <Badge>{count === 0 ? 'Programmes not listed yet' : `${count} program${count === 1 ? '' : 's'}`}</Badge>
       </div>
       <VerifiedBadges item={s} />
@@ -208,13 +212,15 @@ export function SchoolCard({ s, count, matches = [], matched, to, signedIn }) {
 
 export function ScholarshipCard({ s }) {
   const { pathname } = useLocation()
+  const { schools } = useSchoolScholarships()
+  const school = s.schoolId ? schools[s.schoolId] : null
   const base = pathname.startsWith('/international') || !isLocal(s.country) ? '/international' : '/local'
   return (
     <article className="card flex flex-col gap-3 hover:border-brand-orange transition-colors">
       <div className="flex items-start gap-3">
-        <Monogram name={s.funder || s.name} />
+        <Monogram name={school?.name || s.funder || s.name} logo={school?.logoUrl} />
         <div className="min-w-0 flex-1">
-          <p className="font-semibold text-sm leading-tight break-words">{s.funder}</p>
+          <p className="font-semibold text-sm leading-tight break-words">{school?.name || s.funder}</p>
           <p className="text-sm text-neutral-600">{s.country}</p>
         </div>
       </div>

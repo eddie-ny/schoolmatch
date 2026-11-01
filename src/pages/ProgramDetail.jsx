@@ -5,7 +5,8 @@ import { useAuth } from '../context/AuthContext'
 import { useScope } from '../hooks/useScope'
 import { useSaved } from '../hooks/useSaved'
 import { BackLink, Badge, Gate, PageTitle, Spinner } from '../components/ui'
-import { HeartButton, Monogram } from '../components/Cards'
+import { HeartButton, Monogram, ScholarshipCard } from '../components/Cards'
+import { forLevel, useSchoolScholarships } from '../hooks/useSchoolScholarships'
 import { getProgramGroup } from '../lib/api'
 import { variantLabel } from '../lib/variants'
 import { fullDegreeName } from '../lib/degreeNames'
@@ -75,6 +76,7 @@ export default function ProgramDetail() {
   const { user, access } = useAuth()
   const { to, international } = useScope()
   const saved = useSaved()
+  const sch = useSchoolScholarships()
   const [state, setState] = useState({ loading: true, data: null, error: '' })
   const [imgBad, setImgBad] = useState(false)
 
@@ -94,6 +96,8 @@ export default function ProgramDetail() {
   const p = variants[0]
   const full = access.level === 'full'
   const masters = p.level === 'Masters'
+  const atSchool = forLevel(sch.bySchool[p.schoolId], masters)
+  const external = atSchool.length ? [] : forLevel(sch.external.filter((x) => !school?.country || !x.country || x.country === school.country), masters).slice(0, 6)
   const feeUsd = variants.find((v) => v.feesUsd != null)?.feesUsd
   const feeGhs = variants.find((v) => v.feesGhs != null)?.feesGhs
   const feeOther = variants.find((v) => v.feeAmount != null)
@@ -208,8 +212,19 @@ export default function ProgramDetail() {
             <section id="fees" className="space-y-2">
               <h2 className="text-xl font-bold">Fees and funding</h2>
               <p className="text-neutral-800">{feeUsd != null ? `${money(feeUsd, 'USD')} per year.${abroad ? ' This is the price international students usually pay.' : ''}` : feeOther ? `${money(feeOther.feeAmount, feeOther.feeCurrency)} per year, worked out from the full course fee and the course length.` : feeGhs != null ? `${money(feeGhs, 'GHS')} per year.` : 'The fee has not been added yet. Check with the school.'}</p>
-              <Link to={to('/scholarships')} className="underline text-sm">Look for scholarships</Link>
+              {atSchool.length || external.length
+                ? <a href="#scholarships" className="underline text-sm">{atSchool.length ? `See the ${atSchool.length === 1 ? 'scholarship' : `${atSchool.length} scholarships`} at ${school?.name}` : 'See scholarships you can apply for'}</a>
+                : <Link to={to('/scholarships')} className="underline text-sm">Look for scholarships</Link>}
             </section>
+
+            {(atSchool.length > 0 || external.length > 0) && (
+              <section id="scholarships" className="space-y-3 scroll-mt-24">
+                <h2 className="text-xl font-bold">{atSchool.length ? `Scholarships at ${school?.name}` : 'Scholarships you can apply for'}</h2>
+                {!atSchool.length && <p className="text-sm text-neutral-600">{school?.name} has none listed yet. These are open to students applying to schools in {school?.country || 'this country'}.</p>}
+                <div className="grid sm:grid-cols-2 gap-4">{[...atSchool, ...external].map((x) => <ScholarshipCard key={x.id} s={x} />)}</div>
+                <Link to={to('/scholarships')} className="underline text-sm">See all scholarships</Link>
+              </section>
+            )}
           </div>
         </div>
       )}

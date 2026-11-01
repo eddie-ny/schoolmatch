@@ -10,14 +10,17 @@ export function useSchoolScholarships() {
     const all = [...cat.scholarships, ...(cat.intl?.scholarships || [])]
     const seen = new Set()
     const bySchool = {}
+    const external = []
     for (const s of all) {
-      if (!s.schoolId || seen.has(s.id)) continue
+      if (seen.has(s.id)) continue
       seen.add(s.id)
+      if (!s.schoolId) { external.push(s); continue }
       ;(bySchool[s.schoolId] ||= []).push(s)
     }
     for (const k of Object.keys(bySchool)) bySchool[k].sort((a, b) => fundingRank(a.fundingType) - fundingRank(b.fundingType))
     const schools = Object.fromEntries([...cat.schools, ...(cat.intl?.schools || [])].map((x) => [x.id, x]))
-    return { bySchool, schools, loading: cat.loading }
+    external.sort((a, b) => fundingRank(a.fundingType) - fundingRank(b.fundingType))
+    return { bySchool, external, schools, loading: cat.loading }
   }, [cat])
 }
 

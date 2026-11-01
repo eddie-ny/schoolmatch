@@ -5,7 +5,7 @@ import { useSaved } from '../hooks/useSaved'
 import { useSearchParams } from 'react-router-dom'
 import { PageTitle, Segmented, Spinner, Badge, RequireAuth } from '../components/ui'
 import { ProgramResult, asResult } from '../components/Browse'
-import { DEGREE_CLASSES, GRADES } from '../lib/constants'
+import { DEGREE_CLASSES, GRADES, ELECTIVE_SUBJECTS } from '../lib/constants'
 import { useDebounced, useCountries } from '../components/Browse'
 import { getProgramsFull, listProgramsAtSchools, searchPrograms } from '../lib/api'
 import { forLevel, useSchoolScholarships } from '../hooks/useSchoolScholarships'
@@ -110,6 +110,8 @@ function InternationalEligibilityInner() {
   const [cls, setCls] = useState('')
   const [gpa, setGpa] = useState('')
   const [grades, setGrades] = useState(() => gradesFromSaved(user?.results))
+  // The subject names are for the student's own record. The rules we check use the grades only.
+  const [electiveNames, setElectiveNames] = useState(['', '', ''])
   const [note, setNote] = useState('')
   const [test, setTest] = useState('none')
   const [score, setScore] = useState('')
@@ -225,6 +227,12 @@ function InternationalEligibilityInner() {
                       <option value="">Grade</option>
                       {GRADES.map((g) => <option key={g}>{g}</option>)}
                     </select>
+                    {i >= 3 && (
+                      <select className="input mt-2" aria-label={`${s} subject`} value={electiveNames[i - 3]} onChange={(e) => setElectiveNames((n) => n.map((x, j) => (j === i - 3 ? e.target.value : x)))}>
+                        <option value="">Subject name (optional)</option>
+                        {ELECTIVE_SUBJECTS.map((x) => <option key={x}>{x}</option>)}
+                      </select>
+                    )}
                   </label>
                 ))}
               </div>

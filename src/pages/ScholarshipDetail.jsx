@@ -71,9 +71,9 @@ export default function ScholarshipDetail() {
               {s.level && full && <Badge>{s.level}</Badge>}
             </div>
             <VerifiedBadges item={s} />
-            <div className="flex flex-col sm:flex-row gap-2">
-              {full && link && <a className="btn btn-orange w-full sm:w-auto" href={link} target="_blank" rel="noreferrer">Apply or visit the site</a>}
-              {school && <Link className="btn btn-outline w-full sm:w-auto" to={`${schoolBase}/schools/${school.id}`}>See {school.name} and its programs</Link>}
+            <div className="grid sm:grid-cols-2 gap-2 max-w-xl">
+              {full && link && <a className="btn btn-orange w-full justify-center text-center" href={link} target="_blank" rel="noreferrer">Official page</a>}
+              {school && <Link className="btn btn-outline w-full justify-center text-center" to={`${schoolBase}/schools/${school.id}`}>School and its programs</Link>}
             </div>
           </div>
         </div>

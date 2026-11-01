@@ -18,6 +18,7 @@
     "simple-icons": "^16.36.0"
   },
   "devDependencies": {
+    "@sentry/vite-plugin": "^11.10.0",
     "@tailwindcss/vite": "^4.3.3",
     "@vitejs/plugin-react": "^6.1.2",
     "tailwindcss": "^4.3.3",

@@ -222,7 +222,7 @@ export function ScholarshipCard({ s }) {
         <Link to={`${base}/scholarships/${s.id}`} target="_blank" rel="noreferrer" className="hover:underline">{s.name}</Link>
       </h3>
       <div className="flex flex-wrap gap-2">
-        <Badge tone="green">{s.fundingType} funding</Badge>
+        <Badge tone={s.fundingType === 'Not stated' ? 'gray' : 'green'}>{s.fundingType === 'Not stated' ? 'Funding not stated' : `${s.fundingType} funding`}</Badge>
         {s.gender && <Badge tone="orange">{s.gender === 'female' ? 'Women only' : 'Men only'}</Badge>}
       </div>
       <Link to={`${base}/scholarships/${s.id}`} target="_blank" rel="noreferrer" className="font-semibold text-sm text-brand-orange-ink hover:underline mt-auto self-end">View scholarship information &rarr;</Link>

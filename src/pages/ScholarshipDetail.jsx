@@ -44,7 +44,7 @@ export default function ScholarshipDetail() {
             </div>
             <h2 className="text-2xl md:text-3xl font-extrabold leading-tight break-words">{s.name}</h2>
             <div className="flex flex-wrap gap-2">
-              <Badge tone="green">{s.fundingType} funding</Badge>
+              <Badge tone={s.fundingType === 'Not stated' ? 'gray' : 'green'}>{s.fundingType === 'Not stated' ? 'Funding not stated' : `${s.fundingType} funding`}</Badge>
               {s.gender && <Badge tone="orange">{s.gender === 'female' ? 'Women only' : 'Men only'}</Badge>}
               {s.level && full && <Badge>{s.level}</Badge>}
             </div>
@@ -55,7 +55,7 @@ export default function ScholarshipDetail() {
         {full && (
           <div className="border-t border-neutral-200 bg-neutral-50 p-4 md:px-6 flex flex-wrap gap-x-8 gap-y-3">
             <Fact label="Deadline">{s.deadline}</Fact>
-            <Fact label="Funding">{s.fundingType}</Fact>
+            <Fact label="Funding">{s.fundingType === 'Not stated' ? 'Not stated by the funder' : s.fundingType}</Fact>
             <Fact label="Country">{s.country}</Fact>
             <Fact label="Level">{s.level}</Fact>
             <Fact label="Best aggregate">{s.minAggregate}</Fact>

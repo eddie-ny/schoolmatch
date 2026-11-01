@@ -54,7 +54,7 @@ function SchoolScholarships({ list, me }) {
             <div className="flex flex-wrap items-center gap-2">
               <Link to={`/local/scholarships/${s.id}`} target="_blank" rel="noreferrer" className="font-semibold hover:underline">{s.name}</Link>
               <Badge tone={schState[m.state][1]}>{schState[m.state][0]}</Badge>
-              <Badge>{s.fundingType} funding</Badge>
+              <Badge>{s.fundingType === 'Not stated' ? 'Funding not stated' : `${s.fundingType} funding`}</Badge>
             </div>
             <ul className="list-disc ml-5 text-neutral-700">{m.reasons.slice(0, 3).map((r) => <li key={r}>{r}</li>)}</ul>
           </li>

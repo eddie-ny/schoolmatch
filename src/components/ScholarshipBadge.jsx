@@ -14,7 +14,7 @@ export function ScholarshipBadge({ schoolId, base, masters = null }) {
   const label = many ? `${list.length} scholarships available` : best.fundingType === 'Full' ? 'Fully funded scholarship available' : 'Scholarship available'
   const to = many ? `${base}/schools/${schoolId}#scholarships` : `${base}/scholarships/${best.id}`
   return (
-    <Link to={to} target="_blank" rel="noreferrer" className={`inline-block text-xs font-semibold px-2.5 py-1 rounded-full hover:underline ${best.fundingType === 'Full' ? 'bg-brand-green text-neutral-900' : 'bg-brand-green/25 text-neutral-800'}`}>
+    <Link to={to} target="_blank" rel="noreferrer" className={`inline-block text-xs font-semibold px-2.5 py-1 rounded-full hover:underline text-neutral-900 shadow-sm ${best.fundingType === 'Full' ? 'bg-brand-green' : 'bg-brand-orange'}`}>
       {label}
     </Link>
   )

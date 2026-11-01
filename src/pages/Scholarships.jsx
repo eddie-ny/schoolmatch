@@ -8,6 +8,7 @@ import { ScholarshipCard } from '../components/Cards'
 import { SHOW_INTERNATIONAL } from '../lib/constants'
 
 const PAGE = 12
+const RANK = ['Full', 'Partial', 'Not stated']
 
 export default function Scholarships() {
   const { access, user } = useAuth()
@@ -23,7 +24,9 @@ export default function Scholarships() {
     () =>
       scholarships
         .filter((s) => funding === 'all' || s.fundingType.toLowerCase() === funding)
-        .filter((s) => where === 'all' || (where === 'local' ? isLocal(s.country) : !isLocal(s.country))),
+        .filter((s) => where === 'all' || (where === 'local' ? isLocal(s.country) : !isLocal(s.country)))
+        // Fully funded first, then partial, then the rest. Array.sort is stable, so the existing order holds inside each group.
+        .sort((a, b) => RANK.indexOf(a.fundingType) - RANK.indexOf(b.fundingType)),
     [scholarships, funding, where, user]
   )
 

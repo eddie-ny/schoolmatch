@@ -1,0 +1,7 @@
+-- University of Ghana Level 100 fees, part 3 (2026/27 provisional UG schedules, GHS). Safe to run twice.
+-- BSc Family and Consumer Sciences: Science column (owner). BSc Business Administration: Humanities Admin/Law column (owner said Humanities; Admin/Law chosen to match BSc Administration).
+do $$ begin
+update public.programs p set fees_ghs=3462, internal_note=trim(coalesce(p.internal_note,'')||' UG fee schedule 2026/27 (provisional), Science column, Level 100: GHS 3,462.') from public.schools s where s.id=p.school_id and s.name='University of Ghana' and p.name='BSc Family and Consumer Sciences (Family and Child Studies)' and p.mode='Regular' and p.campus is null and p.fees_ghs is null;
+update public.programs p set fees_ghs=3462, internal_note=trim(coalesce(p.internal_note,'')||' UG fee schedule 2026/27 (provisional), Science column, Level 100: GHS 3,462.') from public.schools s where s.id=p.school_id and s.name='University of Ghana' and p.name='BSc Family and Consumer Sciences (Food and Clothing)' and p.mode='Regular' and p.campus is null and p.fees_ghs is null;
+update public.programs p set fees_ghs=2814, internal_note=trim(coalesce(p.internal_note,'')||' UG fee schedule 2026/27 (provisional), Humanities Admin/Law column, Level 100: GHS 2,814.') from public.schools s where s.id=p.school_id and s.name='University of Ghana' and p.name='BSc Business Administration' and p.mode='Regular' and p.campus is null and p.fees_ghs is null;
+end $$;

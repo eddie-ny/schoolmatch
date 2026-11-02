@@ -28,6 +28,9 @@ export const ELECTIVE_SUBJECTS = [
   'Business Management',
   'French',
   'Information and Communication Technology',
+  'Applied Electricity',
+  'Electronics',
+  'Technical Drawing',
 ]
 
 export const SHS_PROGRAMS = [

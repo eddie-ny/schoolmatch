@@ -43,6 +43,8 @@ function keyFacts(v, masters) {
   const out = []
   if (v.entryQualification) out.push(['What you need', v.entryQualification])
   if (!masters && v.cutoffAggregate != null) out.push(['Last year\'s cut-off', `Aggregate ${v.cutoffAggregate}${v.cutoffYear ? ` (${v.cutoffYear})` : ''}. A lower number is better, so your aggregate must be equal or lower.`])
+  else if (!masters && v.cutoffFrom) out.push(['Last year\'s cut-off', `Aggregate ${v.cutoffFrom.cutoffAggregate}${v.cutoffFrom.cutoffYear ? ` (${v.cutoffFrom.cutoffYear})` : ''} for the ${v.cutoffFrom.mode || 'regular'} entry. The school publishes one cut-off for this programme, so use it as a guide.`])
+  else if (!masters && (v.level === 'Undergraduate' || v.level === 'Bachelors')) out.push(['Last year\'s cut-off', 'Not available yet. We add it when the school publishes it.'])
   if (!masters && v.requirements?.length) {
     const CORE = ['English Language', 'Core Mathematics', 'Integrated Science', 'Social Studies']
     const g = (r) => (r.minGrade ? ` (${r.minGrade} or better)` : '')
@@ -93,7 +95,8 @@ export default function ProgramDetail() {
   if (!data || !data.variants.length) return <div className="space-y-3"><BackLink to={to('/programs')}>Back to programs</BackLink><p>{state.error || 'This program could not be found.'}</p></div>
 
   const { school, variants } = data
-  const p = variants[0]
+  const alt = variants.find((v) => v.cutoffAggregate != null)
+  const p = variants[0].cutoffAggregate == null && alt ? { ...variants[0], cutoffFrom: alt } : variants[0]
   const full = access.level === 'full'
   const masters = p.level === 'Masters'
   const atSchool = forLevel(sch.bySchool[p.schoolId], masters)

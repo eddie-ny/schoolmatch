@@ -167,7 +167,7 @@ function EligibilityInner() {
   // What the student typed stays on this device, so a refresh does not wipe it. Nothing leaves the browser.
   const draftKey = `wemk.eligibility.draft.${user?.id || 'user'}`
   const [draft] = useState(() => { try { return JSON.parse(localStorage.getItem(draftKey) || 'null') || {} } catch { return {} } })
-  const [level, setLevel] = useState(fromLevel === 'Masters' ? 'masters' : (draft.level || 'undergraduate'))
+  const [level, setLevel] = useState(fromLevel ? (fromLevel === 'Masters' ? 'masters' : 'undergraduate') : (draft.level || 'undergraduate'))
   const [degreeClass, setDegreeClass] = useState(draft.degreeClass || '')
   const [cgpa, setCgpa] = useState(draft.cgpa || '')
   const masters = level === 'masters'

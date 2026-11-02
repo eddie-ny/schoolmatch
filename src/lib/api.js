@@ -222,7 +222,7 @@ export async function saveProfile(userId, profile) {
   }
   let { error } = await supabase.from('profiles').update({ ...base, study_level: profile.studyLevel || null, study_field: profile.studyField || null }).eq('id', userId)
   // If the database does not have the study columns yet, save everything else so the student is not blocked.
-  if (error && /study_(level|field)/.test(error.message || '')) ({ error } = await supabase.from('profiles').update(base).eq('id', userId))
+  if (error && (/study_(level|field)/.test(error.message || '') || /permission denied/i.test(error.message || ''))) ({ error } = await supabase.from('profiles').update(base).eq('id', userId))
   fail(error, 'Could not save your profile.')
 }
 

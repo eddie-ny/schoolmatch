@@ -84,6 +84,7 @@ function ResultCard({ item, highlight, scholarships, me }) {
         {item.programId ? <Link to={`/${item.international ? 'international' : 'local'}/programs/${item.programId}`} className="hover:underline">{item.programName}</Link> : item.programName}
       </h3>
       <p className="text-sm text-neutral-600">{item.schoolName}</p>
+      {item.programId && <Link to={`/${item.international ? 'international' : 'local'}/programs/${item.programId}`} className="inline-block text-sm font-semibold underline">View program page</Link>}
       {need && <p className="text-sm font-semibold">{need}</p>}
       {item.aggregate != null && (
         <p className="text-sm">Your aggregate: <b>{item.aggregate}</b>{item.cutoff != null ? ` · Cut-off: ${item.cutoff}` : ''}</p>
@@ -163,19 +164,25 @@ function EligibilityInner() {
   const [params] = useSearchParams()
   const fromName = params.get('program') || ''
   const fromLevel = params.get('level') || ''
-  const [level, setLevel] = useState(fromLevel === 'Masters' ? 'masters' : 'undergraduate')
-  const [degreeClass, setDegreeClass] = useState('')
-  const [cgpa, setCgpa] = useState('')
+  // What the student typed stays on this device, so a refresh does not wipe it. Nothing leaves the browser.
+  const draftKey = `wemk.eligibility.draft.${user?.id || 'user'}`
+  const [draft] = useState(() => { try { return JSON.parse(localStorage.getItem(draftKey) || 'null') || {} } catch { return {} } })
+  const [level, setLevel] = useState(fromLevel === 'Masters' ? 'masters' : (draft.level || 'undergraduate'))
+  const [degreeClass, setDegreeClass] = useState(draft.degreeClass || '')
+  const [cgpa, setCgpa] = useState(draft.cgpa || '')
   const masters = level === 'masters'
   const topup = level === 'topup'
-  const [qualification, setQualification] = useState('')
-  const [mode, setMode] = useState(saved?.mode || 'final')
-  const [grades, setGrades] = useState(saved?.grades || {})
-  const [electives, setElectives] = useState(saved?.electives || ['', '', ''])
-  const [sat, setSat] = useState(saved?.sat || '')
-  const [scope, setScope] = useState(SHOW_INTERNATIONAL ? 'both' : 'local')
-  const [field, setField] = useState('')
-  const [programName, setProgramName] = useState('')
+  const [qualification, setQualification] = useState(draft.qualification || '')
+  const [mode, setMode] = useState(draft.mode || saved?.mode || 'final')
+  const [grades, setGrades] = useState(draft.grades || saved?.grades || {})
+  const [electives, setElectives] = useState(draft.electives || saved?.electives || ['', '', ''])
+  const [sat, setSat] = useState(draft.sat || saved?.sat || '')
+  const [scope, setScope] = useState(SHOW_INTERNATIONAL ? (draft.scope || 'both') : 'local')
+  const [field, setField] = useState(fromName ? '' : (draft.field || ''))
+  const [programName, setProgramName] = useState(fromName ? '' : (draft.programName || ''))
+  useEffect(() => {
+    try { localStorage.setItem(draftKey, JSON.stringify({ level, degreeClass, cgpa, qualification, mode, grades, electives, sat, scope, field, programName })) } catch { /* storage blocked: the form still works */ }
+  }, [draftKey, level, degreeClass, cgpa, qualification, mode, grades, electives, sat, scope, field, programName])
   const [output, setOutput] = useState(null)
   // Scholarships that belong to the schools in the results, fetched once per search.
   const [schol, setSchol] = useState({ bySchool: {}, schoolOf: {} })

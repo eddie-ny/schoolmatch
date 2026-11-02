@@ -6,13 +6,19 @@
 import { supabase } from './supabase'
 import { CORE_SUBJECTS } from './constants'
 import { logoFor } from './logos'
+import { Sentry } from './sentry.js'
 
 export const PASSWORD_RULE = 'Use at least 8 characters with upper case, lower case and numbers.'
 export const passwordProblem = (pw) =>
   pw.length >= 8 && /[a-z]/.test(pw) && /[A-Z]/.test(pw) && /[0-9]/.test(pw) ? '' : PASSWORD_RULE
 
+// Errors from our own server or database (timeouts, 5xx, broken functions) go to Sentry so they are not silent.
+// Normal user mistakes (wrong password, a rule message we raise on purpose) are not reported. No grades or personal data are sent.
+const isServerFault = (e) => /^(57|58|XX|42P|42883|53|54)/.test(e.code || '') || /timeout|bad gateway|failed to fetch|internal server/i.test(e.message || '') || Number(e.status) >= 500
 const fail = (error, fallback) => {
-  if (error) throw new Error(friendly(error) || fallback)
+  if (!error) return
+  if (isServerFault(error)) Sentry.captureException(new Error(`Supabase: ${error.message || fallback}`), { extra: { code: error.code, fallback } })
+  throw new Error(friendly(error) || fallback)
 }
 
 function friendly(error) {

@@ -30,9 +30,9 @@ const classRank = (r) => (/^Meets/.test(r.label) ? 0 : /^Below/.test(r.label) ? 
 const outOfReach = (r) => /^(Below|Not yet)/.test(r.label)
 const byClass = (list) => [...list].sort((a, b) => classRank(a) - classRank(b))
 
-function GradeSelect({ value, onChange }) {
+function GradeSelect({ value, onChange, id, label }) {
   return (
-    <select className="input" value={value || ''} onChange={(e) => onChange(e.target.value)}>
+    <select className="input" id={id} name={id} aria-label={label} value={value || ''} onChange={(e) => onChange(e.target.value)}>
       <option value="">Grade</option>
       {GRADES.map((g) => <option key={g}>{g}</option>)}
     </select>
@@ -84,7 +84,7 @@ function ResultCard({ item, highlight, scholarships, me }) {
         {item.programId ? <Link to={`/${item.international ? 'international' : 'local'}/programs/${item.programId}`} className="hover:underline">{item.programName}</Link> : item.programName}
       </h3>
       <p className="text-sm text-neutral-600">{item.schoolName}</p>
-      {item.programId && <Link to={`/${item.international ? 'international' : 'local'}/programs/${item.programId}`} className="inline-block text-sm font-semibold underline">View program page</Link>}
+      {item.programId && <Link to={`/${item.international ? 'international' : 'local'}/programs/${item.programId}`} className="btn btn-orange inline-flex text-sm">View program page</Link>}
       {need && <p className="text-sm font-semibold">{need}</p>}
       {item.aggregate != null && (
         <p className="text-sm">Your aggregate: <b>{item.aggregate}</b>{item.cutoff != null ? ` · Cut-off: ${item.cutoff}` : ''}</p>
@@ -105,7 +105,7 @@ function ResultCard({ item, highlight, scholarships, me }) {
 
 
 // Type to search the programs, then pick one from the matches.
-function ProgramPicker({ options, value, onChange, disabled }) {
+function ProgramPicker({ options, value, onChange, disabled, id }) {
   const [text, setText] = useState(value || '')
   const [open, setOpen] = useState(false)
   const [active, setActive] = useState(0)
@@ -129,7 +129,7 @@ function ProgramPicker({ options, value, onChange, disabled }) {
   return (
     <div className="relative">
       <input
-        className="input" type="text" role="combobox" aria-expanded={open} aria-controls="program-list" aria-autocomplete="list"
+        id={id} name={id} className="input" type="text" role="combobox" aria-expanded={open} aria-controls="program-list" aria-autocomplete="list"
         placeholder="Start typing, for example nursing or law" autoComplete="off" disabled={disabled}
         value={text}
         onChange={(e) => { setText(e.target.value); setActive(0); setOpen(true); if (value) onChange('') }}
@@ -211,6 +211,12 @@ function EligibilityInner() {
     [scoped, field]
   )
 
+  // A programme saved from another level (for example Bachelor of Arts while you are on Masters) is cleared once the list is known.
+  useEffect(() => {
+    if (!programs.length || !programName) return
+    if (!scoped.some((p) => p.group === programName)) { setProgramName(''); setField('') }
+  }, [programs, scoped, programName])
+
   // Arriving from a programme page: fill in that programme (by its common name) once the list is loaded.
   const [prefilled, setPrefilled] = useState(false)
   useEffect(() => {
@@ -244,7 +250,7 @@ function EligibilityInner() {
       if (!programName) return setError('Type the masters program you want and choose it from the list.')
       if (cgpa !== '' && !(Number(cgpa) >= 0 && Number(cgpa) <= 5)) return setError('Your CGPA must be a number from 0 to 5, for example 3.2.')
       setBusy(true)
-      try { setOutput(await checkMastersEligibility({ programName, degreeClass, cgpa })) } catch (err) { setError(err.message) }
+      try { setOutput(await checkMastersEligibility({ programName, degreeClass, cgpa, scope })) } catch (err) { setError(err.message) }
       setBusy(false)
       return
     }
@@ -342,11 +348,11 @@ function EligibilityInner() {
           <div className="space-y-3">
             {electives.map((name, i) => (
               <div key={i} className="grid grid-cols-2 gap-3">
-                <select className="input" value={name} onChange={(e) => pickElective(i, e.target.value)}>
+                <select className="input" name={`elective-${i + 1}`} aria-label={`Elective subject ${i + 1}`} value={name} onChange={(e) => pickElective(i, e.target.value)}>
                   <option value="">Choose subject</option>
                   {ELECTIVE_SUBJECTS.map((s) => <option key={s}>{s}</option>)}
                 </select>
-                <GradeSelect value={name ? grades[name] : ''} onChange={(g) => name && setGrade(name)(g)} />
+                <GradeSelect id={`elective-grade-${i + 1}`} label={`Grade for elective ${i + 1}`} value={name ? grades[name] : ''} onChange={(g) => name && setGrade(name)(g)} />
               </div>
             ))}
             {electives.length < 5 && (

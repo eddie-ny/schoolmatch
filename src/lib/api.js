@@ -92,6 +92,8 @@ export async function signIn(email, password) {
 export async function signOut() {
   // 'local' ends this browser's session without waiting on other devices.
   await supabase.auth.signOut({ scope: 'local' })
+  // Forms saved on this device (eligibility answers) are cleared when the student signs out.
+  try { Object.keys(localStorage).filter((k) => k.startsWith('wemk.eligibility.draft.')).forEach((k) => localStorage.removeItem(k)) } catch { /* storage blocked */ }
 }
 
 export async function requestPasswordReset(email) {
@@ -301,7 +303,12 @@ const isLocalCountry = (c) => (c || '').toLowerCase() === 'ghana'
 
 // The API returns at most 1000 rows per request. Read the first page (with the total count), then fetch the rest in parallel.
 async function fetchAll(table, columns, filter = (q) => q) {
-  const first = await filter(supabase.from(table).select(columns, { count: 'exact' })).order('id').range(0, 999)
+  // One quick retry: a busy database can answer a 500 once and be fine a second later.
+  let first = await filter(supabase.from(table).select(columns, { count: 'exact' })).order('id').range(0, 999)
+  if (first.error && /timeout|500|internal|gateway/i.test(`${first.error.message} ${first.error.code}`)) {
+    await new Promise((r) => setTimeout(r, 700))
+    first = await filter(supabase.from(table).select(columns, { count: 'exact' })).order('id').range(0, 999)
+  }
   if (first.error) return { data: [], error: first.error }
   const rows = first.data
   const step = rows.length
@@ -513,11 +520,16 @@ export async function checkEligibility({ programName, scope, mode, grades, elect
 }
 
 // Masters: compares the student's first-degree class with the class each school states. No thresholds are guessed.
-export async function checkMastersEligibility({ programName, degreeClass, cgpa }) {
+export async function checkMastersEligibility({ programName, degreeClass, cgpa, scope = 'local' }) {
   // The CGPA goes along only when the student typed one, so the check works the same for schools that do not ask for it.
-  const args = { p_program_name: programName, p_degree_class: degreeClass }
+  const args = { p_program_name: programName, p_degree_class: degreeClass, p_scope: scope }
   if (cgpa !== '' && cgpa != null) args.p_cgpa = Number(cgpa)
-  const { data, error } = await supabase.rpc('check_masters_eligibility_cgpa', args)
+  let { data, error } = await supabase.rpc('check_masters_eligibility_cgpa', args)
+  // Until the database has the scope-aware version, fall back to the older call so the check keeps working.
+  if (error && (error.code === 'PGRST202' || /could not find the function/i.test(error.message || ''))) {
+    const { p_scope, ...older } = args
+    ;({ data, error } = await supabase.rpc('check_masters_eligibility_cgpa', older))
+  }
   fail(error, 'Could not check masters eligibility.')
   return data
 }

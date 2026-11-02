@@ -117,11 +117,13 @@ export function PasswordInput({ className = '', ...props }) {
 export function Field({ label, children, hint }) {
   const id = useId()
   // Link the label to its input or select so tapping the label focuses it and screen readers announce it.
-  const linkable = isValidElement(children) && (['input', 'select', 'textarea'].includes(children.type) || children.type === PasswordInput)
+  const isDom = isValidElement(children) && typeof children.type === 'string'
+  // Plain inputs, and our own input components (they pass the id on to the real input).
+  const linkable = isValidElement(children) && (isDom ? ['input', 'select', 'textarea'].includes(children.type) : typeof children.type === 'function' || children.type === PasswordInput)
   return (
     <div>
       <label className="label" htmlFor={linkable ? id : undefined}>{label}</label>
-      {linkable ? cloneElement(children, { id }) : children}
+      {linkable ? cloneElement(children, isDom ? { id, name: children.props.name || id } : { id }) : children}
       {hint && <p className="text-xs text-neutral-500 mt-1">{hint}</p>}
     </div>
   )

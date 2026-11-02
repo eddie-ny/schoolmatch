@@ -2,7 +2,7 @@
 # usage: python3 scripts/gen_uk_programmes.py <unzipped on_* folder> <output folder> [rows per file]
 import csv, collections, re, sys, os
 D, OUT = sys.argv[1], sys.argv[2]
-K = int(sys.argv[3]) if len(sys.argv) > 3 else 3000
+MAXB = int(sys.argv[3]) if len(sys.argv) > 3 else 600000
 os.makedirs(OUT, exist_ok=True)
 rd = lambda f: list(csv.DictReader(open(os.path.join(D, f), encoding='utf-8-sig')))
 INST = {x['PUBUKPRN']: x for x in rd('INSTITUTION.csv')}
@@ -75,8 +75,8 @@ for c in KIS:
     elif fnd == '1': notes.append('A foundation year is available on this course.')
     if c['SANDWICH'] in ('1', '2'): notes.append('A work placement year is %s.' % ('optional' if c['SANDWICH'] == '1' else 'compulsory'))
     if c['YEARABROAD'] in ('1', '2'): notes.append('A year abroad is %s.' % ('optional' if c['YEARABROAD'] == '1' else 'compulsory'))
-    notes.append('Tuition fees and entry requirements are not in this record. Read them on the official pages: course %s, fees and funding %s.' % (c['CRSEURL'], c['CRSECSTURL']))
-    rows.setdefault(p, []).append((t, field(SBJ.get((p, c['KISCOURSEID'], c['KISMODE'])), t), yrs, fnd in ('1', '2'), ' '.join(notes), c['CRSEURL'], c['KISCOURSEID']))
+    feeurl = c['CRSECSTURL'] if c['CRSECSTURL'] and c['CRSECSTURL'] != c['CRSEURL'] else None
+    rows.setdefault(p, []).append((t, field(SBJ.get((p, c['KISCOURSEID'], c['KISMODE'])), t), yrs, fnd in ('1', '2'), ' '.join(notes), c['CRSEURL'], c['KISCOURSEID'], feeurl))
 
 SCH = """insert into schools(name,country,type,category,city,website,verified,demo)
 select v.name,'United Kingdom','Public','University',v.city,v.web,false,false from (values
@@ -89,22 +89,24 @@ open(os.path.join(OUT, 'step149_uk_schools.sql'), 'w').write(
 
 HEAD = """-- UK programmes (part %d of %d): first-degree, full-time courses from the Discover Uni dataset of 27 Oct 2026. Run step149_uk_schools.sql first. Safe to run twice.
 insert into programs(school_id,name,field,level,mode,duration_years,foundation_available,verified,demo,entry_note,intl_source_url,internal_note)
-select s.id, v.name, v.field, 'Undergraduate', 'Regular', v.yrs, v.fnd, false, false, v.note, v.url,
+select s.id, v.name, v.field, 'Undergraduate', 'Regular', v.yrs, v.fnd, false, false, trim(coalesce(v.note,'')||' Tuition fees and entry requirements are not in this record. Read them on the university course page (the link on this programme)'||coalesce(' and the fees page '||v.feeurl,' and the university fees pages')||'.'), v.url,
   'Imported from the Discover Uni dataset (HESA / OfS, 27 Oct 2026). Course id '||v.code||'. Source: discoveruni-2026-10-27'
 from (values
 %s
-) as v(school,name,field,yrs,fnd,note,url,code)
+) as v(school,name,field,yrs,fnd,note,url,code,feeurl)
 join schools s on s.name=v.school and s.country='United Kingdom'
 where not exists (select 1 from programs x where x.school_id=s.id and x.name=v.name and x.mode='Regular');
 """
-files = []; cur = []
-for p, rs in rows.items():
-    if len(cur) + len(rs) > K and cur: files.append(cur); cur = []
-    cur += [(sch[p][0],) + r for r in rs]
+def line(r): return '(%s,%s,%s,%s,%s,%s,%s,%s,%s)' % (q(r[0]), q(r[1]), q(r[2]) if r[2] else 'null', nn(r[3]), 'true' if r[4] else 'false', q(r[5]) if r[5] else "null", q(r[6]), q(r[7]), q(r[8]) if r[8] else 'null')
+allrows = [(sch[p][0],) + r for p, rs in rows.items() for r in rs]
+files = []; cur = []; size = 0
+for r in allrows:
+    l = len(line(r)) + 2
+    if cur and size + l > MAXB: files.append(cur); cur = []; size = 0
+    cur.append(r); size += l
 if cur: files.append(cur)
 for i, fr in enumerate(files, 1):
-    v = ',\n'.join('(%s,%s,%s,%s,%s,%s,%s,%s)' % (q(r[0]), q(r[1]), q(r[2]) if r[2] else 'null', nn(r[3]), 'true' if r[4] else 'false', q(r[5]), q(r[6]), q(r[7])) for r in fr)
-    open(os.path.join(OUT, 'uk_programmes_part%d.sql' % i), 'w').write(HEAD % (i, len(files), v))
+    open(os.path.join(OUT, 'uk_programmes_part%d.sql' % i), 'w').write(HEAD % (i, len(files), ',\n'.join(line(r) for r in fr)))
     print('part', i, len(fr))
 print('schools', len(sch), 'programmes', sum(len(r) for r in rows.values()))
 print('fields', collections.Counter(r[2] for rs in rows.values() for r in rs).most_common(30))

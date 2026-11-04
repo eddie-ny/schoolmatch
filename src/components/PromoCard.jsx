@@ -9,12 +9,12 @@ function RockingCard() {
     <div className="promo-card-stage" aria-hidden="true">
       <div className="promo-card">
         <div className="flex items-center justify-between">
-          <span className="text-[11px] font-bold uppercase tracking-widest text-neutral-500">Example</span>
-          <span className="text-xs font-bold bg-brand-green/40 rounded-full px-2.5 py-1">Strong match</span>
+          <span className="text-[11px] font-bold uppercase tracking-widest text-neutral-800/70">Example</span>
+          <span className="text-xs font-bold bg-white/80 rounded-full px-2.5 py-1">Strong match</span>
         </div>
         <div>
           <p className="font-bold leading-tight">Sample program</p>
-          <p className="text-sm text-neutral-600">Sample university</p>
+          <p className="text-sm text-neutral-800/80">Sample university</p>
         </div>
         <div className="flex items-center gap-2 text-sm">
           <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="9" width="12" height="8" rx="2" /><path d="M7 9V6a3 3 0 0 1 6 0v3" /></svg>

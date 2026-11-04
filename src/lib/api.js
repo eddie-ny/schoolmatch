@@ -73,7 +73,9 @@ export async function signUp(form) {
     options: { data: meta },
   })
   fail(error, 'Could not create your account.')
-  return { needsConfirm: !data.session }
+  // For an address that already has a confirmed account, Supabase answers success but returns a user with no identities and sends nothing.
+  const alreadyRegistered = Array.isArray(data.user?.identities) && data.user.identities.length === 0
+  return { needsConfirm: !data.session && !alreadyRegistered, alreadyRegistered }
 }
 
 // The confirmation email carries a code. Typing it here confirms the address and signs the person in.

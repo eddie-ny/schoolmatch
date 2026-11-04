@@ -153,6 +153,7 @@ export function Signup() {
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const [sentTo, setSentTo] = useState('')
+  const [exists, setExists] = useState(false)
   const set = (k) => (e) => setF({ ...f, [k]: e.target.type === 'checkbox' ? e.target.checked : e.target.value })
   const minor = isMinorFromDob(f.dateOfBirth)
 
@@ -161,6 +162,7 @@ export function Signup() {
   const submit = async (e) => {
     e.preventDefault()
     setError('')
+    setExists(false)
     if (!f.dateOfBirth) return setError('Please choose your full date of birth (day, month and year).')
     if (passwordProblem(f.password)) return setError(PASSWORD_RULE)
     if (!f.consent) return setError('Please accept the terms and the privacy notice to continue.')
@@ -175,7 +177,9 @@ export function Signup() {
     setBusy(true)
     try {
       const res = await signUp(f)
-      if (res.needsConfirm) {
+      if (res.alreadyRegistered) {
+        setExists(true)
+      } else if (res.needsConfirm) {
         writePending(f.email)
         setSentTo(f.email.trim())
       }
@@ -214,6 +218,11 @@ export function Signup() {
           </span>
         </label>
 
+        {exists && (
+          <p role="alert" className="rounded-xl bg-brand-orange/25 p-3 text-sm">
+            This email already has an account. <Link to="/login" className="underline font-semibold">Sign in</Link> instead, or <Link to="/forgot-password" className="underline font-semibold">reset your password</Link> if you forgot it.
+          </p>
+        )}
         {error && <p className="text-red-700 text-sm">{error}</p>}
         <button className="btn btn-orange w-full disabled:opacity-50 disabled:cursor-not-allowed" disabled={busy || !f.consent}>{busy ? 'Creating...' : 'Create account'}</button>
         <p className="text-xs text-neutral-600 bg-neutral-100 rounded-xl p-3">On a phone or computer that other people use, do not let the browser save your password. Sign out when you finish.</p>

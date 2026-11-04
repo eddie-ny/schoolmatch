@@ -88,18 +88,23 @@ input[type="file"]::file-selector-button:hover { opacity: 0.9; }
 .label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 6px; }
 }
 
-/* Promo card: rocks a few degrees right, then a few degrees left, around its centre. */
-.promo-card-stage { display: flex; justify-content: center; padding: 18px 0; }
+/* Promo: three sample cards sway a few degrees each way, each on its own timing. The countdown pulses gently. */
+.promo-stack { position: relative; height: 240px; max-width: 300px; margin: 0 auto; width: 100%; }
 .promo-card {
-  width: 260px; height: 164px; border-radius: 18px; padding: 16px;
+  position: absolute; left: 20px; right: 20px; height: 150px; border-radius: 18px; padding: 14px;
   display: flex; flex-direction: column; justify-content: space-between;
-  background: linear-gradient(135deg, #FFB02E 0%, #FFD27A 45%, #B2DE2B 100%);
-  color: #1f1f1f; box-shadow: 0 14px 30px rgba(38, 53, 43, 0.2);
-  transform-origin: center; animation: promo-rock 4s ease-in-out infinite;
+  color: #1f1f1f; box-shadow: 0 10px 24px rgba(38, 53, 43, 0.22);
+  transform-origin: center;
 }
-@keyframes promo-rock {
-  0%, 100% { transform: rotate(0deg); }
-  25% { transform: rotate(7deg); }
-  75% { transform: rotate(-7deg); }
+.promo-card-a { top: 0; background: linear-gradient(135deg, #FFB02E 0%, #FFD27A 100%); z-index: 1; animation: promo-sway-a 5s ease-in-out infinite; }
+.promo-card-b { top: 42px; background: linear-gradient(135deg, #FFD27A 0%, #D9EC7A 100%); z-index: 2; animation: promo-sway-b 5s ease-in-out infinite; }
+.promo-card-c { top: 84px; background: linear-gradient(135deg, #D9EC7A 0%, #B2DE2B 100%); z-index: 3; animation: promo-sway-c 5s ease-in-out infinite; }
+@keyframes promo-sway-a { 0%, 100% { transform: rotate(-4deg); } 50% { transform: rotate(5deg); } }
+@keyframes promo-sway-b { 0%, 100% { transform: rotate(5deg); } 50% { transform: rotate(-4deg); } }
+@keyframes promo-sway-c { 0%, 100% { transform: rotate(-3deg); } 50% { transform: rotate(4deg); } }
+.promo-countdown { animation: promo-pulse 2s ease-in-out infinite; }
+@keyframes promo-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+@media (prefers-reduced-motion: reduce) {
+  .promo-card, .promo-countdown { animation: none; }
+  .promo-card-a { transform: rotate(-3deg); } .promo-card-b { transform: rotate(3deg); } .promo-card-c { transform: rotate(-2deg); }
 }
-@media (prefers-reduced-motion: reduce) { .promo-card { animation: none; transform: rotate(-4deg); } }

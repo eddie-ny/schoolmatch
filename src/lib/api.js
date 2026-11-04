@@ -25,7 +25,7 @@ function friendly(error) {
   const m = (error.message || '').toLowerCase()
   const code = error.code || ''
   if (m.includes('invalid login')) return 'Wrong email or password.'
-  if (m.includes('email not confirmed')) return 'Please confirm your email first. Check your inbox for the link.'
+  if (m.includes('email not confirmed')) return 'Please confirm your email first. Enter the code we sent to your inbox.'
   // The email limit is shared by the whole site, not by one account, so say that plainly.
   if (code === 'over_email_send_rate_limit' || m.includes('email rate limit')) {
     return 'We cannot send an email or reset link right now because the email service has its limits. Please try again in an hour.'
@@ -35,6 +35,7 @@ function friendly(error) {
   }
   if (code === 'over_request_rate_limit' || m.includes('rate limit') || m.includes('too many')) return 'Too many attempts from this connection. Please wait a few minutes and try again.'
   if (m.includes('banned')) return 'This account is closed or disabled. Contact support if you think this is a mistake.'
+  if (m.includes('token has expired') || m.includes('otp_expired') || m.includes('otp expired') || code === 'otp_expired') return 'That code is wrong or has expired. Ask for a new code and use only the newest email.'
   if (m.includes('at least one character of each')) return PASSWORD_RULE
   if (m.includes('password') && m.includes('characters')) return 'Password is too short. ' + PASSWORD_RULE
   if (m.includes('should be different')) return 'Your new password must be different from the old one.'
@@ -57,9 +58,9 @@ export function isMinorFromDob(dob) {
 export async function signUp(form) {
   const meta = {
     full_name: form.fullName,
+    first_name: (form.fullName || '').trim().split(/\s+/)[0] || '', // lets the confirmation email say "Hey Edward"
     phone: form.phone,
     date_of_birth: form.dateOfBirth,
-    gender: form.gender || '',
   }
   if (isMinorFromDob(form.dateOfBirth)) {
     meta.parent_name = form.parentName
@@ -69,18 +70,20 @@ export async function signUp(form) {
   const { data, error } = await supabase.auth.signUp({
     email: form.email,
     password: form.password,
-    options: { data: meta, emailRedirectTo: `${window.location.origin}/login` },
+    options: { data: meta },
   })
   fail(error, 'Could not create your account.')
   return { needsConfirm: !data.session }
 }
 
+// The confirmation email carries a code. Typing it here confirms the address and signs the person in.
+export async function verifySignupCode(email, code) {
+  const { error } = await supabase.auth.verifyOtp({ email: email.trim(), token: code.replace(/\s+/g, ''), type: 'signup' })
+  fail(error, 'Could not check that code.')
+}
+
 export async function resendConfirmation(email) {
-  const { error } = await supabase.auth.resend({
-    type: 'signup',
-    email,
-    options: { emailRedirectTo: `${window.location.origin}/login` },
-  })
+  const { error } = await supabase.auth.resend({ type: 'signup', email })
   fail(error, 'Could not send the email. Please wait a minute and try again.')
 }
 

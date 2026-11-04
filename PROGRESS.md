@@ -16,6 +16,12 @@ Date, session, what was done, what is still open, link (commit or step file).
 
 ## Entries
 
+### 4 Nov 2026 22:50, Claude session (claude.ai, repo attached with push access)
+- Done (code): sign-up shortened (confirm password and gender removed; phone and date of birth kept on purpose, phone feeds the repeat-trial check and DOB the under-18 rule). Email confirmation is now a code typed on a code screen (verifyOtp), also offered at sign-in if the email is unconfirmed. Rocking-card promo for signed-in people without a paid plan (/local, /international, /profile). Cookie notice. Original draft Privacy, Terms, Acceptable use, Cookies and Refunds pages with [bracketed] gaps for the owner. Brand text changed from WEMK to Jamba (the logo text and page titles; file and storage keys left alone).
+- NOT live until the owner does docs/EMAIL-TEMPLATES.md section 1 in the Supabase dashboard (Confirm signup template must contain {{ .Token }}) and sets up custom SMTP. No database change and no step file.
+- Not built: reminder emails (complete profile, trial ending), company-address sender, domain. Unconfirmed: jambaconsult.com availability.
+- Not tested: the code flow against the real Supabase project (needs the template change first). Build passes.
+
 ### 4 Nov 2026 01:15, Claude Code session (claude.ai, repo attached with push access)
 - Done: cloned the repo, added this file to git (it existed only as an attachment before), pushed. No code or database change.
 - Note: the chat session could not push because it had no shell and no repo attached. Pushing from claude.ai needs the repo attached with push access in a session that has a shell.

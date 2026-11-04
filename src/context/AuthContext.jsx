@@ -94,6 +94,7 @@ export function AuthProvider({ children }) {
         signUp, signIn, signOut, saveProfile, saveResults, saveSat, addDocument, removeDocument, refresh,
         requestPasswordReset: api.requestPasswordReset,
         resendConfirmation: api.resendConfirmation,
+        verifySignupCode: api.verifySignupCode,
         setNewPassword: async (pw) => { await api.setNewPassword(pw); setRecovering(false) },
       }}
     >

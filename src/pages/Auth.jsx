@@ -18,6 +18,7 @@ export function Login() {
   const [busy, setBusy] = useState(false)
 
   const [confirmed] = useState(ARRIVED_CONFIRMED)
+  const [needsCode, setNeedsCode] = useState(false)
 
   // The confirmation link signs the person in by itself. We end that session so they sign in on purpose.
   useEffect(() => {
@@ -35,11 +36,14 @@ export function Login() {
       try { localStorage.removeItem('sm_pending_confirm') } catch { /* ignore */ }
       if (confirmed) nav('/')
     } catch (err) {
-      setError(err.message)
+      if (/confirm your email/i.test(err.message)) setNeedsCode(true)
+      else setError(err.message)
     } finally {
       setBusy(false)
     }
   }
+
+  if (needsCode) return <VerifyCode email={email} firstWait={0} trial={false} />
 
   return (
     <div className="max-w-md mx-auto">
@@ -59,13 +63,90 @@ export function Login() {
   )
 }
 
+const PENDING_KEY = 'sm_pending_confirm'
+const readPending = () => {
+  try { return JSON.parse(localStorage.getItem(PENDING_KEY) || 'null') } catch { return null }
+}
+const writePending = (email) => {
+  try { localStorage.setItem(PENDING_KEY, JSON.stringify({ email: email.trim().toLowerCase(), at: Date.now() })) } catch { /* storage blocked: fine */ }
+}
+const clearPending = () => { try { localStorage.removeItem(PENDING_KEY) } catch { /* ignore */ } }
+
+// Step two of sign-up: the person types the code from the email. Typing it confirms the address and signs them in.
+function VerifyCode({ email, firstWait = 60, trial = true }) {
+  const { verifySignupCode, resendConfirmation } = useAuth()
+  const [code, setCode] = useState('')
+  const [error, setError] = useState('')
+  const [msg, setMsg] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [wait, setWait] = useState(firstWait)
+
+  useEffect(() => {
+    if (wait <= 0) return
+    const t = setTimeout(() => setWait(wait - 1), 1000)
+    return () => clearTimeout(t)
+  }, [wait])
+
+  const submit = async (e) => {
+    e.preventDefault()
+    setError('')
+    setMsg('')
+    const clean = code.replace(/\s+/g, '')
+    if (!/^\d{6,10}$/.test(clean)) return setError('Enter the code from the email. It is made of numbers only.')
+    setBusy(true)
+    try {
+      await verifySignupCode(email, clean)
+      clearPending()
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const resend = async () => {
+    setError('')
+    setMsg('')
+    setBusy(true)
+    try {
+      await resendConfirmation(email)
+      writePending(email)
+      setMsg('A new code is on its way. Use only the newest email. Older codes stop working.')
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setWait(60)
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div className="max-w-md mx-auto">
+      <PageTitle title="Enter your code" sub={`We sent a code to ${email}.${trial ? ' Your 24-hour free trial starts when you sign up.' : ''}`} />
+      <form onSubmit={submit} className="card space-y-4">
+        <Field label="Code from the email">
+          <input
+            className="input text-2xl tracking-[0.3em] text-center font-semibold" inputMode="numeric" autoComplete="one-time-code"
+            maxLength={12} required autoFocus value={code} onChange={(e) => setCode(e.target.value)} placeholder="000000"
+          />
+        </Field>
+        {error && <p role="alert" className="text-red-700 text-sm">{error}</p>}
+        {msg && <p role="status" className="text-sm">{msg}</p>}
+        <button className="btn btn-orange w-full" disabled={busy}>{busy ? 'Checking...' : 'Confirm and continue'}</button>
+        <p className="text-sm text-neutral-600">Emails can take a few minutes. Check your spam folder first. Only ask for a new code if nothing has arrived after a few minutes.</p>
+        <button type="button" className="btn btn-outline w-full" onClick={resend} disabled={busy || wait > 0}>
+          {wait > 0 ? `Send a new code in ${wait}s` : 'Send a new code'}
+        </button>
+      </form>
+    </div>
+  )
+}
+
 export function Signup() {
-  const { signUp, resendConfirmation, user } = useAuth()
+  const { signUp, user } = useAuth()
   const nav = useNavigate()
-  const [wait, setWait] = useState(0) // seconds until another confirmation email can be requested
-  const [resendMsg, setResendMsg] = useState('')
   const [f, setF] = useState({
-    fullName: '', phone: '', email: '', password: '', confirm: '', dateOfBirth: '', gender: '',
+    fullName: '', phone: '', email: '', password: '', dateOfBirth: '',
     parentName: '', parentPhone: '', parentEmail: '', consent: false,
   })
   const [error, setError] = useState('')
@@ -76,51 +157,18 @@ export function Signup() {
 
   useEffect(() => { if (user) nav('/profile') }, [user, nav])
 
-  useEffect(() => {
-    if (wait <= 0) return
-    const t = setTimeout(() => setWait(wait - 1), 1000)
-    return () => clearTimeout(t)
-  }, [wait])
-
-  // Remember which address is waiting for confirmation. Signing up again with it would send a new
-  // link and kill the one already in the inbox, so we send the person to "resend" instead.
-  const PENDING_KEY = 'sm_pending_confirm'
-  const readPending = () => {
-    try { return JSON.parse(localStorage.getItem(PENDING_KEY) || 'null') } catch { return null }
-  }
-  const writePending = (email) => {
-    try { localStorage.setItem(PENDING_KEY, JSON.stringify({ email: email.trim().toLowerCase(), at: Date.now() })) } catch { /* storage blocked: fine */ }
-  }
-
-  const resend = async () => {
-    setResendMsg('')
-    setBusy(true)
-    try {
-      await resendConfirmation(sentTo)
-      writePending(sentTo)
-      setWait(60)
-      setResendMsg('Sent. Use only this newest email. Older links stop working.')
-    } catch (err) {
-      setResendMsg(err.message)
-      setWait(60)
-    } finally {
-      setBusy(false)
-    }
-  }
-
   const submit = async (e) => {
     e.preventDefault()
     setError('')
     if (!f.dateOfBirth) return setError('Please choose your full date of birth (day, month and year).')
-    if (!f.gender) return setError('Please choose your gender. Some scholarships are only for one gender.')
     if (passwordProblem(f.password)) return setError(PASSWORD_RULE)
-    if (f.password !== f.confirm) return setError('The two passwords do not match.')
-    if (!f.consent) return setError('Please accept the privacy notice to continue.')
+    if (!f.consent) return setError('Please accept the terms and the privacy notice to continue.')
     if (minor && (!f.parentName || !f.parentPhone || !f.parentEmail)) return setError('A parent or guardian name, phone and email are required for under 18s.')
+    // An address already waiting for its code goes straight to the code screen. Signing up again
+    // would send a new code and cancel the one already in the inbox.
     const pending = readPending()
     if (pending && pending.email === f.email.trim().toLowerCase() && Date.now() - pending.at < 60 * 60 * 1000) {
-      setSentTo(f.email)
-      setWait(Math.max(0, 60 - Math.floor((Date.now() - pending.at) / 1000)))
+      setSentTo(f.email.trim())
       return
     }
     setBusy(true)
@@ -128,8 +176,7 @@ export function Signup() {
       const res = await signUp(f)
       if (res.needsConfirm) {
         writePending(f.email)
-        setWait(60)
-        setSentTo(f.email)
+        setSentTo(f.email.trim())
       }
     } catch (err) {
       setError(err.message)
@@ -138,42 +185,17 @@ export function Signup() {
     }
   }
 
-  if (sentTo) {
-    return (
-      <div className="max-w-md mx-auto card space-y-3">
-        <h1 className="text-2xl font-bold">Check your email</h1>
-        <p>We sent a confirmation link to <b>{sentTo}</b>. Click it to finish creating your account. Your 24-hour free trial starts when you sign up.</p>
-        <p className="font-semibold">Use only the newest email. Older links stop working.</p>
-        <p className="text-sm text-neutral-600">Emails can take a few minutes. Check your spam folder first. Only ask for a new one if nothing has arrived after a few minutes.</p>
-        {resendMsg && <p role="status" className="text-sm">{resendMsg}</p>}
-        <div className="flex flex-wrap gap-3">
-          <button className="btn btn-outline" onClick={resend} disabled={busy || wait > 0}>
-            {wait > 0 ? `Resend confirmation email in ${wait}s` : busy ? 'Sending...' : 'Resend confirmation email'}
-          </button>
-          <Link to="/login" className="btn btn-orange">Go to sign in</Link>
-        </div>
-      </div>
-    )
-  }
+  if (sentTo) return <VerifyCode email={sentTo} />
 
   return (
     <div className="max-w-md mx-auto">
-      <PageTitle title="Create your account" sub="Your 24-hour free trial starts when you sign up." />
+      <PageTitle title="Create your account" sub="Your 24-hour free trial starts when you sign up. You can finish your profile later." />
       <form onSubmit={submit} className="card space-y-4">
-        <Field label="Full name"><input className="input" required value={f.fullName} onChange={set('fullName')} /></Field>
-        <Field label="Phone"><input className="input" type="tel" required value={f.phone} onChange={set('phone')} placeholder="024 000 0000" /></Field>
-        <Field label="Email"><input className="input" type="email" required value={f.email} onChange={set('email')} /></Field>
+        <Field label="Full name"><input className="input" required autoComplete="name" value={f.fullName} onChange={set('fullName')} /></Field>
+        <Field label="Phone"><input className="input" type="tel" required autoComplete="tel" value={f.phone} onChange={set('phone')} placeholder="024 000 0000" /></Field>
+        <Field label="Email"><input className="input" type="email" required autoComplete="email" value={f.email} onChange={set('email')} /></Field>
         <Field label="Password" hint="At least 8 characters, with upper case, lower case and numbers."><PasswordInput required autoComplete="new-password" value={f.password} onChange={set('password')} /></Field>
-        <Field label="Confirm password"><PasswordInput required autoComplete="new-password" value={f.confirm} onChange={set('confirm')} /></Field>
-        <Field label="Date of birth"><DobPicker value={f.dateOfBirth} onChange={(v) => { setF((cur) => ({ ...cur, dateOfBirth: v })); setError('') }} /></Field>
-
-        <Field label="Gender" hint="Used only to match you to scholarships. Some are open to one gender only.">
-          <select className="input" required value={f.gender} onChange={set('gender')}>
-            <option value="">Select</option>
-            <option value="female">Female</option>
-            <option value="male">Male</option>
-          </select>
-        </Field>
+        <Field label="Date of birth" hint="We ask so we can get a parent or guardian to confirm accounts for under 18s."><DobPicker value={f.dateOfBirth} onChange={(v) => { setF((cur) => ({ ...cur, dateOfBirth: v })); setError('') }} /></Field>
 
         {minor && (
           <div className="rounded-xl border-2 border-brand-green p-4 space-y-4 bg-brand-green/10">
@@ -185,8 +207,10 @@ export function Signup() {
         )}
 
         <label className="flex gap-3 items-start text-sm">
-          <input type="checkbox" className="mt-1 w-5 h-5" checked={f.consent} onChange={set('consent')} />
-          <span>I agree to the <Link to="/privacy" className="underline">privacy notice</Link>{minor ? ' and my parent or guardian has been told about it' : ''}.</span>
+          <input type="checkbox" className="mt-1 w-5 h-5 shrink-0" checked={f.consent} onChange={set('consent')} />
+          <span>
+            I agree to the <Link to="/terms" className="underline">Terms of use</Link>, the <Link to="/acceptable-use" className="underline">Acceptable use policy</Link> and the <Link to="/privacy" className="underline">Privacy notice</Link>{minor ? ', and my parent or guardian has been told about them' : ''}.
+          </span>
         </label>
 
         {error && <p className="text-red-700 text-sm">{error}</p>}

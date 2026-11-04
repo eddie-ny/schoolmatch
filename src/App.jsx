@@ -113,6 +113,7 @@ export default function App() {
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/parent-confirm" element={<ParentConfirm />} />
         <Route path="/terms" element={<Legal page="terms" />} />
+        <Route path="/acceptable-use" element={<Legal page="acceptable-use" />} />
         <Route path="/refunds" element={<Legal page="refunds" />} />
         <Route path="/cookies" element={<Legal page="cookies" />} />
         <Route path="*" element={<NotFound />} />

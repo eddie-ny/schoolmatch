@@ -87,3 +87,20 @@ input[type="file"]::file-selector-button:hover { opacity: 0.9; }
 
 .label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 6px; }
 }
+
+/* Promo card: rocks a few degrees right, then a few degrees left, around its centre. */
+.promo-card-stage { display: flex; justify-content: center; padding: 18px 0; }
+.promo-card {
+  width: 260px; height: 164px; border-radius: 18px; padding: 16px;
+  display: flex; flex-direction: column; justify-content: space-between;
+  background: linear-gradient(135deg, #FFB02E 0%, #FFD27A 45%, #B2DE2B 100%);
+  color: #1f1f1f; box-shadow: 0 14px 30px rgba(38, 53, 43, 0.25);
+  transform-origin: center; animation: promo-rock 4s ease-in-out infinite;
+}
+.promo-chip { width: 38px; height: 28px; border-radius: 6px; background: rgba(255, 255, 255, 0.75); border: 1px solid rgba(0, 0, 0, 0.12); }
+@keyframes promo-rock {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(7deg); }
+  75% { transform: rotate(-7deg); }
+}
+@media (prefers-reduced-motion: reduce) { .promo-card { animation: none; transform: rotate(-4deg); } }

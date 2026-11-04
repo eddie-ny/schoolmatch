@@ -3,10 +3,12 @@ import { Suspense, useEffect, useRef, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { timeLeft } from '../lib/access'
 import MfaChallenge from './MfaChallenge'
+import PromoCard from './PromoCard'
+import CookieBanner from './CookieBanner'
 import { ConfirmDialog, Spinner } from './ui'
 import { scopeOf } from '../hooks/useScope'
 
-export const APP_NAME = 'WEMK'
+export const APP_NAME = 'Jamba'
 
 // Each side of the site (Local, International) has its own menu. The landing page and account pages have none.
 const sideLinks = (side) => [
@@ -100,10 +102,10 @@ export default function Layout() {
       <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:bg-white focus:p-3 focus:m-2 focus:rounded-lg focus:font-semibold">Skip to content</a>
       <header className="border-b border-neutral-200/70 bg-white/90 backdrop-blur sticky top-0 z-20">
         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-          <Link to="/" className="inline-flex flex-col justify-center min-h-11 leading-none" aria-label={side ? `WEMK ${side}, back to the start page` : 'WEMK home'}>
+          <Link to="/" className="inline-flex flex-col justify-center min-h-11 leading-none" aria-label={side ? `${APP_NAME} ${side}, back to the start page` : `${APP_NAME} home`}>
             <span className="font-heading font-bold text-xl">
-              <span className="text-brand-orange">WE</span>
-              <span className="text-brand-green">MK</span>
+              <span className="text-brand-orange">Jam</span>
+              <span className="text-brand-green">ba</span>
             </span>
             {side && <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500 mt-0.5">{side === 'local' ? 'Local' : 'International'}</span>}
           </Link>
@@ -197,9 +199,12 @@ export default function Layout() {
 
       <main id="main" tabIndex={-1} className="flex-1 outline-none max-w-6xl w-full mx-auto px-4 py-6">
         <Suspense fallback={<Spinner className="min-h-[60vh]" />}>
+          {!mfaNeeded && ['/local', '/international', '/profile'].includes(pathname.replace(/\/$/, '')) && <PromoCard />}
           {mfaNeeded ? <MfaChallenge /> : <Outlet />}
         </Suspense>
       </main>
+
+      <CookieBanner />
 
       <footer className="border-t border-neutral-200 text-sm text-neutral-600">
         <div className="max-w-6xl mx-auto px-4 py-6 flex flex-col gap-2">
@@ -210,6 +215,7 @@ export default function Layout() {
             <Link to="/invite" className="underline inline-flex items-center min-h-11">Invite friends</Link>
             <Link to="/privacy" className="underline inline-flex items-center min-h-11">Privacy</Link>
             <Link to="/terms" className="underline inline-flex items-center min-h-11">Terms</Link>
+            <Link to="/acceptable-use" className="underline inline-flex items-center min-h-11">Acceptable use</Link>
             <Link to="/refunds" className="underline inline-flex items-center min-h-11">Refunds</Link>
             <Link to="/cookies" className="underline inline-flex items-center min-h-11">Cookies</Link>
             <Link to="/complaints" className="underline inline-flex items-center min-h-11">Complaints</Link>

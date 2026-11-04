@@ -51,7 +51,7 @@ export function BackLink({ to, children }) {
 }
 
 export function PageTitle({ title, sub }) {
-  useEffect(() => { document.title = `${title} | WEMK` }, [title])
+  useEffect(() => { document.title = `${title} | Jamba` }, [title])
   return (
     <div className="mb-6">
       <h1 className="text-2xl md:text-3xl font-bold">{title}</h1>

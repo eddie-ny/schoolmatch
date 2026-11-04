@@ -20,7 +20,7 @@ export default function SatClasses() {
       const res = await fetch(`https://formspree.io/f/${FORM_ID}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-        body: JSON.stringify({ name: f.name, phone: f.phone, email: f.email, wants: f.want, sat_score_or_goal: f.score, message: f.message, page: 'WEMK SAT classes' }),
+        body: JSON.stringify({ name: f.name, phone: f.phone, email: f.email, wants: f.want, sat_score_or_goal: f.score, message: f.message, page: 'Jamba SAT classes' }),
       })
       setState(res.ok ? 'sent' : 'error')
     } catch { setState('error') }

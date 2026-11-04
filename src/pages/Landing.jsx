@@ -44,7 +44,7 @@ export default function Landing() {
       </section>
 
       <section>
-        <h2 className="text-xl font-bold mb-3">What you can do on WEMK</h2><p className="text-sm text-neutral-600 -mt-2 mb-3">Choose Local or International above, and each one has all four.</p>
+        <h2 className="text-xl font-bold mb-3">What you can do on Jamba</h2><p className="text-sm text-neutral-600 -mt-2 mb-3">Choose Local or International above, and each one has all four.</p>
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {info.map((t) => (
             <div key={t.title} className={`card border-l-8 ${t.bar}`}>

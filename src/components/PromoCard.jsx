@@ -9,19 +9,13 @@ function CapScene() {
   return (
     <div className="promo-scene" aria-hidden="true">
       <svg viewBox="0 0 300 250" className="w-full h-full">
-        <defs>
-          <linearGradient id="promo-tag" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stopColor="#FFB02E" />
-            <stop offset="1" stopColor="#B2DE2B" />
-          </linearGradient>
-        </defs>
         {/* scholarship tag, swings gently on its string */}
         <g className="promo-tag-swing">
           <path d="M150 112 V128" stroke="#26352B" strokeWidth="3" strokeLinecap="round" />
-          <rect x="70" y="128" width="160" height="86" rx="16" fill="url(#promo-tag)" stroke="#26352B" strokeWidth="3" />
+          <rect x="70" y="128" width="160" height="86" rx="16" fill="#FFB02E" stroke="#26352B" strokeWidth="3" />
           <circle cx="150" cy="140" r="5" fill="#fff" stroke="#26352B" strokeWidth="2" />
-          <text x="150" y="172" textAnchor="middle" fontSize="22" fontWeight="800" fill="#1f1f1f">Scholarships</text>
-          <text x="150" y="196" textAnchor="middle" fontSize="13" fontWeight="600" fill="#1f1f1f">Full and partial funding</text>
+          <text x="150" y="172" textAnchor="middle" fontSize="23" fontWeight="700" fontFamily="Poppins, sans-serif" fill="#1f1f1f">Scholarships</text>
+          <text x="150" y="196" textAnchor="middle" fontSize="13" fontWeight="600" fontFamily="Inter, sans-serif" fill="#1f1f1f">Full and partial funding</text>
         </g>
         {/* graduation cap, tips left then right around the centre of its band */}
         <g className="promo-cap">

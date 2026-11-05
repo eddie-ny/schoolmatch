@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { isMinorFromDob, passwordProblem, PASSWORD_RULE } from '../lib/api'
 import { supabase } from '../lib/supabase'
+import { CONFIRM_BY_CODE } from '../lib/constants'
 
 // Read before Supabase clears the address: did the person just arrive from the email confirmation link?
 const ARRIVED_CONFIRMED = /type=signup|type=email/.test(window.location.hash)
@@ -36,7 +37,7 @@ export function Login() {
       try { localStorage.removeItem('sm_pending_confirm') } catch { /* ignore */ }
       if (confirmed) nav('/')
     } catch (err) {
-      if (/confirm your email/i.test(err.message)) setNeedsCode(true)
+      if (CONFIRM_BY_CODE && /confirm your email/i.test(err.message)) setNeedsCode(true)
       else setError(err.message)
     } finally {
       setBusy(false)
@@ -143,6 +144,52 @@ function VerifyCode({ email, firstWait = 60, trial = true }) {
   )
 }
 
+// Step two of sign-up when the email holds a link (CONFIRM_BY_CODE is false).
+function CheckEmailLink({ email, firstWait = 60 }) {
+  const { resendConfirmation } = useAuth()
+  const [wait, setWait] = useState(firstWait)
+  const [msg, setMsg] = useState('')
+  const [busy, setBusy] = useState(false)
+
+  useEffect(() => {
+    if (wait <= 0) return
+    const t = setTimeout(() => setWait(wait - 1), 1000)
+    return () => clearTimeout(t)
+  }, [wait])
+
+  const resend = async () => {
+    setMsg('')
+    setBusy(true)
+    try {
+      await resendConfirmation(email)
+      writePending(email)
+      setMsg('Sent. Use only this newest email. Older links stop working.')
+    } catch (err) {
+      setMsg(err.message)
+    } finally {
+      setWait(60)
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div className="max-w-md mx-auto card space-y-3">
+      <h1 className="text-2xl font-bold">Check your email</h1>
+      <p>We sent a confirmation link to <b>{email}</b>. Click it to finish creating your account. Your 24-hour free trial starts when you sign up.</p>
+      <p className="font-semibold">Use only the newest email. Older links stop working.</p>
+      <p className="text-sm text-neutral-600">Emails can take a few minutes. Check your spam folder first. Only ask for a new one if nothing has arrived after a few minutes.</p>
+      <p className="text-sm text-neutral-600">No email at all? This address may already have an account. <Link to="/login" className="underline font-semibold">Sign in</Link> or <Link to="/forgot-password" className="underline font-semibold">reset your password</Link>.</p>
+      {msg && <p role="status" className="text-sm">{msg}</p>}
+      <div className="flex flex-wrap gap-3">
+        <button className="btn btn-outline" onClick={resend} disabled={busy || wait > 0}>
+          {wait > 0 ? `Resend confirmation email in ${wait}s` : busy ? 'Sending...' : 'Resend confirmation email'}
+        </button>
+        <Link to="/login" className="btn btn-orange">Go to sign in</Link>
+      </div>
+    </div>
+  )
+}
+
 export function Signup() {
   const { signUp, user } = useAuth()
   const nav = useNavigate()
@@ -190,7 +237,7 @@ export function Signup() {
     }
   }
 
-  if (sentTo) return <VerifyCode email={sentTo} />
+  if (sentTo) return CONFIRM_BY_CODE ? <VerifyCode email={sentTo} /> : <CheckEmailLink email={sentTo} />
 
   return (
     <div className="max-w-md mx-auto">

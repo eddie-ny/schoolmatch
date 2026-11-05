@@ -4,7 +4,7 @@
 // Payments are not wired yet (step 6): the browser can never write subscriptions.
 
 import { supabase } from './supabase'
-import { CORE_SUBJECTS } from './constants'
+import { CONFIRM_BY_CODE, CORE_SUBJECTS } from './constants'
 import { logoFor } from './logos'
 import { Sentry } from './sentry.js'
 
@@ -25,7 +25,7 @@ function friendly(error) {
   const m = (error.message || '').toLowerCase()
   const code = error.code || ''
   if (m.includes('invalid login')) return 'Wrong email or password.'
-  if (m.includes('email not confirmed')) return 'Please confirm your email first. Enter the code we sent to your inbox.'
+  if (m.includes('email not confirmed')) return CONFIRM_BY_CODE ? 'Please confirm your email first. Enter the code we sent to your inbox.' : 'Please confirm your email first. Check your inbox for the link.'
   // The email limit is shared by the whole site, not by one account, so say that plainly.
   if (code === 'over_email_send_rate_limit' || m.includes('email rate limit')) {
     return 'We cannot send an email or reset link right now because the email service has its limits. Please try again in an hour.'
@@ -70,7 +70,7 @@ export async function signUp(form) {
   const { data, error } = await supabase.auth.signUp({
     email: form.email,
     password: form.password,
-    options: { data: meta },
+    options: CONFIRM_BY_CODE ? { data: meta } : { data: meta, emailRedirectTo: `${window.location.origin}/login` },
   })
   fail(error, 'Could not create your account.')
   // For an address that already has a confirmed account, Supabase answers success but returns a user with no identities and sends nothing.
@@ -85,7 +85,7 @@ export async function verifySignupCode(email, code) {
 }
 
 export async function resendConfirmation(email) {
-  const { error } = await supabase.auth.resend({ type: 'signup', email })
+  const { error } = await supabase.auth.resend(CONFIRM_BY_CODE ? { type: 'signup', email } : { type: 'signup', email, options: { emailRedirectTo: `${window.location.origin}/login` } })
   fail(error, 'Could not send the email. Please wait a minute and try again.')
 }
 

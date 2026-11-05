@@ -82,5 +82,12 @@ export const FIELDS = [
 // set this to true to bring them back everywhere (filters, Study Abroad page, eligibility scope).
 export const SHOW_INTERNATIONAL = false
 
+// How a new account confirms its email address.
+//   false = the email holds a link (works with Supabase's default email template).
+//   true  = the email holds a code the person types in. Switch to true ONLY after custom SMTP is set up in Supabase
+//           and the "Confirm signup" template contains {{ .Token }} (see docs/EMAIL-TEMPLATES.md). With the default
+//           template this would show a code box that no email ever fills.
+export const CONFIRM_BY_CODE = false
+
 // First-degree classes, best first. Used by the masters checker.
 export const DEGREE_CLASSES = ['First Class', 'Second Class Upper', 'Second Class Lower', 'Third Class', 'Pass']

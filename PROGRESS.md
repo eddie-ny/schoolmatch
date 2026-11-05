@@ -16,6 +16,11 @@ Date, session, what was done, what is still open, link (commit or step file).
 
 ## Entries
 
+### 5 Nov 2026 07:35, Claude session (claude.ai, repo attached with push access)
+- Done: confirmation email is back to a LINK for now. The code screen is kept in the app behind one switch, CONFIRM_BY_CODE in src/lib/constants.js (false today). Reason: custom SMTP and the domain are not set up, so Supabase's default template cannot be changed to a code.
+- When the owner says the domain and email are ready: set up custom SMTP in Supabase, paste the code template from docs/EMAIL-TEMPLATES.md, then change CONFIRM_BY_CODE to true. Do not flip it before the template is saved.
+- Also: with the default sender, Supabase only delivers to addresses of the Supabase team members, so real students get no email until SMTP is live (per Supabase docs).
+
 ### 4 Nov 2026 22:50, Claude session (claude.ai, repo attached with push access)
 - Done (code): sign-up shortened (confirm password and gender removed; phone and date of birth kept on purpose, phone feeds the repeat-trial check and DOB the under-18 rule). Email confirmation is now a code typed on a code screen (verifyOtp), also offered at sign-in if the email is unconfirmed. Rocking-card promo for signed-in people without a paid plan (/local, /international, /profile). Cookie notice. Original draft Privacy, Terms, Acceptable use, Cookies and Refunds pages with [bracketed] gaps for the owner. Brand text changed from WEMK to Jamba (the logo text and page titles; file and storage keys left alone).
 - NOT live until the owner does docs/EMAIL-TEMPLATES.md section 1 in the Supabase dashboard (Confirm signup template must contain {{ .Token }}) and sets up custom SMTP. No database change and no step file.

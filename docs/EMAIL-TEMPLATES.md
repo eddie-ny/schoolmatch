@@ -37,4 +37,4 @@ Trial ending:
 > Subject: {{first_name}}, your free trial ends soon
 > Hey {{first_name}}, your free trial ends in about 3 hours. Pick a plan to keep seeing full cut-offs, requirements and scholarships. [See plans]
 
-Open decision: marketing-style reminders may need an unsubscribe link under Ghana's Data Protection Act. A lawyer should confirm before these go out.
+Consent: these reminders are not service notices. Ghana's Electronic Transactions Act 2008 s.50 needs the person's prior consent and an unsubscribe option, and the Data Protection Act 2012 s.40 needs prior written consent for direct marketing. Before sending any of them, add an unticked opt-in box and an unsubscribe link in every email. See docs/GHANA-LEGAL-CHECK.md.

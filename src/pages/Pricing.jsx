@@ -39,6 +39,7 @@ export default function Pricing() {
   }, [reference, user?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const chosen = plans.find((p) => p.id === plan)
+  const [agreed, setAgreed] = useState(false)
 
   const pay = async () => {
     setError('')
@@ -88,9 +89,17 @@ export default function Pricing() {
         {msg && <p className="font-semibold">{msg}</p>}
         {error && <p className="text-red-700 text-sm">{error}</p>}
         {user ? (
-          <button className="btn btn-orange w-full" disabled={busy || !chosen?.price_minor} onClick={pay}>
+          <>
+          <label className="flex gap-3 items-start text-sm">
+            <input type="checkbox" className="mt-1 w-5 h-5 shrink-0" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} />
+            <span>
+              I have read the <Link to="/terms" className="underline">Terms of use</Link> and the <Link to="/refunds" className="underline">Refund policy</Link>. I agree that my plan starts as soon as Paystack confirms my payment, and I understand this may end my 7-day right to cancel.
+            </span>
+          </label>
+          <button className="btn btn-orange w-full" disabled={busy || !agreed || !chosen?.price_minor} onClick={pay}>
             {busy ? 'Opening Paystack...' : chosen?.price_minor ? `Pay ${money(chosen.price_minor, chosen.currency)} with Paystack` : 'This plan has no price yet'}
           </button>
+          </>
         ) : (
           <Link to="/signup" className="btn btn-orange w-full">Sign up to subscribe</Link>
         )}

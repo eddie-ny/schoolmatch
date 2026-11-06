@@ -16,6 +16,12 @@ Date, session, what was done, what is still open, link (commit or step file).
 
 ## Entries
 
+### 6 Nov 2026 23:55, Claude session (claude.ai, repo attached with push access)
+- Done: Privacy, Terms, Acceptable use, Cookies and Refunds pages rewritten against Ghana law (Act 843, Act 772, Children's Act 560, Act 1023). Checkout now has a required tick box (terms, refund policy, plan starts at once, 7-day right). Full table, sources and gaps: docs/GHANA-LEGAL-CHECK.md. Pages are still drafts: a Ghanaian lawyer must review them and the owner must fill the [bracketed] items.
+- Owner must do before launch: register as a data controller with the Data Protection Commission (s.27), get processor contracts, write a breach procedure, build or confirm a deletion procedure. Reminder emails must not be sent until an opt-in box and unsubscribe exist.
+- Open data risk: some schools and programmes came from GTEC and NMC registers and are marked unverified, and one note says programmes were "awaiting accreditation". Act 1023 s.36(1)(h) (as quoted by GTEC) makes advertising unaccredited programmes an offence. Needs a decision: store accreditation status and date per listing, and hide or label unconfirmed ones.
+- Audited, no change needed: Paystack webhook (HMAC-SHA512 signature, then re-verified with Paystack, amount and currency checked, atomic so a replay cannot double-activate, activate_payment not callable by browser users on the live database, payments and subscriptions not writable by users). Web performance: lists are already server-paged, routes are lazy, images use thumbnails, lazy loading and a failed-image fallback.
+
 ### 5 Nov 2026 07:35, Claude session (claude.ai, repo attached with push access)
 - Done: confirmation email is back to a LINK for now. The code screen is kept in the app behind one switch, CONFIRM_BY_CODE in src/lib/constants.js (false today). Reason: custom SMTP and the domain are not set up, so Supabase's default template cannot be changed to a code.
 - When the owner says the domain and email are ready: set up custom SMTP in Supabase, paste the code template from docs/EMAIL-TEMPLATES.md, then change CONFIRM_BY_CODE to true. Do not flip it before the template is saved.

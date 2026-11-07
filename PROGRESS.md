@@ -16,6 +16,11 @@ Date, session, what was done, what is still open, link (commit or step file).
 
 ## Entries
 
+### 7 Nov 2026, Claude session (claude.ai, repo attached with push access)
+- Owner asked to remove schools that are not accredited, nursing and midwifery first, and thought private universities were already gone.
+- Found: there is no accreditation field (schools.verified means requirements checked, not accredited). The app already hides every non-Public school (search_schools, search_programs, search_programs_c, useCatalog.js), so private rows are invisible but still stored. The removal script existed as RUN_THIS_remove_private_schools.sql and had never been run. Renamed to supabase/step172_remove_private_schools.sql (67 private schools, 21 programmes, none saved or linked). My attempt to run it through the SQL tool was cancelled by the client, so NOTHING WAS DELETED. Owner runs it in the SQL editor.
+- GTEC check: gtec.edu.gh refuses automated access (robots_disallowed), so Claude cannot fetch the register. Waiting for the owner to supply the GTEC list (Public Nurses Training College category, and others). Then compare by name and hide or remove the Public schools not on it. 84 public nursing colleges and 48 colleges of education are currently loaded and unverified.
+
 ### 6 Nov 2026 23:55, Claude session (claude.ai, repo attached with push access)
 - Done: Privacy, Terms, Acceptable use, Cookies and Refunds pages rewritten against Ghana law (Act 843, Act 772, Children's Act 560, Act 1023). Checkout now has a required tick box (terms, refund policy, plan starts at once, 7-day right). Full table, sources and gaps: docs/GHANA-LEGAL-CHECK.md. Pages are still drafts: a Ghanaian lawyer must review them and the owner must fill the [bracketed] items.
 - Owner must do before launch: register as a data controller with the Data Protection Commission (s.27), get processor contracts, write a breach procedure, build or confirm a deletion procedure. Reminder emails must not be sent until an opt-in box and unsubscribe exist.

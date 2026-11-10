@@ -55,9 +55,9 @@ export const PAGES = {
   cookies: {
     title: 'Cookies and storage',
     sections: [
-      { h: 'What we use today', p: ['This site does not use advertising or analytics cookies today.', 'Your browser stores a sign-in session so you stay signed in. This is strictly necessary for the site to work. It is cleared when you sign out, and you are signed out after 30 minutes of inactivity.', 'Your browser also remembers your choice on the cookie notice, and keeps unfinished eligibility answers on your device until you sign out.'] },
-      { h: 'Your choice', p: ['The cookie notice has Accept all and Decline all. Right now both leave the site working the same way, because we set nothing optional.'] },
-      { h: 'If this changes', p: ['If analytics or other trackers are added later, they will stay off until you agree to them, as the Data Protection Act 2012 (Act 843) requires consent for processing that is not otherwise necessary. This page will be updated first.'] },
+      { h: 'What is always on', p: ['Your browser stores a sign-in session so you stay signed in. This is strictly necessary for the site to work, so it is not optional. It is cleared when you sign out, and you are signed out after 30 minutes of inactivity.', 'Your browser also remembers your choice on the cookie notice, and keeps unfinished eligibility answers on your device until you sign out.', 'We do not use advertising cookies.'] },
+      { h: 'Your choice: counting visits', p: ['If you press Accept all, we count visits with Vercel Web Analytics. It records which pages are visited, the site that sent you, your country, your device and browser, and a visitor identifier. We use the counts to see which pages help students and to fix problems.', 'If you press Decline all, this counting stays off and the site works the same way. Staff pages and the parent confirmation page are never counted.', 'Your choice is saved on your device. To change it, clear this site\'s data in your browser settings and the notice will appear again.'] },
+      { h: 'If this changes', p: ['If we add other trackers, they will stay off until you agree to them, as the Data Protection Act 2012 (Act 843) requires consent for processing that is not otherwise necessary. This page will be updated first.'] },
     ],
   },
 }

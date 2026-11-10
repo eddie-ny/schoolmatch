@@ -1,7 +1,8 @@
-import { lazy, Suspense, useEffect } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { Routes, Route, useLocation, Navigate } from 'react-router-dom'
 import { Analytics } from '@vercel/analytics/react'
 import Layout from './components/Layout'
+import { analyticsAllowed, CHOICE_EVENT } from './components/CookieBanner'
 import Home from './pages/Home'
 import Landing from './pages/Landing'
 import { SHOW_INTERNATIONAL } from './lib/constants'
@@ -65,10 +66,17 @@ function ScrollToTop() {
 }
 
 export default function App() {
+  // Visit counting runs only after the person accepts the cookie notice.
+  const [counting, setCounting] = useState(analyticsAllowed)
+  useEffect(() => {
+    const update = () => setCounting(analyticsAllowed())
+    window.addEventListener(CHOICE_EVENT, update)
+    return () => window.removeEventListener(CHOICE_EVENT, update)
+  }, [])
   return (
     <>
     <ScrollToTop />
-    <Analytics beforeSend={skipAnalytics} />
+    {counting && <Analytics beforeSend={skipAnalytics} />}
     <Routes>
       <Route element={<Layout />}>
         <Route path="/" element={<Landing />} />

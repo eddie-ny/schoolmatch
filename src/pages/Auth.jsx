@@ -171,7 +171,6 @@ function VerifyCode({ email, firstWait = 60, trial = true }) {
         {msg && <p role="status" className="text-sm">{msg}</p>}
         <button className="btn btn-orange w-full" disabled={busy}>{busy ? 'Checking...' : 'Confirm and continue'}</button>
         <p className="text-sm text-neutral-600">Emails can take a few minutes. Check your spam folder first. Only ask for a new code if nothing has arrived after a few minutes.</p>
-        <p className="text-sm text-neutral-600">No code at all? This email may already have an account. <Link to="/login" className="underline font-semibold">Sign in</Link> or <Link to="/forgot-password" className="underline font-semibold">reset your password</Link>.</p>
         <button type="button" className="btn btn-outline w-full" onClick={resend} disabled={busy || wait > 0}>
           {wait > 0 ? `Send a new code in ${wait}s` : 'Send a new code'}
         </button>

@@ -67,6 +67,8 @@ export async function signUp(form) {
     meta.parent_phone = form.parentPhone
     meta.parent_email = form.parentEmail
   }
+  // A sign-up that was started but never confirmed would keep its first details, so it is cleared first (step176). Confirmed accounts are never touched.
+  await supabase.rpc('discard_unconfirmed_signup', { p_email: form.email })
   const { data, error } = await supabase.auth.signUp({
     email: form.email,
     password: form.password,

@@ -158,6 +158,9 @@ function InternationalEligibilityInner() {
     return () => { live = false }
   }, [ready, masters, dStudy, pickedKey, scholarshipKey])
 
+  // The course groups of the programmes found for what the student typed. Used for scholarships tied to a course.
+  const studyFields = useMemo(() => (study ? [...new Set(pool.items.map((p) => p.field).filter(Boolean))] : []), [study, pool.items])
+
   const rows = useMemo(() => {
     if (!ready) return []
     const me = { grades, sat: satNum, test, score }
@@ -275,7 +278,7 @@ function InternationalEligibilityInner() {
         <div className="mb-4"><Segmented value={view} onChange={setView} options={[{ value: 'schools', label: 'Schools' }, { value: 'scholarships', label: 'Scholarships' }]} /></div>
       )}
       {view === 'scholarships' && full && ready && !loading && !pool.busy ? (
-        <ScholarshipsForYou me={{ gender: user?.profile?.gender || '', sat: satNum || '' }} fields={[]} masters={masters} scope="international" />
+        <ScholarshipsForYou me={{ gender: user?.profile?.gender || '', sat: satNum || '' }} fields={studyFields} masters={masters} scope="international" />
       ) : loading || pool.busy ? <Spinner /> : !ready ? (
         <p className="text-neutral-700">{masters ? 'Choose your degree class, then press Check my eligibility.' : 'Fill in what you have and press Check my eligibility. You can leave out the SAT and English test.'}</p>
       ) : rows.length === 0 ? (

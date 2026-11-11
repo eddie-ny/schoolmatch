@@ -6,6 +6,7 @@ import { analyticsAllowed, CHOICE_EVENT } from './components/CookieBanner'
 import Home from './pages/Home'
 import Landing from './pages/Landing'
 import { SHOW_INTERNATIONAL } from './lib/constants'
+import { RouteSeo } from './lib/seo'
 function ToLocal() {
   const { pathname, search } = useLocation()
   return <Navigate to={`/local${pathname}${search}`} replace />
@@ -76,6 +77,7 @@ export default function App() {
   return (
     <>
     <ScrollToTop />
+    <RouteSeo />
     {counting && <Analytics beforeSend={skipAnalytics} />}
     <Routes>
       <Route element={<Layout />}>

@@ -1,6 +1,7 @@
 import { cloneElement, isValidElement, useEffect, useId, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { usePageMeta } from '../lib/seo'
 
 export function Badge({ children, tone = 'gray' }) {
   const tones = {
@@ -51,7 +52,7 @@ export function BackLink({ to, children }) {
 }
 
 export function PageTitle({ title, sub }) {
-  useEffect(() => { document.title = `${title} | Jamba` }, [title])
+  usePageMeta({ title: `${title} | Jamba`, description: sub })
   return (
     <div className="mb-6">
       <h1 className="text-2xl md:text-3xl font-bold">{title}</h1>

@@ -16,6 +16,12 @@ Date, session, what was done, what is still open, link (commit or step file).
 
 ## Entries
 
+### 11 Nov 2026, Claude session (claude.ai chat, repo cloned, no push access)
+- Done (code, not pushed): Google indexing basics for jambaconsult.com. public/robots.txt now names the sitemap. public/sitemap.xml lists the public pages only (home, /local, schools, programs and scholarships lists, pricing). New src/lib/seo.js sets the canonical link, the page description and a noindex rule on every route change. Private pages, the hidden international pages and the school, programme and scholarship detail pages are marked noindex.
+- Why the detail pages are noindex: a signed out visitor, which includes Googlebot, sees only the Gate sign in prompt there. Flip INDEX_DETAIL_PAGES in src/lib/seo.js and add them to the sitemap once they show real content to everyone. Owner decision needed.
+- Facts found live on 11 Nov: jambaconsult.com is bought in Vercel team Jamba (slug jamba2), attached to project prj_79sM0nCsytGDlFCOZzxqNBj5elBT, www redirects to the apex. DNS has Zoho mail records, Resend records and a Google site verification TXT. Unconfirmed: Resend verified status, Search Console verified status, Formspree ID and Sentry DSN on the new project.
+- Open: owner pushes or applies the patch, then submits https://jambaconsult.com/sitemap.xml in Search Console. Not tested in a browser. Build passes.
+
 ### 7 Nov 2026, Claude session (claude.ai, repo attached with push access)
 - Owner asked to remove schools that are not accredited, nursing and midwifery first, and thought private universities were already gone.
 - Found: there is no accreditation field (schools.verified means requirements checked, not accredited). The app already hides every non-Public school (search_schools, search_programs, search_programs_c, useCatalog.js), so private rows are invisible but still stored. The removal script existed as RUN_THIS_remove_private_schools.sql and had never been run. Renamed to supabase/step172_remove_private_schools.sql (67 private schools, 21 programmes, none saved or linked). My attempt to run it through the SQL tool was cancelled by the client, so NOTHING WAS DELETED. Owner runs it in the SQL editor.

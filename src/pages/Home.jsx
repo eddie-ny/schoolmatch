@@ -6,6 +6,7 @@ import { FIELDS, SHOW_INTERNATIONAL } from '../lib/constants'
 import { Segmented, Spinner } from '../components/ui'
 import { SchoolCard, ScholarshipCard } from '../components/Cards'
 import { SCHOOL_CATEGORIES, schoolCategory } from '../lib/schoolCategory'
+import { usePageMeta } from '../lib/seo'
 
 const tasks = [
   { to: '/local/schools', title: 'Find a School', text: SHOW_INTERNATIONAL ? 'Search local and international schools and programs.' : 'Search Ghanaian universities and their programs.', bar: 'border-l-brand-orange' },
@@ -73,6 +74,7 @@ export function HeroArt() {
 }
 
 export default function Home() {
+  usePageMeta({ title: 'Study in Ghana | Jamba', description: 'Browse Ghanaian universities, programmes and scholarships, and check your WASSCE aggregate against entry requirements.' })
   const { user, access } = useAuth()
   const nav = useNavigate()
   const { schools, scholarships, loading, error } = useCatalog()

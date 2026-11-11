@@ -1,7 +1,9 @@
 import { Link } from 'react-router-dom'
 import { PageTitle } from '../components/ui'
+import { useNoindex } from '../lib/seo'
 
 export default function NotFound() {
+  useNoindex()
   return (
     <div className="max-w-md space-y-4">
       <PageTitle title="Page not found" sub="That page does not exist or has moved." />

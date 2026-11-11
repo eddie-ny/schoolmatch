@@ -162,12 +162,12 @@ export default function Layout() {
           </div>
         )}
 
-        {user && access.level === 'full' && access.trial && (
+        {user && pathname !== '/reset-password' && access.level === 'full' && access.trial && (
           <div className="bg-brand-green/20 text-sm text-center py-2 px-4">
             Free trial: {timeLeft(access.expiresAt)} left. <Link to="/pricing" className="underline font-semibold inline-block py-2">See pricing</Link>
           </div>
         )}
-        {user && !mfaNeeded && access.level === 'summary' && (
+        {user && !mfaNeeded && pathname !== '/reset-password' && access.level === 'summary' && (
           <div className="bg-brand-orange/25 text-sm text-center py-2 px-4">
             {access.needsParent
               ? 'Waiting for your parent or guardian to confirm. You can see summaries only until then.'

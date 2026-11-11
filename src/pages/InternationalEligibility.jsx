@@ -117,6 +117,7 @@ function InternationalEligibilityInner() {
   const [test, setTest] = useState('none')
   const [score, setScore] = useState('')
   const [go, setGo] = useState(false)
+  const [view, setView] = useState('schools')
   const [study, setStudy] = useState(params.get('program') || '')
   const dStudy = useDebounced(study)
   const [pool, setPool] = useState({ items: [], total: 0, busy: false })
@@ -270,7 +271,12 @@ function InternationalEligibilityInner() {
           </>
         )}
       </div>
-      {loading || pool.busy ? <Spinner /> : !ready ? (
+      {full && ready && !loading && !pool.busy && (
+        <div className="mb-4"><Segmented value={view} onChange={setView} options={[{ value: 'schools', label: 'Schools' }, { value: 'scholarships', label: 'Scholarships' }]} /></div>
+      )}
+      {view === 'scholarships' && full && ready && !loading && !pool.busy ? (
+        <ScholarshipsForYou me={{ gender: user?.profile?.gender || '', sat: satNum || '' }} fields={[]} masters={masters} scope="international" />
+      ) : loading || pool.busy ? <Spinner /> : !ready ? (
         <p className="text-neutral-700">{masters ? 'Choose your degree class, then press Check my eligibility.' : 'Fill in what you have and press Check my eligibility. You can leave out the SAT and English test.'}</p>
       ) : rows.length === 0 ? (
         <p className="text-neutral-700">{study ? 'No programs match that search. Try a broader word.' : `We are adding international ${masters ? 'masters' : 'bachelors'} programs. Check back soon.`}</p>
@@ -294,7 +300,6 @@ function InternationalEligibilityInner() {
         </div>
         </>
       )}
-      {full && ready && !loading && !pool.busy && <ScholarshipsForYou me={{ gender: user?.profile?.gender || '', sat: satNum || '' }} fields={[]} masters={masters} scope="international" />}
       <p className="text-sm text-neutral-600 mt-6">This is guidance, not a guarantee of admission. A "?" means the school has not published that rule. Always confirm requirements with the school.</p>
     </div>
   )

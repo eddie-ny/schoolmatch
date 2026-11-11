@@ -185,6 +185,8 @@ function EligibilityInner() {
     try { localStorage.setItem(draftKey, JSON.stringify({ level, degreeClass, cgpa, qualification, mode, grades, electives, sat, scope, field, programName })) } catch { /* storage blocked: the form still works */ }
   }, [draftKey, level, degreeClass, cgpa, qualification, mode, grades, electives, sat, scope, field, programName])
   const [output, setOutput] = useState(null)
+  // Results show either schools or scholarships, one at a time.
+  const [view, setView] = useState('schools')
   // Scholarships that belong to the schools in the results, fetched once per search.
   const [schol, setSchol] = useState({ bySchool: {}, schoolOf: {} })
   useEffect(() => {
@@ -398,7 +400,11 @@ function EligibilityInner() {
         </section>
       )}
 
-      {output && !output.locked && output.yourQualification && (
+      {output && !output.locked && (
+        <Segmented value={view} onChange={setView} options={[{ value: 'schools', label: 'Schools' }, { value: 'scholarships', label: 'Scholarships' }]} />
+      )}
+
+      {output && !output.locked && view === 'schools' && output.yourQualification && (
         <section className="space-y-4">
           <h2 className="text-xl font-bold">Results</h2>
           <p>Your qualification: <b>{output.yourQualification}</b>. Each school sets its own entry rules, so confirm with the school before you apply.</p>
@@ -418,7 +424,7 @@ function EligibilityInner() {
         </section>
       )}
 
-      {output && !output.locked && output.yourClass && (
+      {output && !output.locked && view === 'schools' && output.yourClass && (
         <section className="space-y-4">
           <h2 className="text-xl font-bold">Results</h2>
           <p>Your first-degree class: <b>{output.yourClass}</b>. Each school sets its own entry rules, so confirm with the school before you apply.</p>
@@ -438,7 +444,7 @@ function EligibilityInner() {
         </section>
       )}
 
-      {output && !output.locked && !output.yourClass && !output.yourQualification && (
+      {output && !output.locked && view === 'schools' && !output.yourClass && !output.yourQualification && (
         <section className="space-y-4">
           <h2 className="text-xl font-bold">Results</h2>
           {output.aggregate != null
@@ -493,7 +499,7 @@ function EligibilityInner() {
         </section>
       )}
 
-      {output && !output.locked && (
+      {output && !output.locked && view === 'scholarships' && (
         <ScholarshipsForYou me={{ ...me, aggregate: output.aggregate ?? null }} fields={chosenFields} masters={masters} scope="local" />
       )}
     </div>

@@ -64,14 +64,6 @@ export function Login() {
   )
 }
 
-const PENDING_KEY = 'sm_pending_confirm'
-const readPending = () => {
-  try { return JSON.parse(localStorage.getItem(PENDING_KEY) || 'null') } catch { return null }
-}
-const writePending = (email) => {
-  try { localStorage.setItem(PENDING_KEY, JSON.stringify({ email: email.trim().toLowerCase(), at: Date.now() })) } catch { /* storage blocked: fine */ }
-}
-const clearPending = () => { try { localStorage.removeItem(PENDING_KEY) } catch { /* ignore */ } }
 
 // Step two of sign-up: the person types the code from the email. Typing it confirms the address and signs them in.
 // One box per digit of the code. Typing moves on, Backspace moves back, and pasting the whole code fills every box.
@@ -138,7 +130,6 @@ function VerifyCode({ email, firstWait = 60, trial = true }) {
     setBusy(true)
     try {
       await verifySignupCode(email, clean)
-      clearPending()
     } catch (err) {
       setError(err.message)
     } finally {
@@ -152,7 +143,6 @@ function VerifyCode({ email, firstWait = 60, trial = true }) {
     setBusy(true)
     try {
       await resendConfirmation(email)
-      writePending(email)
       setMsg('A new code is on its way. Use only the newest email. Older codes stop working.')
     } catch (err) {
       setError(err.message)
@@ -197,7 +187,6 @@ function CheckEmailLink({ email, firstWait = 60 }) {
     setBusy(true)
     try {
       await resendConfirmation(email)
-      writePending(email)
       setMsg('Sent. Use only this newest email. Older links stop working.')
     } catch (err) {
       setMsg(err.message)
@@ -249,20 +238,12 @@ export function Signup() {
     if (passwordProblem(f.password)) return setError(PASSWORD_RULE)
     if (!f.consent) return setError('Please accept the terms and the privacy notice to continue.')
     if (minor && (!f.parentName || !f.parentPhone || !f.parentEmail)) return setError('A parent or guardian name, phone and email are required for under 18s.')
-    // An address already waiting for its code goes straight to the code screen. Signing up again
-    // would send a new code and cancel the one already in the inbox.
-    const pending = readPending()
-    if (pending && pending.email === f.email.trim().toLowerCase() && Date.now() - pending.at < 60 * 60 * 1000) {
-      setSentTo(f.email.trim())
-      return
-    }
     setBusy(true)
     try {
       const res = await signUp(f)
       if (res.alreadyRegistered) {
         setExists(true)
       } else if (res.needsConfirm) {
-        writePending(f.email)
         setSentTo(f.email.trim())
       }
     } catch (err) {

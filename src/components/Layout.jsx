@@ -103,7 +103,7 @@ export default function Layout() {
       <header className="border-b border-neutral-200/70 bg-white/90 backdrop-blur sticky top-0 z-20">
         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
           <Link to="/" className="inline-flex flex-col justify-center min-h-11 leading-none" aria-label={side ? `${APP_NAME} ${side}, back to the start page` : `${APP_NAME} home`}>
-            <img src="/logo.png" alt={APP_NAME} className="h-9 w-auto" />
+            <img src="/logo.png" alt={APP_NAME} className="h-8 w-auto" />
             {side && <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500 mt-0.5">{side === 'local' ? 'Local' : 'International'}</span>}
           </Link>
 

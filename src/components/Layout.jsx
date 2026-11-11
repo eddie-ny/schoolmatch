@@ -167,7 +167,7 @@ export default function Layout() {
             Free trial: {timeLeft(access.expiresAt)} left. <Link to="/pricing" className="underline font-semibold inline-block py-2">See pricing</Link>
           </div>
         )}
-        {user && access.level === 'summary' && (
+        {user && !mfaNeeded && access.level === 'summary' && (
           <div className="bg-brand-orange/25 text-sm text-center py-2 px-4">
             {access.needsParent
               ? 'Waiting for your parent or guardian to confirm. You can see summaries only until then.'

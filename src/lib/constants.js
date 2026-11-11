@@ -87,7 +87,7 @@ export const SHOW_INTERNATIONAL = false
 //   true  = the email holds a code the person types in. Switch to true ONLY after custom SMTP is set up in Supabase
 //           and the "Confirm signup" template contains {{ .Token }} (see docs/EMAIL-TEMPLATES.md). With the default
 //           template this would show a code box that no email ever fills.
-export const CONFIRM_BY_CODE = false
+export const CONFIRM_BY_CODE = true
 
 // First-degree classes, best first. Used by the masters checker.
 export const DEGREE_CLASSES = ['First Class', 'Second Class Upper', 'Second Class Lower', 'Third Class', 'Pass']

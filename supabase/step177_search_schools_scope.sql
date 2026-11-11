@@ -1,9 +1,9 @@
--- STEP 177 (NOT APPLIED. Needs the owner's approval: it replaces a function the site uses.)
+-- STEP 177 (APPLIED 11 Nov 2026 through execute_sql, approved by the owner. Old and new function returned identical rows and totals on 16 test searches before the swap.)
 -- Fixes SCHOOLMATCH-6 (Postgres 57014 "canceling statement due to statement timeout" on /local/schools, two Ghana users, 10 and 11 Nov).
 -- Cause (measured 11 Nov as postgres): search_schools('local','','','','','',24,0) takes 2,981 ms. The anon limit is 3 s, so it fails
 -- whenever the server is a little busy. The pf, pq and tot parts group ALL 79,000 program_groups rows, even for the 158 Ghana public schools.
 -- Fix: the three parts only read program_groups rows of the schools already chosen by scope and country (the sch part).
--- A test of the same idea for the plain Local list ran in 73 ms. The result is unchanged because schools outside sch were dropped by the joins anyway.
+-- A test of the same idea ran in 73 ms. After the swap the real function ran in 154 ms (one run, includes warm-up). The result is unchanged because schools outside sch were dropped by the joins anyway.
 
 create or replace function public.search_schools(p_scope text default 'local'::text, p_q text default ''::text, p_field text default ''::text, p_level text default ''::text, p_kind text default ''::text, p_country text default ''::text, p_limit integer default 24, p_offset integer default 0)
  returns table(id uuid, name text, country text, city text, type text, category text, logo_url text, verified boolean, program_count integer, matched integer, matches text[], total bigint)

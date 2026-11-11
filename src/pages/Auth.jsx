@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { isMinorFromDob, passwordProblem, PASSWORD_RULE } from '../lib/api'
 import { supabase } from '../lib/supabase'
-import { CONFIRM_BY_CODE } from '../lib/constants'
+import { CONFIRM_BY_CODE, OTP_LENGTH } from '../lib/constants'
 
 // Read before Supabase clears the address: did the person just arrive from the email confirmation link?
 const ARRIVED_CONFIRMED = /type=signup|type=email/.test(window.location.hash)
@@ -74,11 +74,11 @@ const writePending = (email) => {
 const clearPending = () => { try { localStorage.removeItem(PENDING_KEY) } catch { /* ignore */ } }
 
 // Step two of sign-up: the person types the code from the email. Typing it confirms the address and signs them in.
-// Six boxes for the six-digit code. Typing moves on, Backspace moves back, and pasting the whole code fills every box.
-const CODE_LENGTH = 6
+// One box per digit of the code. Typing moves on, Backspace moves back, and pasting the whole code fills every box.
+// OTP_LENGTH must match Supabase, Authentication > Sign In / Providers > Email > Email OTP Length.
 function CodeBoxes({ value, onChange }) {
   const refs = useRef([])
-  const digits = value.padEnd(CODE_LENGTH, ' ').split('').slice(0, CODE_LENGTH)
+  const digits = value.padEnd(OTP_LENGTH, ' ').split('').slice(0, OTP_LENGTH)
   const put = (i, d) => {
     const next = digits.map((x, k) => (k === i ? d : x)).join('').replace(/ +$/, '')
     onChange(next)
@@ -87,27 +87,27 @@ function CodeBoxes({ value, onChange }) {
     const d = raw.replace(/\D/g, '')
     if (!d) return put(i, ' ')
     if (d.length > 1) { // autofill or paste of several digits
-      const all = (value.slice(0, i) + d).slice(0, CODE_LENGTH)
+      const all = (value.slice(0, i) + d).slice(0, OTP_LENGTH)
       onChange(all)
-      refs.current[Math.min(all.length, CODE_LENGTH - 1)]?.focus()
+      refs.current[Math.min(all.length, OTP_LENGTH - 1)]?.focus()
       return
     }
     put(i, d)
-    if (i < CODE_LENGTH - 1) refs.current[i + 1]?.focus()
+    if (i < OTP_LENGTH - 1) refs.current[i + 1]?.focus()
   }
   const onKey = (i, e) => {
     if (e.key === 'Backspace' && digits[i] === ' ' && i > 0) { refs.current[i - 1]?.focus() }
     if (e.key === 'ArrowLeft' && i > 0) refs.current[i - 1]?.focus()
-    if (e.key === 'ArrowRight' && i < CODE_LENGTH - 1) refs.current[i + 1]?.focus()
+    if (e.key === 'ArrowRight' && i < OTP_LENGTH - 1) refs.current[i + 1]?.focus()
   }
   return (
-    <div className="flex justify-center gap-2" role="group" aria-label="Six-digit code">
+    <div className="flex justify-center gap-2" role="group" aria-label="Code from the email">
       {digits.map((d, i) => (
         <input
           key={i} ref={(el) => { refs.current[i] = el }}
           className="input !w-11 sm:!w-12 !px-0 text-2xl text-center font-semibold"
           inputMode="numeric" autoComplete={i === 0 ? 'one-time-code' : 'off'} aria-label={`Digit ${i + 1}`}
-          autoFocus={i === 0} value={d.trim()} maxLength={CODE_LENGTH}
+          autoFocus={i === 0} value={d.trim()} maxLength={OTP_LENGTH}
           onChange={(e) => onInput(i, e.target.value)} onKeyDown={(e) => onKey(i, e)} onFocus={(e) => e.target.select()}
         />
       ))}
@@ -134,7 +134,7 @@ function VerifyCode({ email, firstWait = 60, trial = true }) {
     setError('')
     setMsg('')
     const clean = code.replace(/\s+/g, '')
-    if (!/^\d{6}$/.test(clean)) return setError('Enter the code from the email. It is made of numbers only.')
+    if (clean.length !== OTP_LENGTH || !/^\d+$/.test(clean)) return setError('Enter the code from the email. It is made of numbers only.')
     setBusy(true)
     try {
       await verifySignupCode(email, clean)

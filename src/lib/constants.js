@@ -82,6 +82,9 @@ export const FIELDS = [
 // set this to true to bring them back everywhere (filters, Study Abroad page, eligibility scope).
 export const SHOW_INTERNATIONAL = false
 
+// Digits in the email code. Supabase sends 8 today (checked 11 Nov from a real email). Keep in step with Supabase's Email OTP Length.
+export const OTP_LENGTH = 8
+
 // How a new account confirms its email address.
 //   false = the email holds a link (works with Supabase's default email template).
 //   true  = the email holds a code the person types in. Switch to true ONLY after custom SMTP is set up in Supabase

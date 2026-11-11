@@ -80,7 +80,7 @@ export const FIELDS = [
 
 // Launch is local (Ghana) only. International schools and scholarships stay in the database and the code;
 // set this to true to bring them back everywhere (filters, Study Abroad page, eligibility scope).
-export const SHOW_INTERNATIONAL = false
+export const SHOW_INTERNATIONAL = true
 
 // Digits in the email code. Supabase sent 8 on 11 Nov, then the owner set Email OTP Length to 6. Keep this in step with that Supabase setting.
 export const OTP_LENGTH = 6

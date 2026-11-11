@@ -1,3 +1,4 @@
+import ScholarshipsForYou from '../components/ScholarshipsForYou'
 import { useEffect, useMemo, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useCatalog } from '../hooks/useCatalog'
@@ -293,6 +294,7 @@ function InternationalEligibilityInner() {
         </div>
         </>
       )}
+      {full && ready && !loading && !pool.busy && <ScholarshipsForYou me={{ gender: user?.profile?.gender || '', sat: satNum || '' }} fields={[]} masters={masters} scope="international" />}
       <p className="text-sm text-neutral-600 mt-6">This is guidance, not a guarantee of admission. A "?" means the school has not published that rule. Always confirm requirements with the school.</p>
     </div>
   )

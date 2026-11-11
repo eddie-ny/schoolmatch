@@ -25,9 +25,18 @@ export function matchScholarship(s, me, now = new Date()) {
     else if (Number(me.sat) >= s.minSat) reasons.push(`SAT ${me.sat} meets the ${s.minSat} asked`)
     else { below = true; reasons.push(`Needs an SAT score of ${s.minSat}, yours is ${me.sat}`) }
   }
-  if (s.field && me.field && s.field.toLowerCase() !== String(me.field).toLowerCase()) { below = true; reasons.push(`Only for ${s.field} programmes`) }
+  // A scholarship tied to courses lists them in `field`, separated by "|". The student's courses come from me.fields or me.field.
+  const fields = String(s.field || '').split('|').map((x) => x.trim()).filter(Boolean)
+  if (fields.length) {
+    known++
+    const mine = (me.fields || (me.field ? [me.field] : [])).map((x) => String(x).toLowerCase())
+    const list = fields.join(' or ')
+    if (!mine.length) reasons.push(`Only for ${list} programmes. Check yours is one of them.`)
+    else if (fields.some((f) => mine.includes(f.toLowerCase()))) reasons.push(`For ${list} programmes: you fit`)
+    else { below = true; reasons.push(`Only for ${list} programmes`) }
+  }
   if (below) return { state: 'below', reasons }
-  if (known === 0 && !s.field) return { state: 'unknown', reasons: ['No entry rules stated. Check the details with the school.'] }
-  const open = reasons.some((r) => /Needs|Add your/.test(r))
+  if (known === 0) return { state: 'unknown', reasons: ['No entry rules stated. Check the details with the school.'] }
+  const open = reasons.some((r) => /Needs|Add your|Check yours/.test(r))
   return { state: open ? 'unknown' : 'meets', reasons }
 }

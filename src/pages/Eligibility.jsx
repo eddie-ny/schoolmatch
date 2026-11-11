@@ -5,6 +5,7 @@ import { useEffect } from 'react'
 import { listSchoolScholarships, listEligibilityPrograms, checkEligibility, checkMastersEligibility, checkTopupEligibility } from '../lib/api'
 import { CORE_SUBJECTS, ELECTIVE_SUBJECTS, GRADES, DISCLAIMER, FIELDS, SHOW_INTERNATIONAL, DEGREE_CLASSES } from '../lib/constants'
 import { matchScholarship } from '../lib/scholarshipMatch'
+import ScholarshipsForYou from '../components/ScholarshipsForYou'
 import { Badge, Field, Gate, PagedGrid, PageTitle, RequireAuth, Segmented, Spinner } from '../components/ui'
 
 const labelTone = {
@@ -202,6 +203,11 @@ function EligibilityInner() {
       .filter((p) => (masters ? p.level === 'Masters' : topup ? !!p.entryQualification : p.level !== 'Masters' && p.level !== 'Diploma' && p.level !== 'Certificate' && !p.entryQualification))
       .filter((p) => scope === 'both' || (scope === 'local' ? !p.international : p.international)),
     [programs, scope, masters, topup]
+  )
+  // The course group(s) of the programme the student searched, used for scholarships tied to a course.
+  const chosenFields = useMemo(
+    () => [...new Set(programs.filter((p) => output && p.group === output.programName).map((p) => p.field).filter(Boolean))],
+    [programs, output]
   )
   const qualifications = useMemo(() => [...new Set(programs.map((p) => p.entryQualification).filter(Boolean))].sort(), [programs])
 
@@ -485,6 +491,10 @@ function EligibilityInner() {
           )}
           <p className="text-xs text-neutral-500">{DISCLAIMER}</p>
         </section>
+      )}
+
+      {output && !output.locked && (
+        <ScholarshipsForYou me={{ ...me, aggregate: output.aggregate ?? null }} fields={chosenFields} masters={masters} scope="local" />
       )}
     </div>
   )

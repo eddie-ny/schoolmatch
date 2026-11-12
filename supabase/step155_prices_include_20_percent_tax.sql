@@ -7,6 +7,7 @@
 --   3m   35000 -> 42000    3000 -> 3600
 --   6m   69900 -> 83880    6000 -> 7200
 --   1y  116500 -> 139800  10000 -> 12000
+-- Follow-up (12 Nov): 3m and 6m GHS were set to 41900 and 83900 so every GHS price equals USD price x rate, rounded to whole cedis (the rule admin_set_rate uses).
 -- To undo, set the old prices back by hand.
 update public.plans set price_minor = 16800,  price_usd_cents = 1440  where id = '1m' and price_minor = 14000  and price_usd_cents = 1200;
 update public.plans set price_minor = 42000,  price_usd_cents = 3600  where id = '3m' and price_minor = 35000  and price_usd_cents = 3000;

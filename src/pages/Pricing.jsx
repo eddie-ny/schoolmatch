@@ -4,8 +4,10 @@ import { useAuth } from '../context/AuthContext'
 import { getRate, listPlans, startCheckout, verifyPayment } from '../lib/api'
 import { PageTitle } from '../components/ui'
 
-const usd = (cents) => `USD ${(cents / 100).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`
-const money = (minor, currency) => `${currency} ${(minor / 100).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`
+// Whole amounts show without decimals; amounts with cents always show two (14.40, not 14.4).
+const digits = (minor) => (minor % 100 ? 2 : 0)
+const usd = (cents) => `USD ${(cents / 100).toLocaleString(undefined, { minimumFractionDigits: digits(cents), maximumFractionDigits: 2 })}`
+const money = (minor, currency) => `${currency} ${(minor / 100).toLocaleString(undefined, { minimumFractionDigits: digits(minor), maximumFractionDigits: 2 })}`
 
 export default function Pricing() {
   const { user, access, refresh } = useAuth()
@@ -77,6 +79,7 @@ export default function Pricing() {
               {best && <span className="absolute -top-3 left-4 rounded-full bg-brand-orange px-3 py-0.5 text-xs font-bold text-white">Best value</span>}
               <p className="font-heading font-bold text-lg">{p.label}</p>
               <p className="text-3xl font-bold leading-tight">{main ? (hasUsd ? usd(main) : money(main, p.currency)) : 'Price to be set'}</p>
+              {main > 0 && <p className="text-xs font-semibold text-neutral-700">Includes 20% VAT and levies</p>}
               {hasUsd && p.price_minor > 0 && <p className="text-sm text-neutral-600">about {money(p.price_minor, p.currency)}</p>}
               {main > 0 && p.months > 1 && <p className="text-sm text-neutral-600">{hasUsd ? usd(Math.round(perMonth)) : money(Math.round(perMonth), p.currency)} a month</p>}
               {save > 0 && <span className="mt-1 self-start rounded-full bg-brand-green-soft px-2.5 py-0.5 text-xs font-bold text-neutral-800">Save {save}%</span>}
@@ -103,6 +106,7 @@ export default function Pricing() {
         ) : (
           <Link to="/signup" className="btn btn-orange w-full">Sign up to subscribe</Link>
         )}
+        <p className="text-sm font-semibold">All prices include 20% VAT and levies.</p>
         <p className="text-sm text-neutral-700 bg-brand-orange-soft rounded-xl p-3">
           For your safety: do not let your browser or phone save your card or Mobile Money details. Enter them each time on Paystack's page, and never share your PIN or OTP with anyone, including us.
         </p>

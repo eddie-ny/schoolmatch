@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { StatusBar } from 'expo-status-bar'
+import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { ActivityIndicator, View } from 'react-native'
 import { AuthProvider, useAuth } from './src/AuthContext'
 import { Login, MfaChallenge, Signup } from './src/AuthScreens'
@@ -20,9 +21,11 @@ function Root() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <Root />
-      <StatusBar style="dark" />
-    </AuthProvider>
+    <SafeAreaProvider>
+      <AuthProvider>
+        <Root />
+        <StatusBar style="dark" />
+      </AuthProvider>
+    </SafeAreaProvider>
   )
 }

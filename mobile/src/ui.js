@@ -1,14 +1,17 @@
-import { useRef, useState } from 'react'
+import { createContext, useContext, useRef, useState } from 'react'
 import { ActivityIndicator, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StatusBar, StyleSheet, Text, TextInput, View } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { colors } from './lib/constants'
 
 const topPad = Platform.OS === 'android' ? (StatusBar.currentHeight || 24) + 16 : 60
 
+export const InShell = createContext(false)
+
 export function Screen({ children }) {
+  const inShell = useContext(InShell) // inside the tabs, the header already covers the status bar
   return (
     <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScrollView style={styles.flex} contentContainerStyle={[styles.screen, { paddingTop: topPad }]} keyboardShouldPersistTaps="handled">
+      <ScrollView style={styles.flex} contentContainerStyle={[styles.screen, { paddingTop: inShell ? 16 : topPad }]} keyboardShouldPersistTaps="handled">
         {children}
       </ScrollView>
     </KeyboardAvoidingView>

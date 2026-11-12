@@ -19,8 +19,8 @@ const KINDS = [{ value: '', label: 'All schools' }, ...SCHOOL_CATEGORIES.filter(
 const Spinner = () => <View style={{ paddingVertical: 32 }}><ActivityIndicator color={colors.orangeInk} /></View>
 
 // ---------- Find a School (local) ----------
-export function SchoolsList({ onBack, onOpen }) {
-  const [f, setF] = useState({ q: '', kind: '', field: '', offers: '', page: 1 })
+export function SchoolsList({ onBack, onOpen, initialKind = '' }) {
+  const [f, setF] = useState({ q: '', kind: initialKind, field: '', offers: '', page: 1 })
   const dq = useDebounced(f.q)
   const [state, setState] = useState({ rows: [], total: 0, loading: true, error: '' })
   const [tries, setTries] = useState(0)
@@ -40,7 +40,7 @@ export function SchoolsList({ onBack, onOpen }) {
   const pages = Math.ceil(total / SCHOOLS_PAGE)
   return (
     <Screen>
-      <BackLink label="Home" onPress={onBack} />
+      {onBack && <BackLink label="Back" onPress={onBack} />}
       <Title title="Find a School" sub="Ghanaian universities and their programs." />
       <View style={{ gap: 12, marginBottom: 16 }}>
         <Input placeholder="Search by school, program (for example law), city or country" value={f.q} onChangeText={set('q')} autoCorrect={false} />
@@ -96,8 +96,8 @@ export function SchoolDetail({ id, q: q0 = '', field: field0 = '', onBack }) {
     return () => { live = false }
   }, [id, dq, f.field, f.level, f.page])
 
-  if (school === undefined) return <Screen><BackLink label="Back to schools" onPress={onBack} /><Spinner /></Screen>
-  if (!school) return <Screen><BackLink label="Back to schools" onPress={onBack} /><Text style={styles.body}>This school could not be found.</Text></Screen>
+  if (school === undefined) return <Screen><BackLink label="Back" onPress={onBack} /><Spinner /></Screen>
+  if (!school) return <Screen><BackLink label="Back" onPress={onBack} /><Text style={styles.body}>This school could not be found.</Text></Screen>
 
   const where = [school.city, school.country].filter(Boolean).join(', ')
   const pages = Math.ceil(prog.total / PROGRAMS_PAGE)
@@ -105,7 +105,7 @@ export function SchoolDetail({ id, q: q0 = '', field: field0 = '', onBack }) {
   const credit = [school.descriptionCredit, school.imageCredit, school.logoCredit].filter(Boolean).join(' | ')
   return (
     <Screen>
-      <BackLink label="Back to schools" onPress={onBack} />
+      <BackLink label="Back" onPress={onBack} />
       <View style={[cardStyle, { padding: 0, gap: 0, overflow: 'hidden' }]}>
         {school.imageUrl && !imgBad
           ? <Image source={{ uri: thumbUrl(school.imageUrl, 960) }} onError={() => setImgBad(true)} style={{ height: 130, width: '100%' }} resizeMode="cover" />

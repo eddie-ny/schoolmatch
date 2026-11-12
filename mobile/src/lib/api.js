@@ -2,6 +2,120 @@
 // Search and eligibility rules live in the database, so the app gets the same answers as the website.
 
 import { supabase } from './supabase'
+import { PASSWORD_RULE, isMinorFromDob } from './validation'
+
+// Turns a Supabase error into the plain message the web app shows. Wording copied from the web app (friendly).
+function friendly(error) {
+  const m = (error.message || '').toLowerCase()
+  const code = error.code || ''
+  if (m.includes('invalid login')) return 'Wrong email or password.'
+  if (m.includes('email not confirmed')) return 'Please confirm your email first. Enter the code we sent to your inbox.'
+  if (code === 'over_email_send_rate_limit' || m.includes('email rate limit')) {
+    return 'We cannot send an email or reset link right now because the email service has its limits. Please try again in an hour.'
+  }
+  if (m.includes('failed to fetch') || m.includes('networkerror') || m.includes('network request failed') || error.name === 'AuthRetryableFetchError') {
+    return 'Could not reach the server. Check your internet connection and try again. If you were creating an account, check your email first, it may have gone through.'
+  }
+  if (code === 'over_request_rate_limit' || m.includes('rate limit') || m.includes('too many')) return 'Too many attempts from this connection. Please wait a few minutes and try again.'
+  if (m.includes('banned')) return 'This account is closed or disabled. Contact support if you think this is a mistake.'
+  if (m.includes('token has expired') || m.includes('otp_expired') || m.includes('otp expired') || code === 'otp_expired') return 'That code is wrong or has expired. Ask for a new code and use only the newest email.'
+  if (m.includes('at least one character of each')) return PASSWORD_RULE
+  if (m.includes('password') && m.includes('characters')) return 'Password is too short. ' + PASSWORD_RULE
+  if (m.includes('should be different')) return 'Your new password must be different from the old one.'
+  return error.message
+}
+
+const fail = (error, fallback) => {
+  if (error) throw new Error(friendly(error) || fallback)
+}
+
+// ---------- Auth ----------
+
+// Returns { needsConfirm, alreadyRegistered }. The email holds a 6-digit code (see verifySignupCode).
+export async function signUp(form) {
+  const meta = {
+    full_name: form.fullName,
+    first_name: (form.fullName || '').trim().split(/\s+/)[0] || '', // lets the confirmation email say "Hey Edward"
+    phone: form.phone,
+    date_of_birth: form.dateOfBirth,
+  }
+  if (isMinorFromDob(form.dateOfBirth)) {
+    meta.parent_name = form.parentName
+    meta.parent_phone = form.parentPhone
+    meta.parent_email = form.parentEmail
+  }
+  // A sign-up that was started but never confirmed would keep its first details, so it is cleared first. Confirmed accounts are never touched.
+  await supabase.rpc('discard_unconfirmed_signup', { p_email: form.email })
+  const { data, error } = await supabase.auth.signUp({ email: form.email, password: form.password, options: { data: meta } })
+  fail(error, 'Could not create your account.')
+  // For an address that already has a confirmed account, Supabase answers success but returns a user with no identities and sends nothing.
+  const alreadyRegistered = Array.isArray(data.user?.identities) && data.user.identities.length === 0
+  return { needsConfirm: !data.session && !alreadyRegistered, alreadyRegistered }
+}
+
+// Typing the code from the email confirms the address and signs the person in.
+export async function verifySignupCode(email, code) {
+  const { error } = await supabase.auth.verifyOtp({ email: email.trim(), token: code.replace(/\s+/g, ''), type: 'signup' })
+  fail(error, 'Could not check that code.')
+}
+
+export async function resendConfirmation(email) {
+  const { error } = await supabase.auth.resend({ type: 'signup', email })
+  fail(error, 'Could not send the email. Please wait a minute and try again.')
+}
+
+export async function signIn(email, password) {
+  const { error } = await supabase.auth.signInWithPassword({ email, password })
+  fail(error, 'Could not sign in.')
+}
+
+export async function signOut() {
+  // 'local' ends this phone's session without waiting on other devices.
+  await supabase.auth.signOut({ scope: 'local' })
+}
+
+// ---------- Two-step verification (authenticator app): the sign-in challenge only. Turning it on or off comes in step 8. ----------
+// current = what this session has proven; next = what it could prove. aal1 -> aal2 means a code is still owed.
+export async function mfaState() {
+  const { data, error } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
+  if (error) return { current: 'aal1', next: 'aal1' }
+  return { current: data.currentLevel, next: data.nextLevel }
+}
+
+export async function mfaFactor() {
+  const { data, error } = await supabase.auth.mfa.listFactors()
+  fail(error, 'Could not read your two-step verification.')
+  return (data.totp || []).find((f) => f.status === 'verified') || null
+}
+
+export async function mfaVerifyCode(factorId, code) {
+  const ch = await supabase.auth.mfa.challenge({ factorId })
+  fail(ch.error, 'Could not check the code.')
+  const v = await supabase.auth.mfa.verify({ factorId, challengeId: ch.data.id, code: code.replace(/\s/g, '') })
+  if (v.error) throw new Error('That code is not right or has expired. Try the newest code from your app.')
+}
+
+// The signed-in student, or null. With two-step verification on, the database hides the profile until the code is entered,
+// so a missing profile plus "aal1 -> aal2" means a code is still owed.
+export async function getCurrentUser() {
+  const { data: sess } = await supabase.auth.getSession()
+  const uid = sess.session?.user?.id
+  if (!uid) return null
+  const { data: p, error } = await supabase
+    .from('profiles')
+    .select('id, full_name, email, phone, date_of_birth, is_minor, trial_ends_at, disabled_at')
+    .eq('id', uid)
+    .maybeSingle()
+  if (error) throw new Error(error.message)
+  if (!p) {
+    const m = await mfaState()
+    if (m.current === 'aal1' && m.next === 'aal2') return { id: uid, mfaPending: true, email: sess.session.user.email }
+    return null // the profile row is created by the sign-up trigger, so it should always exist
+  }
+  return { id: p.id, fullName: p.full_name, email: p.email, phone: p.phone, dateOfBirth: p.date_of_birth, isMinor: p.is_minor, trialEndsAt: p.trial_ends_at, disabled: !!p.disabled_at }
+}
+
+// ---------- Schools (used from step 5) ----------
 
 const toScope = (scope) => (scope === 'all' ? 'all' : scope === 'international' || scope === 'intl' ? 'intl' : 'local')
 

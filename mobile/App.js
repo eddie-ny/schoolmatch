@@ -1,34 +1,28 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { StatusBar } from 'expo-status-bar'
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native'
-import { searchSchools } from './src/lib/api'
+import { ActivityIndicator, View } from 'react-native'
+import { AuthProvider, useAuth } from './src/AuthContext'
+import { Login, MfaChallenge, Signup } from './src/AuthScreens'
+import HomeScreen from './src/HomeScreen'
+import { colors } from './src/lib/constants'
 
-// Step 3 check screen: shows that the app can read schools from the database. Replaced by the real schools list in step 5.
-export default function App() {
-  const [state, setState] = useState({ loading: true, rows: [], total: 0, error: '' })
+function Root() {
+  const { user, loading } = useAuth()
+  const [view, setView] = useState('login')
 
-  useEffect(() => {
-    searchSchools({ scope: 'local', limit: 3 })
-      .then(({ rows, total }) => setState({ loading: false, rows, total, error: '' }))
-      .catch((e) => setState({ loading: false, rows: [], total: 0, error: e.message }))
-  }, [])
-
-  return (
-    <View style={styles.container}>
-      {state.loading && <ActivityIndicator />}
-      {!!state.error && <Text>{state.error}</Text>}
-      {!state.loading && !state.error && (
-        <>
-          <Text style={styles.title}>{state.total} local schools</Text>
-          {state.rows.map((r) => <Text key={r.school.id}>{r.school.name}</Text>)}
-        </>
-      )}
-      <StatusBar style="auto" />
-    </View>
-  )
+  if (loading) {
+    return <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.page }}><ActivityIndicator color={colors.orangeInk} /></View>
+  }
+  if (!user) return view === 'signup' ? <Signup goLogin={() => setView('login')} /> : <Login goSignup={() => setView('signup')} />
+  if (user.mfaPending) return <MfaChallenge />
+  return <HomeScreen />
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', padding: 16 },
-  title: { fontWeight: 'bold', marginBottom: 8 },
-})
+export default function App() {
+  return (
+    <AuthProvider>
+      <Root />
+      <StatusBar style="dark" />
+    </AuthProvider>
+  )
+}

@@ -1,3 +1,4 @@
+import { AppState } from 'react-native'
 import { createClient } from '@supabase/supabase-js'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 
@@ -13,4 +14,10 @@ if (!url || !key) {
 // The session is kept on the phone in AsyncStorage. There is no browser address bar, so detectSessionInUrl is off.
 export const supabase = createClient(url || 'http://localhost', key || 'missing', {
   auth: { storage: AsyncStorage, persistSession: true, autoRefreshToken: true, detectSessionInUrl: false },
+})
+
+// Supabase's React Native guide: refresh the login only while the app is on screen.
+AppState.addEventListener('change', (state) => {
+  if (state === 'active') supabase.auth.startAutoRefresh()
+  else supabase.auth.stopAutoRefresh()
 })

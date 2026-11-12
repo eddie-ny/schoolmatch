@@ -208,7 +208,7 @@ export default function Layout() {
 
       <footer className="border-t border-neutral-200 text-sm text-neutral-600">
         <div className="max-w-6xl mx-auto px-4 py-6 flex flex-col gap-2">
-          <p>Starter data is unverified. Results are guidance, not a guarantee of admission.</p>
+          <p>Results are guidance, not a guarantee of admission.</p>
           <div className="flex flex-wrap gap-x-4 gap-y-1">
             <Link to="/" className="underline inline-flex items-center min-h-11">Switch Local or International</Link>
             <Link to="/pricing" className="underline inline-flex items-center min-h-11">Pricing</Link>

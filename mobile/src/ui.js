@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, StatusBar, StyleSheet, Text, TextInput, View } from 'react-native'
+import { Ionicons } from '@expo/vector-icons'
 import { colors } from './lib/constants'
 
 const topPad = Platform.OS === 'android' ? (StatusBar.currentHeight || 24) + 16 : 60
@@ -40,10 +41,10 @@ export const Input = ({ style, ...rest }) => <TextInput placeholderTextColor="#9
 export function PasswordInput(props) {
   const [show, setShow] = useState(false)
   return (
-    <View style={styles.passRow}>
-      <TextInput placeholderTextColor="#9a9a9a" style={[styles.input, { flex: 1 }]} autoCapitalize="none" autoCorrect={false} secureTextEntry={!show} {...props} />
-      <Pressable onPress={() => setShow(!show)} style={styles.showBtn} accessibilityRole="button" accessibilityLabel={show ? 'Hide password' : 'Show password'}>
-        <Text style={styles.link}>{show ? 'Hide' : 'Show'}</Text>
+    <View style={[styles.input, styles.passRow]}>
+      <TextInput placeholderTextColor="#9a9a9a" style={styles.passInput} autoCapitalize="none" autoCorrect={false} secureTextEntry={!show} {...props} />
+      <Pressable onPress={() => setShow(!show)} style={styles.eyeBtn} hitSlop={8} accessibilityRole="button" accessibilityLabel={show ? 'Hide password' : 'Show password'}>
+        <Ionicons name={show ? 'eye-off-outline' : 'eye-outline'} size={22} color={colors.muted} />
       </Pressable>
     </View>
   )
@@ -84,8 +85,9 @@ export const styles = StyleSheet.create({
   label: { fontSize: 15, fontWeight: '600', color: colors.ink },
   hint: { fontSize: 13, color: colors.muted },
   input: { borderWidth: 1, borderColor: colors.line, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 12, fontSize: 16, color: colors.ink, backgroundColor: '#fff' },
-  passRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  showBtn: { paddingHorizontal: 8, paddingVertical: 12 },
+  passRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 0, paddingRight: 8 },
+  passInput: { flex: 1, fontSize: 16, color: colors.ink, paddingVertical: 12 },
+  eyeBtn: { paddingHorizontal: 6, paddingVertical: 8 },
   btn: { minHeight: 48, borderRadius: 12, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 16 },
   btnOrange: { backgroundColor: colors.orange },
   btnOutline: { borderWidth: 2, borderColor: colors.green, backgroundColor: '#fff' },

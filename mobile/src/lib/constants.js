@@ -19,3 +19,9 @@ export const colors = {
   line: '#d9d6c8',
   error: '#b91c1c',
 }
+
+// Fields of study (same list and order as the website).
+export const FIELDS = ['Computing', 'Engineering', 'Business', 'Health', 'Science', 'Arts', 'Law', 'Education', 'Agriculture', 'Social Sciences']
+
+export const SCHOOLS_PAGE = 12
+export const PROGRAMS_PAGE = 20

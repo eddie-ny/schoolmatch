@@ -3,7 +3,7 @@ import { StatusBar } from 'expo-status-bar'
 import { ActivityIndicator, View } from 'react-native'
 import { AuthProvider, useAuth } from './src/AuthContext'
 import { Login, MfaChallenge, Signup } from './src/AuthScreens'
-import HomeScreen from './src/HomeScreen'
+import Shell from './src/Shell'
 import { colors } from './src/lib/constants'
 
 function Root() {
@@ -15,7 +15,7 @@ function Root() {
   }
   if (!user) return view === 'signup' ? <Signup goLogin={() => setView('login')} /> : <Login goSignup={() => setView('signup')} />
   if (user.mfaPending) return <MfaChallenge />
-  return <HomeScreen />
+  return <Shell />
 }
 
 export default function App() {

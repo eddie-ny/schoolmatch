@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, StatusBar, StyleSheet, Text, TextInput, View } from 'react-native'
+import { useRef, useState } from 'react'
+import { ActivityIndicator, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StatusBar, StyleSheet, Text, TextInput, View } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { colors } from './lib/constants'
 
@@ -74,6 +74,104 @@ export const TextLink = ({ label, onPress }) => (
   <Pressable onPress={onPress} accessibilityRole="link" style={styles.linkWrap}><Text style={styles.link}>{label}</Text></Pressable>
 )
 
+// A box that opens a list to pick from (months, fields, levels).
+export function SelectField({ value, options, onChange, placeholder, title }) {
+  const [open, setOpen] = useState(false)
+  const cur = options.find((o) => String(o.value) === String(value))
+  return (
+    <>
+      <Pressable style={[styles.input, styles.selectRow]} onPress={() => setOpen(true)} accessibilityRole="button" accessibilityLabel={title || placeholder}>
+        <Text style={[styles.selectText, !cur && { color: '#9a9a9a' }]} numberOfLines={1}>{cur ? cur.label : placeholder}</Text>
+        <Ionicons name="chevron-down" size={18} color={colors.muted} />
+      </Pressable>
+      <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
+        <Pressable style={styles.backdrop} onPress={() => setOpen(false)}>
+          <Pressable style={styles.sheet} onPress={() => {}}>
+            {!!title && <Text style={styles.sheetTitle}>{title}</Text>}
+            <ScrollView>
+              {options.map((o) => {
+                const on = String(o.value) === String(value)
+                return (
+                  <Pressable key={String(o.value)} style={styles.option} onPress={() => { onChange(o.value); setOpen(false) }}>
+                    <Text style={[styles.optionText, on && { fontWeight: '700' }]}>{o.label}</Text>
+                    {on && <Ionicons name="checkmark" size={20} color={colors.orangeInk} />}
+                  </Pressable>
+                )
+              })}
+            </ScrollView>
+          </Pressable>
+        </Pressable>
+      </Modal>
+    </>
+  )
+}
+
+// The code from the email, one box per digit (like the website). One hidden input sits on top, so typing and pasting both work.
+export function CodeBoxes({ value, onChange, length = 6, autoFocus }) {
+  const [focused, setFocused] = useState(false)
+  const ref = useRef(null)
+  return (
+    <View>
+      <View style={styles.codeRow}>
+        {Array.from({ length }).map((_, i) => {
+          const active = focused && (i === value.length || (i === length - 1 && value.length === length))
+          return (
+            <View key={i} style={[styles.codeBox, active && styles.codeBoxActive]}>
+              <Text style={styles.codeDigit}>{value[i] || ''}</Text>
+            </View>
+          )
+        })}
+      </View>
+      <TextInput
+        ref={ref} value={value} autoFocus={autoFocus} maxLength={length} caretHidden
+        keyboardType="number-pad" textContentType="oneTimeCode" autoComplete="sms-otp"
+        onChangeText={(t) => onChange(t.replace(/\D/g, '').slice(0, length))}
+        onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
+        style={styles.codeHidden} accessibilityLabel={`${length}-digit code`}
+      />
+    </View>
+  )
+}
+
+export const Badge = ({ children }) => (
+  <View style={styles.badge}><Text style={styles.badgeText}>{children}</Text></View>
+)
+
+// One row of choices to tap (like the website's All schools / Universities / ...).
+export function Chips({ value, options, onChange }) {
+  return (
+    <ScrollView horizontal showsHorizontalScrollIndicator={false} keyboardShouldPersistTaps="handled" contentContainerStyle={{ gap: 8 }}>
+      {options.map((o) => {
+        const on = o.value === value
+        return (
+          <Pressable key={o.value || 'all'} onPress={() => onChange(o.value)} accessibilityRole="button" accessibilityState={{ selected: on }} style={[styles.chip, on && styles.chipOn]}>
+            <Text style={[styles.chipText, on && { fontWeight: '700' }]}>{o.label}</Text>
+          </Pressable>
+        )
+      })}
+    </ScrollView>
+  )
+}
+
+export const BackLink = ({ label, onPress }) => (
+  <Pressable onPress={onPress} accessibilityRole="button" style={styles.backLink} hitSlop={8}>
+    <Ionicons name="arrow-back" size={20} color={colors.orangeInk} />
+    <Text style={styles.link}>{label}</Text>
+  </Pressable>
+)
+
+// Page x of y with Previous and Next, like the website's pagination.
+export function Pager({ page, pages, onChange }) {
+  if (pages <= 1) return null
+  return (
+    <View style={styles.pager}>
+      <View style={{ flex: 1 }}><Button variant="outline" label="Previous" disabled={page <= 1} onPress={() => onChange(page - 1)} /></View>
+      <Text style={styles.body}>Page {page} of {pages}</Text>
+      <View style={{ flex: 1 }}><Button variant="outline" label="Next" disabled={page >= pages} onPress={() => onChange(page + 1)} /></View>
+    </View>
+  )
+}
+
 export const styles = StyleSheet.create({
   flex: { flex: 1, backgroundColor: colors.page },
   screen: { paddingHorizontal: 16, paddingBottom: 48 },
@@ -98,4 +196,23 @@ export const styles = StyleSheet.create({
   linkWrap: { paddingVertical: 10 },
   link: { color: colors.orangeInk, fontSize: 15, fontWeight: '600', textDecorationLine: 'underline' },
   body: { fontSize: 15, color: colors.ink, lineHeight: 22 },
+  selectRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 6 },
+  selectText: { flex: 1, fontSize: 16, color: colors.ink },
+  backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', padding: 24 },
+  sheet: { backgroundColor: '#fff', borderRadius: 16, maxHeight: '75%', paddingVertical: 8 },
+  sheetTitle: { fontSize: 16, fontWeight: '700', color: colors.ink, paddingHorizontal: 16, paddingVertical: 10 },
+  option: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 14 },
+  optionText: { fontSize: 16, color: colors.ink, flex: 1 },
+  codeRow: { flexDirection: 'row', gap: 8 },
+  codeBox: { flex: 1, height: 56, borderWidth: 1, borderColor: colors.line, borderRadius: 12, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' },
+  codeBoxActive: { borderColor: colors.green, borderWidth: 2 },
+  codeDigit: { fontSize: 24, fontWeight: '700', color: colors.ink },
+  codeHidden: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity: 0.02, color: 'transparent' },
+  badge: { backgroundColor: '#f3f1e4', borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4, borderWidth: 1, borderColor: colors.line },
+  badgeText: { fontSize: 12, fontWeight: '600', color: colors.ink },
+  chip: { borderWidth: 1, borderColor: colors.line, backgroundColor: '#fff', borderRadius: 999, paddingHorizontal: 14, paddingVertical: 9 },
+  chipOn: { backgroundColor: colors.green, borderColor: colors.green },
+  chipText: { fontSize: 14, color: colors.ink },
+  backLink: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 8, marginBottom: 8, alignSelf: 'flex-start' },
+  pager: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 20 },
 })

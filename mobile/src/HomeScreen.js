@@ -2,9 +2,9 @@ import { Text, View } from 'react-native'
 import { useAuth } from './AuthContext'
 import { Button, Card, Screen, Title, styles } from './ui'
 
-// Placeholder for step 4: shows what the database holds for the signed-in student, so the sign-up can be checked.
+// Placeholder home: a Find a School button, and (from step 4) shows what the database holds for the signed-in student, so the sign-up can be checked.
 // The real home page (fields of study, search, eligibility) is built in the next steps.
-export default function HomeScreen() {
+export default function HomeScreen({ onFindSchool }) {
   const { user, signOut } = useAuth()
   const rows = [
     ['Name', user.fullName],
@@ -17,6 +17,7 @@ export default function HomeScreen() {
   return (
     <Screen>
       <Title title={`Welcome, ${(user.fullName || '').trim().split(/\s+/)[0] || 'student'}`} sub="You are signed in. This is the profile saved for you in the database." />
+      <View style={{ marginBottom: 16 }}><Button label="Find a School" onPress={onFindSchool} /></View>
       <Card>
         {rows.map(([k, v]) => (
           <View key={k}>

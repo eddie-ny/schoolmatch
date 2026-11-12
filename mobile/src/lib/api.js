@@ -120,7 +120,20 @@ export async function getCurrentUser() {
 const toScope = (scope) => (scope === 'all' ? 'all' : scope === 'international' || scope === 'intl' ? 'intl' : 'local')
 
 // One page of schools from the server. Each comes with how many of its programs match the search and filters.
-export async function searchSchools({ scope, q = '', field = '', level = '', kind = '', country = '', limit = 12, offset = 0 }) {
+export async function searchSchools(args) {
+  return retrying(() => searchSchoolsOnce(args))
+}
+
+// A search can fail for a moment (slow database, weak connection), so it is tried up to three times, like the website.
+async function retrying(fn, tries = 3) {
+  let last
+  for (let i = 0; i < tries; i++) {
+    try { return await fn() } catch (e) { last = e; await new Promise((r) => setTimeout(r, 500 * (i + 1))) }
+  }
+  throw last
+}
+
+async function searchSchoolsOnce({ scope, q = '', field = '', level = '', kind = '', country = '', limit = 12, offset = 0 }) {
   const { data, error } = await supabase.rpc('search_schools', { p_scope: toScope(scope), p_q: q, p_field: field, p_level: level, p_kind: kind, p_country: country, p_limit: limit, p_offset: offset })
   if (error) throw new Error(error.message || 'Could not load schools.')
   const rows = (data || []).map((r) => ({
@@ -128,4 +141,32 @@ export async function searchSchools({ scope, q = '', field = '', level = '', kin
     count: r.program_count, matched: r.matched || 0, matches: r.matches || [],
   }))
   return { rows, total: data?.[0] ? Number(data[0].total) : 0 }
+}
+
+// One school with its extra details (website, picture, description). Same two reads as the website.
+export async function getSchool(id) {
+  const [s, f] = await Promise.all([
+    supabase.from('schools_summary').select('*').eq('id', id).maybeSingle(),
+    supabase.from('schools').select('website, image_url, image_credit, logo_credit, description, description_credit').eq('id', id).maybeSingle(),
+  ])
+  if (s.error) throw new Error('Could not load the school.')
+  const x = s.data && { ...s.data, ...(f.data || {}) }
+  return x && ({ id: x.id, name: x.name, country: x.country, type: x.type, city: x.city, website: x.website || '', category: x.category || '', logoUrl: x.logo_url || '', verified: x.verified, demo: x.demo, programCount: x.program_count ?? 0, imageUrl: x.image_url || '', imageCredit: x.image_credit || '', logoCredit: x.logo_credit || '', description: x.description || '', descriptionCredit: x.description_credit || '' })
+}
+
+// One page of programs (grouped by school, name and level). Returns { rows, total }.
+export async function searchPrograms(args) {
+  return retrying(() => searchProgramsOnce(args))
+}
+async function searchProgramsOnce({ scope = 'all', q = '', field = '', level = '', school = null, country = '', limit = 20, offset = 0 }) {
+  const { data, error } = await supabase.rpc('search_programs_c', { p_scope: toScope(scope), p_q: q, p_field: field, p_level: level, p_school: school, p_country: country, p_limit: limit, p_offset: offset })
+  if (error) throw new Error(error.message || 'Could not load programs.')
+  const rows = (data || []).map((r) => ({ id: r.id, schoolId: r.school_id, name: r.name, level: r.level, field: r.field, variantCount: r.variants, modes: r.modes || [], schoolName: r.school_name }))
+  return { rows, total: data?.[0] ? Number(data[0].total) : 0 }
+}
+
+// The fields of study that have programs on this side of the site.
+export async function listFields(scope = 'local') {
+  const { data } = await supabase.rpc('program_fields', { p_scope: toScope(scope) })
+  return data || []
 }

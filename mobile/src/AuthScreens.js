@@ -4,7 +4,9 @@ import { useAuth } from './AuthContext'
 import * as api from './lib/api'
 import { OTP_LENGTH, SITE, colors } from './lib/constants'
 import { PASSWORD_RULE, dobFromParts, isMinorFromDob, passwordProblem } from './lib/validation'
-import { Button, Card, ErrorText, Field, Input, Notice, PasswordInput, Screen, TextLink, Title, styles } from './ui'
+import { Button, Card, CodeBoxes, ErrorText, Field, Input, Notice, PasswordInput, Screen, SelectField, TextLink, Title, styles } from './ui'
+
+const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
 
 // ---------- Sign in ----------
 export function Login({ goSignup }) {
@@ -34,7 +36,7 @@ export function Login({ goSignup }) {
   return (
     <Screen>
       <Title title="Sign in" />
-      <Notice>{notice}</Notice>
+      {!!notice && <View style={{ marginBottom: 20 }}><Notice>{notice}</Notice></View>}
       <Card>
         <Field label="Email">
           <Input keyboardType="email-address" autoCapitalize="none" autoCorrect={false} autoComplete="email" value={email} onChangeText={setEmail} />
@@ -106,11 +108,7 @@ export function VerifyCode({ email, firstWait = 60, onBack }) {
       <Title title="Enter your code" sub={`We sent a code to ${email}. Your 24-hour free trial starts when you sign up.`} />
       <Card>
         <Field label="Code from the email">
-          <Input
-            keyboardType="number-pad" textContentType="oneTimeCode" autoComplete="sms-otp" maxLength={OTP_LENGTH}
-            value={code} onChangeText={(t) => setCode(t.replace(/\D/g, ''))}
-            style={{ fontSize: 26, letterSpacing: 8, textAlign: 'center', fontWeight: '600' }}
-          />
+          <CodeBoxes value={code} onChange={setCode} length={OTP_LENGTH} autoFocus />
         </Field>
         <ErrorText>{error}</ErrorText>
         <Notice>{msg}</Notice>
@@ -174,7 +172,7 @@ export function Signup({ goLogin }) {
         <Field label="Date of birth" hint="We ask so we can get a parent or guardian to confirm accounts for under 18s.">
           <View style={{ flexDirection: 'row', gap: 8 }}>
             <Input style={{ flex: 1, textAlign: 'center' }} keyboardType="number-pad" placeholder="Day" maxLength={2} value={f.day} onChangeText={set('day')} />
-            <Input style={{ flex: 1, textAlign: 'center' }} keyboardType="number-pad" placeholder="Month" maxLength={2} value={f.month} onChangeText={set('month')} />
+            <View style={{ flex: 2 }}><SelectField title="Month of birth" placeholder="Month" value={f.month} onChange={set('month')} options={MONTHS.map((m, i) => ({ value: String(i + 1), label: m }))} /></View>
             <Input style={{ flex: 1.6, textAlign: 'center' }} keyboardType="number-pad" placeholder="Year" maxLength={4} value={f.year} onChangeText={set('year')} />
           </View>
         </Field>

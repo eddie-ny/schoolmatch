@@ -12,6 +12,35 @@ import { getSchool } from '../lib/api'
 import { schoolCategory, schoolCategoryLabel } from '../lib/schoolCategory'
 
 // A school's own page: who they are, then their programmes, searched and paged on the server.
+const ADMISSION_ROWS = [['ug', 'Undergraduate entry'], ['pg', 'Masters entry'], ['english', 'English language'], ['how_to_apply', 'How to apply'], ['deadlines', 'Deadlines'], ['application_fee', 'Application fee'], ['documents', 'Documents']]
+
+// Entry requirements for Ghanaian applicants, copied from the school's own pages. Only shown when we have them.
+function AdmissionInfo({ school }) {
+  const a = school.admission
+  if (!a) return null
+  const rows = ADMISSION_ROWS.filter(([k]) => a[k])
+  if (!rows.length && !a.fees_link && !a.ghana_page_link) return null
+  const link = (href, text) => <a href={href} target="_blank" rel="noreferrer" className="underline font-semibold">{text}</a>
+  return (
+    <section className="space-y-3">
+      <h2 className="text-xl font-bold">Admission requirements for Ghanaian students</h2>
+      <dl className="card grid gap-3">
+        {rows.map(([k, label]) => (
+          <div key={k}><dt className="text-sm font-semibold text-neutral-600">{label}</dt><dd className="text-neutral-900 break-words">{a[k]}</dd></div>
+        ))}
+        {(a.fees_link || a.ghana_page_link || school.admissionLink) && (
+          <div className="flex flex-wrap gap-x-4 gap-y-1 pt-1">
+            {a.ghana_page_link && link(a.ghana_page_link, 'Page for Ghanaian students')}
+            {a.fees_link && link(a.fees_link, 'International fees')}
+            {school.admissionLink && link(school.admissionLink, 'Admissions page')}
+          </div>
+        )}
+      </dl>
+      <p className="text-xs text-neutral-500">Taken from the school's own website{school.admissionChecked ? ` on ${school.admissionChecked}` : ''}. Requirements change each year, so confirm on the school's page before you apply.</p>
+    </section>
+  )
+}
+
 export default function SchoolDetail() {
   const { id } = useParams()
   const { user, access } = useAuth()
@@ -90,6 +119,8 @@ export default function SchoolDetail() {
           <p className="text-sm text-neutral-600">Check Eligibility also tells you which of these you fit.</p>
         </section>
       )}
+
+      {full && <AdmissionInfo school={school} />}
 
       {!full ? (
         <><p>{school.programCount} program{school.programCount === 1 ? '' : 's'} listed.</p><Gate /></>

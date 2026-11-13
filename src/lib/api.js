@@ -806,7 +806,7 @@ function mapFull(f, school) {
   }
 }
 
-const mapSchool = (x) => x && ({ id: x.id, name: x.name, country: x.country, type: x.type, city: x.city, website: x.website || '', category: x.category || '', logoUrl: x.logo_url || logoFor(x.name), verified: x.verified, demo: x.demo, programCount: x.program_count ?? 0, imageUrl: x.image_url || '', imageCredit: x.image_credit || '', logoCredit: x.logo_credit || '', description: x.description || '', descriptionCredit: x.description_credit || '' })
+const mapSchool = (x) => x && ({ id: x.id, name: x.name, country: x.country, type: x.type, city: x.city, website: x.website || '', category: x.category || '', logoUrl: x.logo_url || logoFor(x.name), verified: x.verified, demo: x.demo, programCount: x.program_count ?? 0, imageUrl: x.image_url || '', imageCredit: x.image_credit || '', logoCredit: x.logo_credit || '', description: x.description || '', descriptionCredit: x.description_credit || '', admission: x.admission_info || null, admissionLink: x.admission_link || '', admissionChecked: x.admission_checked || '' })
 
 // One page of programmes (grouped by school, name and level). Returns { rows, total }.
 async function searchProgramsRaw({ scope, q = '', field = '', level = '', school = null, country = '', limit = 24, offset = 0 }) {
@@ -859,7 +859,7 @@ async function searchSchoolsRaw({ scope, q = '', field = '', level = '', kind = 
 export async function getSchool(id) {
   const [s, f] = await Promise.all([
     supabase.from('schools_summary').select('*').eq('id', id).maybeSingle(),
-    supabase.from('schools').select('website, image_url, image_credit, logo_credit, description, description_credit').eq('id', id).maybeSingle(),
+    supabase.from('schools').select('website, image_url, image_credit, logo_credit, description, description_credit, admission_info, admission_link, admission_checked').eq('id', id).maybeSingle(),
   ])
   fail(s.error, 'Could not load the school.')
   return s.data ? mapSchool({ ...s.data, ...(f.data || {}) }) : null

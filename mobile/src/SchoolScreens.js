@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react'
-import { ActivityIndicator, Image, Linking, Text, View } from 'react-native'
+import { ActivityIndicator, Image, Linking, Pressable, Text, View } from 'react-native'
+import { useAuth } from './AuthContext'
 import * as api from './lib/api'
+import { getAccess } from './lib/access'
 import { FIELDS, PROGRAMS_PAGE, SCHOOLS_PAGE, colors } from './lib/constants'
 import { SCHOOL_CATEGORIES, schoolCategory, schoolCategoryLabel } from './lib/schoolCategory'
 import { thumbUrl } from './lib/thumb'
 import { Monogram, SchoolCard, cardStyle, useDebounced } from './SchoolParts'
-import { Badge, BackLink, Button, Chips, ErrorText, Input, Pager, Screen, SelectField, Title, styles } from './ui'
+import { Badge, BackLink, Button, Gate, Chips, ErrorText, Input, Pager, Screen, SelectField, Title, styles } from './ui'
 
 const LEVELS = [
   { value: '', label: 'Any level' },
@@ -71,7 +73,9 @@ export function SchoolsList({ onBack, onOpen, initialKind = '' }) {
 // ---------- One school: who they are, then their programs ----------
 const PROGRAM_LEVELS = [{ value: '', label: 'All levels' }, ...['Undergraduate', 'Diploma', 'Certificate', 'Masters', 'Graduate Certificate'].map((x) => ({ value: x, label: x }))]
 
-export function SchoolDetail({ id, q: q0 = '', field: field0 = '', onBack }) {
+export function SchoolDetail({ id, q: q0 = '', field: field0 = '', onBack, onOpenProgram }) {
+  const { user } = useAuth()
+  const full = getAccess(user).level === 'full'
   const [school, setSchool] = useState(undefined)
   const [imgBad, setImgBad] = useState(false)
   const [fields, setFields] = useState([])
@@ -88,13 +92,14 @@ export function SchoolDetail({ id, q: q0 = '', field: field0 = '', onBack }) {
   }, [id])
 
   useEffect(() => {
+    if (!full) return undefined
     let live = true
     setProg((s) => ({ ...s, loading: true, error: '' }))
     api.searchPrograms({ scope: 'all', q: dq, field: f.field, level: f.level, school: id, limit: PROGRAMS_PAGE, offset: (f.page - 1) * PROGRAMS_PAGE })
       .then((r) => live && setProg({ ...r, loading: false, error: '' }))
       .catch((e) => live && setProg({ rows: [], total: 0, loading: false, error: e.message }))
     return () => { live = false }
-  }, [id, dq, f.field, f.level, f.page])
+  }, [id, dq, f.field, f.level, f.page, full])
 
   if (school === undefined) return <Screen><BackLink label="Back" onPress={onBack} /><Spinner /></Screen>
   if (!school) return <Screen><BackLink label="Back" onPress={onBack} /><Text style={styles.body}>This school could not be found.</Text></Screen>
@@ -139,6 +144,12 @@ export function SchoolDetail({ id, q: q0 = '', field: field0 = '', onBack }) {
         </View>
       )}
 
+      {!full ? (
+        <View style={{ marginTop: 24, gap: 12 }}>
+          <Text style={styles.body}>{school.programCount} program{school.programCount === 1 ? '' : 's'} listed.</Text>
+          <Gate />
+        </View>
+      ) : (
       <View style={{ marginTop: 24, gap: 12 }}>
         <Text style={{ fontSize: 19, fontWeight: '700', color: colors.ink }}>Programs at {school.name}</Text>
         <Input placeholder="Search this school's programs (for example law)" value={f.q} onChangeText={set('q')} autoCorrect={false} />
@@ -150,7 +161,7 @@ export function SchoolDetail({ id, q: q0 = '', field: field0 = '', onBack }) {
         {prog.loading && prog.rows.length === 0 ? <Spinner /> : (
           <View style={{ gap: 12 }}>
             {prog.rows.map((p) => (
-              <View key={p.id} style={cardStyle}>
+              <Pressable key={p.id} onPress={() => onOpenProgram?.({ id: p.id })} accessibilityRole="button" style={cardStyle}>
                 <Text style={{ fontSize: 17, fontWeight: '700', color: colors.ink, lineHeight: 23 }}>{p.name}</Text>
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
                   {!!p.level && <Badge>{p.level}</Badge>}
@@ -158,13 +169,14 @@ export function SchoolDetail({ id, q: q0 = '', field: field0 = '', onBack }) {
                   {!!modes(p.modes) && <Badge>{modes(p.modes)}</Badge>}
                   {p.variantCount > 1 && <Badge>{`${p.variantCount} ways to study`}</Badge>}
                 </View>
-              </View>
+              </Pressable>
             ))}
           </View>
         )}
         {!prog.loading && prog.rows.length === 0 && !prog.error && <Text style={styles.body}>No programs match. Clear the search to see them all.</Text>}
         <Pager page={Math.min(f.page, pages || 1)} pages={pages} onChange={(n) => setF((cur) => ({ ...cur, page: n }))} />
       </View>
+      )}
     </Screen>
   )
 }

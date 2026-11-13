@@ -101,18 +101,23 @@ export async function getCurrentUser() {
   const { data: sess } = await supabase.auth.getSession()
   const uid = sess.session?.user?.id
   if (!uid) return null
-  const { data: p, error } = await supabase
-    .from('profiles')
-    .select('id, full_name, email, phone, date_of_birth, is_minor, trial_ends_at, disabled_at')
-    .eq('id', uid)
-    .maybeSingle()
+  const [prof, parent, sub, adm] = await Promise.all([
+    supabase.from('profiles').select('id, full_name, email, phone, date_of_birth, is_minor, trial_ends_at, disabled_at').eq('id', uid).maybeSingle(),
+    supabase.from('parent_contacts').select('confirmed_at').eq('student_id', uid).maybeSingle(),
+    supabase.from('subscriptions').select('plan, status, expires_at').eq('user_id', uid).maybeSingle(),
+    supabase.from('admin_users').select('role').eq('user_id', uid).maybeSingle(),
+  ])
+  const { data: p, error } = prof
   if (error) throw new Error(error.message)
   if (!p) {
     const m = await mfaState()
     if (m.current === 'aal1' && m.next === 'aal2') return { id: uid, mfaPending: true, email: sess.session.user.email }
     return null // the profile row is created by the sign-up trigger, so it should always exist
   }
-  return { id: p.id, fullName: p.full_name, email: p.email, phone: p.phone, dateOfBirth: p.date_of_birth, isMinor: p.is_minor, trialEndsAt: p.trial_ends_at, disabled: !!p.disabled_at }
+  return { id: p.id, fullName: p.full_name, email: p.email, phone: p.phone, dateOfBirth: p.date_of_birth, isMinor: p.is_minor, trialEndsAt: p.trial_ends_at, disabled: !!p.disabled_at,
+    staffRole: adm.data ? adm.data.role : null,
+    parent: parent.data ? { confirmedAt: parent.data.confirmed_at } : null,
+    subscription: sub.data ? { plan: sub.data.plan, status: sub.data.status, expiresAt: sub.data.expires_at } : null }
 }
 
 // ---------- Schools (used from step 5) ----------
@@ -161,7 +166,7 @@ export async function searchPrograms(args) {
 async function searchProgramsOnce({ scope = 'all', q = '', field = '', level = '', school = null, country = '', limit = 20, offset = 0 }) {
   const { data, error } = await supabase.rpc('search_programs_c', { p_scope: toScope(scope), p_q: q, p_field: field, p_level: level, p_school: school, p_country: country, p_limit: limit, p_offset: offset })
   if (error) throw new Error(error.message || 'Could not load programs.')
-  const rows = (data || []).map((r) => ({ id: r.id, schoolId: r.school_id, name: r.name, level: r.level, field: r.field, variantCount: r.variants, modes: r.modes || [], schoolName: r.school_name }))
+  const rows = (data || []).map((r) => ({ id: r.id, schoolId: r.school_id, name: r.name, level: r.level, field: r.field, variantCount: r.variants, modes: r.modes || [], schoolName: r.school_name, schoolCity: r.school_city, schoolCountry: r.school_country, schoolLogo: r.school_logo || '' }))
   return { rows, total: data?.[0] ? Number(data[0].total) : 0 }
 }
 
@@ -169,4 +174,34 @@ async function searchProgramsOnce({ scope = 'all', q = '', field = '', level = '
 export async function listFields(scope = 'local') {
   const { data } = await supabase.rpc('program_fields', { p_scope: toScope(scope) })
   return data || []
+}
+
+const isLocalCountry = (c) => (c || '').toLowerCase() === 'ghana'
+
+function mapFull(f, school) {
+  const latest = [...(f?.program_cutoffs || [])].sort((a, b) => b.year - a.year)[0]
+  return {
+    id: f.id, schoolId: f.school_id, schoolName: school?.name || '', name: f.name, level: f.level, field: f.field, demo: f.demo, mode: f.mode || 'Regular', campus: f.campus || '',
+    international: school ? !isLocalCountry(school.country) : false,
+    feesUsd: f.fees_usd ?? null, feesGhs: f.fees_ghs ?? null, feeAmount: f.fee_amount != null ? Number(f.fee_amount) : null, feeCurrency: f.fee_currency || '', entryNote: f.entry_note || '', mastersFormat: f.masters_format || '', entryQualification: f.entry_qualification || '', minDegreeClass: f.min_degree_class || '', minGpa: f.min_gpa != null ? Number(f.min_gpa) : null, grePolicy: f.gre_policy || '', minGre: f.min_gre ?? null, credentialEval: f.credential_eval || '', durationYears: f.duration_years ?? null,
+    satPolicy: f.sat_policy || '', minWassceGrade: f.min_wassce_grade || '', minIelts: f.min_ielts != null ? Number(f.min_ielts) : null, minToefl: f.min_toefl ?? null, minDuolingo: f.min_duolingo ?? null,
+    englishTestWaiver: !!f.english_test_waiver, foundationAvailable: !!f.foundation_available, verified: !!f.verified,
+    requirements: (f.program_requirements || []).map((r) => ({ subject: r.subject, minGrade: r.min_grade })),
+    cutoffAggregate: latest?.cutoff_aggregate ?? null, cutoffYear: latest?.year ?? null,
+    satLow: latest?.sat_low ?? null, satHigh: latest?.sat_high ?? null,
+  }
+}
+
+
+// One programme with all the ways it is offered at its school (copied from the web).
+export async function getProgramGroup(id) {
+  const head = await supabase.from('programs_summary').select('id, school_id, name, level').eq('id', id).maybeSingle()
+  if (head.error) throw new Error('Could not load the program.')
+  if (!head.data) return null
+  const school = await getSchool(head.data.school_id)
+  let q = supabase.from('programs').select('*, program_requirements(subject, min_grade), program_cutoffs(year, cutoff_aggregate, sat_low, sat_high)').eq('school_id', head.data.school_id).eq('name', head.data.name)
+  q = head.data.level ? q.eq('level', head.data.level) : q.is('level', null)
+  const { data, error } = await q
+  if (error) throw new Error('Could not load the program details.')
+  return { school, variants: (data || []).map((f) => mapFull(f, school)) }
 }

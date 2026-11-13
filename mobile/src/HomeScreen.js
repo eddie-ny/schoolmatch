@@ -92,13 +92,13 @@ export default function HomeScreen({ goTab, onOpenSchool }) {
       <View style={{ gap: 12, marginBottom: 32 }}>
         <Text style={H2}>What do you want to study?</Text>
         <TextInput
-          value={study} onChangeText={setStudy} onSubmitEditing={() => goTab('programs')} returnKeyType="search" autoCorrect={false}
+          value={study} onChangeText={setStudy} onSubmitEditing={() => goTab('programs', { q: study.trim() })} returnKeyType="search" autoCorrect={false}
           placeholder="Type a program, for example nursing, law or computer science" placeholderTextColor="#9a9a9a" accessibilityLabel="Search programs"
           style={[styles.input, { borderWidth: 2, borderColor: colors.green }]}
         />
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }}>
           {FIELDS.map(([f, blurb]) => (
-            <Pressable key={f} onPress={() => goTab('programs')} accessibilityRole="button" style={{ width: '48.5%', minHeight: 96, borderWidth: 2, borderColor: '#e5e5e5', borderRadius: 16, padding: 14, backgroundColor: '#fff' }}>
+            <Pressable key={f} onPress={() => goTab('programs', { field: f })} accessibilityRole="button" style={{ width: '48%', marginBottom: 10, minHeight: 96, borderWidth: 2, borderColor: '#e5e5e5', borderRadius: 16, padding: 14, backgroundColor: '#fff' }}>
               <Text style={{ fontWeight: '700', fontSize: 16, color: colors.ink }}>{f}</Text>
               <Text style={{ fontSize: 13, color: '#525252', marginTop: 4 }}>{blurb}</Text>
             </Pressable>

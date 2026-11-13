@@ -3,7 +3,7 @@ import { Modal, Pressable, Text, View } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { colors } from './lib/constants'
-import { timeLeft } from './lib/access'
+import { getAccess, timeLeft } from './lib/access'
 import { Button } from './ui'
 
 export const TABS = [
@@ -59,11 +59,25 @@ export function Header({ user, onHome, onPage, onSignOut }) {
   )
 }
 
-// Green strip during the free trial, same words as the website.
+// Strip under the header, same words as the website: green during the free trial, orange when only summaries are allowed.
 export function TrialBanner({ user, onPricing }) {
   const [, tick] = useState(0)
   useEffect(() => { const t = setInterval(() => tick((n) => n + 1), 60000); return () => clearInterval(t) }, [])
-  if (!user.trialEndsAt || new Date(user.trialEndsAt).getTime() <= Date.now()) return null
+  const a = getAccess(user)
+  if (a.level === 'summary') {
+    const text = a.needsParent
+      ? 'Waiting for your parent or guardian to confirm. You can see summaries only until then.'
+      : a.noTrial ? 'No free trial on this account. You can see summaries only.' : 'Your trial has ended. You can see summaries only.'
+    return (
+      <View style={{ backgroundColor: 'rgba(255,176,46,0.25)', paddingVertical: 8, paddingHorizontal: 16, alignItems: 'center' }}>
+        <Text style={{ fontSize: 13, color: colors.ink, textAlign: 'center' }}>
+          {text}{' '}
+          {!a.needsParent && <Text onPress={onPricing} style={{ fontWeight: '700', textDecorationLine: 'underline' }}>Subscribe</Text>}
+        </Text>
+      </View>
+    )
+  }
+  if (!a.trial) return null
   return (
     <View style={{ backgroundColor: 'rgba(178,222,43,0.25)', paddingVertical: 8, paddingHorizontal: 16, alignItems: 'center' }}>
       <Text style={{ fontSize: 13, color: colors.ink, textAlign: 'center' }}>

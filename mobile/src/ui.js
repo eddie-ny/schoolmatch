@@ -6,6 +6,8 @@ import { colors } from './lib/constants'
 const topPad = Platform.OS === 'android' ? (StatusBar.currentHeight || 24) + 16 : 60
 
 export const InShell = createContext(false)
+// Lets any screen open a menu page (for example Pricing) or switch tab without passing functions down.
+export const ShellActions = createContext({ openPage: () => {}, goTab: () => {} })
 
 export function Screen({ children }) {
   const inShell = useContext(InShell) // inside the tabs, the header already covers the status bar
@@ -60,7 +62,7 @@ export function Button({ label, onPress, busy, disabled, variant = 'orange' }) {
       onPress={onPress}
       disabled={off}
       accessibilityRole="button"
-      style={[styles.btn, variant === 'orange' ? styles.btnOrange : styles.btnOutline, off && { opacity: 0.55 }]}
+      style={[styles.btn, variant === 'orange' ? styles.btnOrange : variant === 'green' ? styles.btnGreen : styles.btnOutline, off && { opacity: 0.55 }]}
     >
       {busy ? <ActivityIndicator color="#1f1f1f" /> : <Text style={styles.btnText}>{label}</Text>}
     </Pressable>
@@ -136,6 +138,17 @@ export function CodeBoxes({ value, onChange, length = 6, autoFocus }) {
   )
 }
 
+// Shown where the website says "Subscribe to see the full details".
+export function Gate({ text }) {
+  const { openPage } = useContext(ShellActions)
+  return (
+    <View style={{ borderWidth: 1, borderStyle: 'dashed', borderColor: colors.orange, backgroundColor: 'rgba(255,176,46,0.1)', borderRadius: 12, padding: 16, gap: 12 }}>
+      <Text style={styles.body}>{text || 'Subscribe to see the full details.'}</Text>
+      <Button label="See pricing" onPress={() => openPage('pricing')} />
+    </View>
+  )
+}
+
 export const Badge = ({ children }) => (
   <View style={styles.badge}><Text style={styles.badgeText}>{children}</Text></View>
 )
@@ -191,6 +204,7 @@ export const styles = StyleSheet.create({
   eyeBtn: { paddingHorizontal: 6, paddingVertical: 8 },
   btn: { minHeight: 48, borderRadius: 12, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 16 },
   btnOrange: { backgroundColor: colors.orange },
+  btnGreen: { backgroundColor: colors.green },
   btnOutline: { borderWidth: 2, borderColor: colors.green, backgroundColor: '#fff' },
   btnText: { fontSize: 16, fontWeight: '700', color: '#1f1f1f' },
   error: { color: colors.error, fontSize: 14, lineHeight: 20 },

@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState } from 'react'
+import { lazy as reactLazy, Suspense, useEffect, useState } from 'react'
 import { Routes, Route, useLocation, Navigate } from 'react-router-dom'
 import { Analytics } from '@vercel/analytics/react'
 import Layout from './components/Layout'
@@ -12,6 +12,17 @@ function ToLocal() {
   return <Navigate to={`/local${pathname}${search}`} replace />
 }
 
+// After a new version goes live, an open tab can ask for a page file that no longer exists. Reload once to get the new files.
+const lazy = (load) => reactLazy(() => load().then(
+  (m) => { try { sessionStorage.removeItem('chunk-reloaded') } catch { /* ignore */ } return m },
+  (err) => {
+    let done = true
+    try { done = sessionStorage.getItem('chunk-reloaded') === '1'; if (!done) sessionStorage.setItem('chunk-reloaded', '1') } catch { /* ignore */ }
+    if (done) throw err
+    window.location.reload()
+    return new Promise(() => {})
+  },
+))
 const Schools = lazy(() => import('./pages/Schools').then((m) => ({ default: m.Schools })))
 const SchoolDetail = lazy(() => import('./pages/SchoolDetail'))
 const Abroad = lazy(() => import('./pages/Abroad'))

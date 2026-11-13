@@ -3,7 +3,7 @@ import { Sections } from './Legal'
 // Draft written for this site and checked against Ghana's Data Protection Act 2012 (Act 843) and related laws on 6 November 2026.
 // See the note at the top of Legal.jsx and docs/GHANA-LEGAL-CHECK.md.
 const SECTIONS = [
-  { h: 'Who we are', p: ['Jamba helps students in Ghana find schools, programs and scholarships and check whether they qualify. The data controller is [registered business name], [registered address], Ghana. Registered with the Data Protection Commission of Ghana under number [registration number]. Privacy contact: [privacy email].', 'We process personal data under Ghana\'s Data Protection Act 2012 (Act 843).'] },
+  { h: 'Who we are', p: ['Jamba helps students in Ghana find schools, programs and scholarships and check whether they qualify. The data controller is Jamba, Ghana. Privacy contact: info@inbox.jambaconsult.com.', 'We process personal data under Ghana\'s Data Protection Act 2012 (Act 843).'] },
   { h: 'What we collect', p: [
     'Account details: your name, phone number, email address, date of birth and password (the password is stored in protected form and we cannot read it).',
     'A protected (hashed) copy of your phone number, kept to stop repeat free trials.',
@@ -16,7 +16,7 @@ const SECTIONS = [
     'Technical error reports, sent to our error tracker without your name or grades.',
     'Visit counts, only if you accept the cookie notice: the pages you visit, the site that sent you, your country, device and browser, and a visitor identifier.',
   ] },
-  { h: 'How and why we use it', p: ['We collect what we need and no more. We use it to create and protect your account, match you to schools, programs and scholarships, run your free trial and plans, confirm a parent or guardian for under 18s, take payment, answer your messages, send account emails (such as your confirmation and payment receipts), prevent fraud and repeat free trials, and fix faults.', 'Our grounds under Act 843 are: your consent where we ask for it; what is needed to run the account and plan you asked for; what the law requires of us; and our legitimate interest in keeping the service secure. You can withdraw consent or object to processing based on our legitimate interest by writing to [privacy email].', 'We do not sell your personal data.'] },
+  { h: 'How and why we use it', p: ['We collect what we need and no more. We use it to create and protect your account, match you to schools, programs and scholarships, run your free trial and plans, confirm a parent or guardian for under 18s, take payment, answer your messages, send account emails (such as your confirmation and payment receipts), prevent fraud and repeat free trials, and fix faults.', 'Our grounds under Act 843 are: your consent where we ask for it; what is needed to run the account and plan you asked for; what the law requires of us; and our legitimate interest in keeping the service secure. You can withdraw consent or object to processing based on our legitimate interest by writing to info@inbox.jambaconsult.com.', 'We do not sell your personal data.'] },
   { h: 'Who we share it with', p: [
     'Service providers that run the site for us: Supabase (database and sign-in), Vercel (hosting and, only if you accept the cookie notice, visit counts), Paystack (payments), Sentry (error reports), Formspree (contact forms), Resend (account emails) and Zoho Mail (the email inboxes our team uses to read what you send us). We have, or will have, a written contract with each that requires them to protect your data. [Owner to confirm the final list before launch.]',
     'Authorities, when the law requires it.',
@@ -29,7 +29,7 @@ const SECTIONS = [
     'You can ask us to correct data that is wrong, and to delete or destroy data we are no longer allowed to keep.',
     'You can object to processing that is based on our legitimate interest, and you can stop us using your data for direct marketing.',
     'If we break the Act and you suffer damage or distress, you may claim compensation.',
-    'To use any of these rights, write to [privacy email]. You can edit most details yourself on the Profile page. We may ask you to prove who you are first.',
+    'To use any of these rights, write to info@inbox.jambaconsult.com. You can edit most details yourself on the Profile page. We may ask you to prove who you are first.',
     'You may complain to the Data Protection Commission of Ghana (dataprotection.org.gh) if you are not satisfied.',
   ] },
   { h: 'Keeping your data safe', p: ['We use technical and organisational measures that fit the risk: access to data is limited by rules in the database, staff sign-in uses two-step verification, and connections are encrypted. No system is completely secure, so keep your password private and sign out on shared devices.', 'If someone gets into your data without permission, we will tell the Data Protection Commission and you as soon as reasonably practicable, unless the law lets us wait.'] },
@@ -39,7 +39,7 @@ const SECTIONS = [
   { h: 'Emails from us', p: ['Account emails, such as your confirmation and payment receipts, are sent because you have an account.', 'Reminders to finish your profile or choose a plan, and any other promotional email, will be sent only if you agree to them. Every one will have a way to unsubscribe, and on request we will tell you where we got your details. [A tick box, not ticked by default, is to be added before these emails are switched on.]'] },
   { h: 'Other websites', p: ['We link to schools and funders. Their privacy practices are theirs, not ours.'] },
   { h: 'Changes to this notice', p: ['We may update this notice. The latest version, with its date, is always on this page, and we will tell you by email if a change matters.'] },
-  { h: 'Contact', p: ['[privacy email], [phone], [registered address].'] },
+  { h: 'Contact', p: ['info@inbox.jambaconsult.com, +233 20 565 8716.'] },
 ]
 
 export default function Privacy() {

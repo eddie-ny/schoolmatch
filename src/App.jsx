@@ -31,6 +31,7 @@ const Pricing = lazy(() => import('./pages/Pricing'))
 const Admin = lazy(() => import('./pages/Admin'))
 const Support = lazy(() => import('./pages/Support'))
 const Complaints = lazy(() => import('./pages/Complaints'))
+const Contact = lazy(() => import('./pages/Contact'))
 const Interested = lazy(() => import('./pages/Interested'))
 const Invite = lazy(() => import('./pages/Invite'))
 const ProgramDetail = lazy(() => import('./pages/ProgramDetail'))
@@ -118,6 +119,7 @@ export default function App() {
         <Route path="/admin/*" element={<Admin />} />
         <Route path="/support/*" element={<Support />} />
         <Route path="/complaints" element={<Complaints />} />
+        <Route path="/contact" element={<Contact />} />
         <Route path="/interested" element={<Interested />} />
         <Route path="/invite" element={<Invite />} />
         <Route path="/privacy" element={<Privacy />} />

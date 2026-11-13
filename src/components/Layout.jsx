@@ -55,6 +55,7 @@ function UserMenu({ user, onSignOut }) {
           <Link role="menuitem" to="/interested" className={item}>Interested</Link>
           <Link role="menuitem" to="/pricing" className={item}>Pricing</Link>
           <Link role="menuitem" to="/invite" className={item}>Invite friends</Link>
+          <Link role="menuitem" to="/contact" className={item}>Contact us</Link>
           <Link role="menuitem" to="/settings" className={item}>Account Settings</Link>
           {user.role === 'admin' && <Link role="menuitem" to="/admin" className={item}>Admin</Link>}
           {user.role === 'support' && <Link role="menuitem" to="/support" className={item}>Support</Link>}
@@ -124,6 +125,7 @@ export default function Layout() {
             ) : (
               <>
                 <NavLink to="/pricing" className={({ isActive }) => `inline-flex items-center min-h-11 text-sm font-medium ${isActive ? 'text-brand-orange' : 'hover:text-brand-green'}`}>Pricing</NavLink>
+                <NavLink to="/contact" className={({ isActive }) => `inline-flex items-center min-h-11 text-sm font-medium ${isActive ? 'text-brand-orange' : 'hover:text-brand-green'}`}>Contact us</NavLink>
                 <Link to="/login" className="btn btn-outline !min-h-10">Sign in</Link>
                 <Link to="/signup" className="btn btn-orange !min-h-10">Sign up</Link>
               </>
@@ -145,6 +147,7 @@ export default function Layout() {
                 <Link to="/profile" className="py-3 font-medium">Profile</Link>
                 <Link to="/interested" className="py-3 font-medium">Interested</Link>
                 <Link to="/pricing" className="py-3 font-medium">Pricing</Link>
+                <Link to="/contact" className="py-3 font-medium">Contact us</Link>
                 <Link to="/settings" className="py-3 font-medium">Account Settings</Link>
                 {user.role === 'admin' && <Link to="/admin" className="py-3 font-medium">Admin</Link>}
                 {user.role === 'support' && <Link to="/support" className="py-3 font-medium">Support</Link>}
@@ -153,6 +156,7 @@ export default function Layout() {
             ) : (
               <div className="flex flex-col gap-1 pt-2">
                 <NavLink to="/pricing" className="py-3 font-medium">Pricing</NavLink>
+                <NavLink to="/contact" className="py-3 font-medium">Contact us</NavLink>
                 <div className="flex gap-3">
                 <Link to="/login" className="btn btn-outline flex-1">Sign in</Link>
                 <Link to="/signup" className="btn btn-orange flex-1">Sign up</Link>
@@ -218,6 +222,7 @@ export default function Layout() {
             <Link to="/acceptable-use" className="underline inline-flex items-center min-h-11">Acceptable use</Link>
             <Link to="/refunds" className="underline inline-flex items-center min-h-11">Refunds</Link>
             <Link to="/cookies" className="underline inline-flex items-center min-h-11">Cookies</Link>
+            <Link to="/contact" className="underline inline-flex items-center min-h-11">Contact us</Link>
             <Link to="/complaints" className="underline inline-flex items-center min-h-11">Complaints</Link>
             {user?.role === 'admin' && <Link to="/admin" className="underline inline-flex items-center min-h-11">Admin</Link>}
             {user?.role === 'support' && <Link to="/support" className="underline inline-flex items-center min-h-11">Support</Link>}

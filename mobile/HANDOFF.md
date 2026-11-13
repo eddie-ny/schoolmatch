@@ -65,7 +65,7 @@ Done and published (owner tested through the home redo; later items published bu
 6c. Admission requirements section on the school page (55ba0f3). Expo run 01a1d5ef was started; I did not record that it finished. Rerun `workflow_run` with the latest `mobile` hash to be sure.
 
 ## 10. What is left (in order)
-7. Local eligibility screen (same label as web for the same grades; uses `check_eligibility`).
+7. Local eligibility screen (same label as web for the same grades; uses `check_eligibility`). OWNER REQUIREMENT (13 Nov): the person can search by field OR by program, only one is needed. Program = precise, specific result. Field only = chances across all programs in that field. The web `src/pages/Eligibility.jsx` today REQUIRES a program (`programName`, error "Type the program you want..."), so field-only needs new logic (run the check over each program group in the field and list the best matches) on web and app. Build it on web and app.
 8. Profile editing, saved/interested programs, turn 2-step on or off. Check: a save on the phone shows on the web.
 9. Scholarships tab: toggle, badges, school scholarships (same list as web). Data is now much richer, see section 11.
 10. International schools and programs (the international search timed out before: Sentry SCHOOLMATCH-2; test on phone).

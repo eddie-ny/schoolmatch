@@ -1,5 +1,5 @@
 import { createContext, useContext, useRef, useState } from 'react'
-import { ActivityIndicator, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StatusBar, StyleSheet, Text, TextInput, View } from 'react-native'
+import { ActivityIndicator, KeyboardAvoidingView, Modal, Platform, Pressable, RefreshControl, ScrollView, StatusBar, StyleSheet, Text, TextInput, View } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { colors } from './lib/constants'
 
@@ -9,11 +9,11 @@ export const InShell = createContext(false)
 // Lets any screen open a menu page (for example Pricing) or switch tab without passing functions down.
 export const ShellActions = createContext({ openPage: () => {}, goTab: () => {} })
 
-export function Screen({ children }) {
+export function Screen({ children, onRefresh, refreshing = false }) {
   const inShell = useContext(InShell) // inside the tabs, the header already covers the status bar
   return (
     <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScrollView style={styles.flex} contentContainerStyle={[styles.screen, { paddingTop: inShell ? 16 : topPad }]} keyboardShouldPersistTaps="handled">
+      <ScrollView style={styles.flex} contentContainerStyle={[styles.screen, { paddingTop: inShell ? 16 : topPad }]} keyboardShouldPersistTaps="handled" refreshControl={onRefresh ? <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.orangeInk]} /> : undefined}>
         {children}
       </ScrollView>
     </KeyboardAvoidingView>

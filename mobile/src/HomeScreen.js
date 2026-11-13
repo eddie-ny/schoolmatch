@@ -1,123 +1,116 @@
-import { useEffect, useState } from 'react'
-import { Pressable, Text, TextInput, View } from 'react-native'
+import { useCallback, useEffect, useState } from 'react'
+import { Pressable, ScrollView, Text, View } from 'react-native'
+import { Ionicons } from '@expo/vector-icons'
+import { useAuth } from './AuthContext'
 import * as api from './lib/api'
 import { colors } from './lib/constants'
-import { SCHOOL_CATEGORIES } from './lib/schoolCategory'
-import { SchoolCard } from './SchoolParts'
-import { Badge, Button, Chips, ErrorText, Screen, styles } from './ui'
+import { SCHOOL_CATEGORIES, schoolCategory, schoolCategoryLabel } from './lib/schoolCategory'
+import { Monogram } from './SchoolParts'
+import { Screen } from './ui'
 
-const TASKS = [
-  { tab: 'schools', title: 'Find a School', text: 'Search Ghanaian universities and their programs.', bar: colors.orange },
-  { tab: 'programs', title: 'Find Programs', text: 'Every program, and the schools that offer it.', bar: colors.green },
-  { tab: 'scholarships', title: 'Find Scholarships', text: 'Browse funding by type and country.', bar: colors.orange },
-  { tab: 'eligibility', title: 'Check My Eligibility', text: 'Enter your results and see where you stand.', bar: colors.green },
-]
 const FIELDS = [
-  ['Computing', 'Computer science, IT, data'], ['Engineering', 'Civil, electrical, mechanical'], ['Business', 'Management, finance, marketing'],
-  ['Health', 'Medicine, nursing, pharmacy'], ['Science', 'Physics, chemistry, biology'], ['Arts', 'Humanities, languages, design'],
-  ['Law', 'Law and public policy'], ['Education', 'Teaching and development'], ['Agriculture', 'Farming, food and natural resources'],
-  ['Social Sciences', 'Economics, development, policy'],
-]
-const STEPS = [
-  ['1', 'Create your account', 'Sign up free. Your 24-hour trial starts straight away.'],
-  ['2', 'Complete your profile', 'Tell us the SHS you attended and the program you studied.'],
-  ['3', 'Enter your results', 'Add your grades and we work out your aggregate.'],
-  ['4', 'Pick what to study', 'Choose a program and see every school that offers it.'],
-  ['5', 'See where you stand', 'Each school is labelled Strong match, Good chance or Worth a try.'],
+  ['Computing', 'laptop-outline'], ['Engineering', 'construct-outline'], ['Business', 'briefcase-outline'], ['Health', 'medkit-outline'],
+  ['Science', 'flask-outline'], ['Arts', 'color-palette-outline'], ['Law', 'scale-outline'], ['Education', 'school-outline'],
+  ['Agriculture', 'leaf-outline'], ['Social Sciences', 'people-outline'],
 ]
 const KINDS = [{ value: '', label: 'All schools' }, ...SCHOOL_CATEGORIES.map((c) => ({ value: c.id, label: c.label }))]
-const H2 = { fontSize: 22, fontWeight: '700', color: colors.ink }
+const H2 = { fontSize: 19, fontWeight: '700', color: colors.ink }
+const press = ({ pressed }) => ({ opacity: pressed ? 0.7 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] })
 
-// Local home page: same sections and order as the website (hero, tasks, browse, what to study, journey).
-// Scholarships in Browse and the picture beside the hero text come later.
+// App-style home: greeting, search bar, swipe rows. Same data as the website, none of its marketing text.
 export default function HomeScreen({ goTab, onOpenSchool }) {
+  const { user } = useAuth()
+  const first = (user?.fullName || '').trim().split(/\s+/)[0]
   const [kind, setKind] = useState('')
   const [st, setSt] = useState({ rows: [], total: 0, loading: true, error: '' })
   const [tries, setTries] = useState(0)
-  const [study, setStudy] = useState('')
+  const [refreshing, setRefreshing] = useState(false)
 
   useEffect(() => {
     let live = true
     setSt((s) => ({ ...s, loading: true, error: '' }))
-    api.searchSchools({ scope: 'local', kind, limit: 6, offset: 0 })
+    api.searchSchools({ scope: 'local', kind, limit: 8, offset: 0 })
       .then((r) => live && setSt({ ...r, loading: false, error: '' }))
       .catch((e) => live && setSt({ rows: [], total: 0, loading: false, error: e.message }))
+      .finally(() => live && setRefreshing(false))
     return () => { live = false }
   }, [kind, tries])
 
+  const onRefresh = useCallback(() => { setRefreshing(true); setTries((n) => n + 1) }, [])
   const { rows, total, loading, error } = st
+
   return (
-    <Screen>
-      <View style={{ alignItems: 'center', gap: 14, paddingTop: 8, paddingBottom: 28 }}>
-        <View style={{ borderWidth: 1, borderColor: 'rgba(255,176,46,0.6)', backgroundColor: '#fff', borderRadius: 999, paddingHorizontal: 16, paddingVertical: 6 }}>
-          <Text style={{ fontSize: 14, fontWeight: '600', color: colors.ink }}>Free for your first 24 hours</Text>
-        </View>
-        <Text style={{ fontSize: 34, fontWeight: '700', lineHeight: 42, textAlign: 'center', color: '#171717' }}>
-          Find the <Text style={{ color: '#9CC722' }}>right school</Text> for <Text style={{ color: '#FFB02E' }}>your results</Text>
-        </Text>
-        <Text style={{ fontSize: 17, lineHeight: 25, textAlign: 'center', color: '#404040' }}>
-          Check your eligibility for Ghanaian universities and find scholarships, all in one place.
-        </Text>
-        <View style={{ alignSelf: 'stretch', gap: 12, marginTop: 6 }}>
-          <Button label="Check My Eligibility" onPress={() => goTab('eligibility')} />
-          <Button variant="outline" label="Find a School" onPress={() => goTab('schools')} />
-        </View>
+    <Screen onRefresh={onRefresh} refreshing={refreshing}>
+      <View style={{ marginBottom: 16 }}>
+        <Text style={{ fontSize: 26, fontWeight: '800', color: colors.ink }}>{first ? `Hi, ${first}` : 'Welcome'}</Text>
+        <Text style={{ fontSize: 15, color: colors.muted, marginTop: 2 }}>Find the right school for your results.</Text>
       </View>
 
-      <View style={{ gap: 10, marginBottom: 28 }}>
-        <Text style={H2}>Your results, matched to schools</Text>
-        <Text style={{ fontSize: 16, lineHeight: 24, color: '#525252' }}>Enter your grades, pick a program and see every school that offers it, labelled by your chances.</Text>
-        <View style={{ alignSelf: 'flex-start' }}><Button variant="outline" label="Try it now" onPress={() => goTab('eligibility')} /></View>
-      </View>
+      <Pressable onPress={() => goTab('programs')} accessibilityRole="search" accessibilityLabel="Search schools or programs" style={({ pressed }) => [{ flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#fff', borderRadius: 999, borderWidth: 2, borderColor: colors.green, paddingHorizontal: 16, paddingVertical: 14, marginBottom: 20 }, pressed && { opacity: 0.7 }]}>
+        <Ionicons name="search" size={20} color={colors.greenInk} />
+        <Text style={{ fontSize: 16, color: '#8a8a8a', flex: 1 }}>Search programs, for example nursing</Text>
+      </Pressable>
 
-      <View style={{ gap: 12, marginBottom: 32 }}>
-        {TASKS.map((t) => (
-          <Pressable key={t.tab} onPress={() => goTab(t.tab)} accessibilityRole="button" style={{ borderWidth: 1, borderColor: '#e5e5e5', borderLeftWidth: 8, borderLeftColor: t.bar, borderRadius: 16, padding: 18, backgroundColor: '#fff' }}>
-            <Text style={{ fontSize: 18, fontWeight: '700', color: colors.ink }}>{t.title}</Text>
-            <Text style={{ fontSize: 15, color: '#525252', marginTop: 2 }}>{t.text}</Text>
+      <Pressable onPress={() => goTab('eligibility')} accessibilityRole="button" style={(s) => [{ flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: colors.greenSoft, borderRadius: 18, padding: 16, marginBottom: 24, borderWidth: 1, borderColor: colors.green }, press(s)]}>
+        <View style={{ width: 46, height: 46, borderRadius: 23, backgroundColor: colors.green, alignItems: 'center', justifyContent: 'center' }}>
+          <Ionicons name="checkmark-circle" size={26} color="#1f1f1f" />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={{ fontSize: 12, fontWeight: '700', letterSpacing: 0.6, color: colors.greenInk }}>YOUR NEXT STEP</Text>
+          <Text style={{ fontSize: 17, fontWeight: '700', color: colors.ink }}>Check what you qualify for</Text>
+          <Text style={{ fontSize: 14, color: '#525252' }}>Enter your results and see where you stand.</Text>
+        </View>
+        <Ionicons name="chevron-forward" size={22} color={colors.ink} />
+      </Pressable>
+
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+        <Text style={H2}>Schools</Text>
+        <Text onPress={() => goTab('schools', { kind })} style={{ fontSize: 14, fontWeight: '700', color: colors.orangeInk }}>See all{!loading && total ? ` ${total.toLocaleString()}` : ''}</Text>
+      </View>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingRight: 16 }} style={{ marginHorizontal: -16, paddingLeft: 16, marginBottom: 12, flexGrow: 0 }}>
+        {KINDS.map((k) => {
+          const on = k.value === kind
+          return (
+            <Pressable key={k.value || 'all'} onPress={() => setKind(k.value)} accessibilityRole="button" accessibilityState={{ selected: on }} style={{ paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999, borderWidth: 1, borderColor: on ? colors.green : colors.line, backgroundColor: on ? colors.green : '#fff' }}>
+              <Text style={{ fontSize: 14, fontWeight: '600', color: colors.ink }}>{k.label}</Text>
+            </Pressable>
+          )
+        })}
+      </ScrollView>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, paddingRight: 16 }} style={{ marginHorizontal: -16, paddingLeft: 16, marginBottom: 24, flexGrow: 0 }}>
+        {loading && rows.length === 0 && [0, 1, 2].map((i) => <View key={i} style={{ width: 200, height: 150, borderRadius: 16, backgroundColor: '#ebe9dc' }} />)}
+        {!loading && !!error && <Pressable onPress={() => setTries((n) => n + 1)}><Text style={{ color: colors.error, paddingVertical: 12 }}>{error} Tap to try again.</Text></Pressable>}
+        {!loading && !error && rows.length === 0 && <Text style={{ color: colors.muted, paddingVertical: 12 }}>Nothing matches yet.</Text>}
+        {rows.map(({ school, count }) => (
+          <Pressable key={school.id} onPress={() => onOpenSchool({ id: school.id })} accessibilityRole="button" style={(s) => [{ width: 200, backgroundColor: '#fff', borderRadius: 16, borderWidth: 1, borderColor: colors.line, padding: 14, gap: 8 }, press(s)]}>
+            <Monogram name={school.name} logo={school.logoUrl} kind={schoolCategory(school)} size={52} />
+            <Text numberOfLines={2} style={{ fontSize: 15, fontWeight: '700', color: colors.ink, lineHeight: 20, minHeight: 40 }}>{school.name}</Text>
+            <Text numberOfLines={1} style={{ fontSize: 13, color: colors.muted }}>{[school.city, schoolCategoryLabel(school)].filter(Boolean).join(' · ')}</Text>
+            <Text style={{ fontSize: 13, fontWeight: '600', color: colors.greenInk }}>{count === 0 ? 'Programs not listed yet' : `${count} program${count === 1 ? '' : 's'}`}</Text>
           </Pressable>
         ))}
-      </View>
+      </ScrollView>
 
-      <View style={{ gap: 12, marginBottom: 32 }}>
-        <Text style={H2}>Browse</Text>
-        <Chips value={kind} options={KINDS} onChange={setKind} />
-        {!loading && <Text style={styles.hint}>{total.toLocaleString()} result{total === 1 ? '' : 's'}</Text>}
-        {!!error && <View style={{ gap: 6 }}><ErrorText>{error}</ErrorText><Button variant="outline" label="Try again" onPress={() => setTries((n) => n + 1)} /></View>}
-        {!error && rows.length === 0 && !loading && <Text style={styles.body}>Nothing matches these filters yet.</Text>}
-        {rows.map(({ school, count }) => <SchoolCard key={school.id} s={school} count={count} onOpen={() => onOpenSchool({ id: school.id })} />)}
-        {!loading && total > 6 && <Button variant="outline" label={`See all ${total.toLocaleString()} schools`} onPress={() => goTab('schools', { kind })} />}
-      </View>
-
-      <View style={{ gap: 12, marginBottom: 32 }}>
-        <Text style={H2}>What do you want to study?</Text>
-        <TextInput
-          value={study} onChangeText={setStudy} onSubmitEditing={() => goTab('programs', { q: study.trim() })} returnKeyType="search" autoCorrect={false}
-          placeholder="Type a program, for example nursing, law or computer science" placeholderTextColor="#9a9a9a" accessibilityLabel="Search programs"
-          style={[styles.input, { borderWidth: 2, borderColor: colors.green }]}
-        />
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }}>
-          {FIELDS.map(([f, blurb]) => (
-            <Pressable key={f} onPress={() => goTab('programs', { field: f })} accessibilityRole="button" style={{ width: '48%', marginBottom: 10, minHeight: 96, borderWidth: 2, borderColor: '#e5e5e5', borderRadius: 16, padding: 14, backgroundColor: '#fff' }}>
-              <Text style={{ fontWeight: '700', fontSize: 16, color: colors.ink }}>{f}</Text>
-              <Text style={{ fontSize: 13, color: '#525252', marginTop: 4 }}>{blurb}</Text>
-            </Pressable>
-          ))}
-        </View>
-      </View>
-
-      <View style={{ gap: 12 }}>
-        <Text style={[H2, { textAlign: 'center' }]}>Your journey</Text>
-        {STEPS.map(([n, title, text]) => (
-          <View key={n} style={{ flexDirection: 'row', gap: 14, alignItems: 'flex-start', backgroundColor: '#fff', borderRadius: 16, padding: 16, borderWidth: 1, borderColor: colors.line }}>
-            <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: colors.green, alignItems: 'center', justifyContent: 'center' }}><Text style={{ fontWeight: '700', fontSize: 16, color: '#1f1f1f' }}>{n}</Text></View>
-            <View style={{ flex: 1 }}>
-              <Text style={{ fontWeight: '700', fontSize: 16, color: colors.ink }}>{title}</Text>
-              <Text style={{ fontSize: 14, color: '#525252', marginTop: 2 }}>{text}</Text>
+      <Text style={[H2, { marginBottom: 12 }]}>What do you want to study?</Text>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 14, paddingRight: 16 }} style={{ marginHorizontal: -16, paddingLeft: 16, marginBottom: 8, flexGrow: 0 }}>
+        {FIELDS.map(([f, icon]) => (
+          <Pressable key={f} onPress={() => goTab('programs', { field: f })} accessibilityRole="button" accessibilityLabel={f} style={(s) => [{ alignItems: 'center', width: 78 }, press(s)]}>
+            <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: colors.orangeSoft, borderWidth: 1, borderColor: 'rgba(255,176,46,0.6)', alignItems: 'center', justifyContent: 'center' }}>
+              <Ionicons name={icon} size={28} color={colors.orangeInk} />
             </View>
-          </View>
+            <Text numberOfLines={2} style={{ fontSize: 13, fontWeight: '600', color: colors.ink, textAlign: 'center', marginTop: 6 }}>{f}</Text>
+          </Pressable>
         ))}
-      </View>
+      </ScrollView>
+
+      <Pressable onPress={() => goTab('scholarships')} accessibilityRole="button" style={(s) => [{ flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: colors.orangeSoft, borderRadius: 18, padding: 16, marginTop: 16, borderWidth: 1, borderColor: 'rgba(255,176,46,0.6)' }, press(s)]}>
+        <Ionicons name="ribbon" size={28} color={colors.orangeInk} />
+        <View style={{ flex: 1 }}>
+          <Text style={{ fontSize: 17, fontWeight: '700', color: colors.ink }}>Find scholarships</Text>
+          <Text style={{ fontSize: 14, color: '#525252' }}>Browse funding by type and country.</Text>
+        </View>
+        <Ionicons name="chevron-forward" size={22} color={colors.ink} />
+      </Pressable>
     </Screen>
   )
 }

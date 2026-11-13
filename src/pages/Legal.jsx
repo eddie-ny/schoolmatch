@@ -46,10 +46,10 @@ export const PAGES = {
   refunds: {
     title: 'Refund policy',
     sections: [
-      { h: 'Your 7-day right to cancel', p: ['Under the Electronic Transactions Act 2008 (Act 772), you may cancel an online service agreement within 7 days of making it, without giving a reason and without penalty. The Act does not give this right where the service began with your agreement before the 7 days ended.', 'At checkout you are asked to agree that your plan starts as soon as Paystack confirms your payment. If you agree and your access starts, the 7-day right may not apply. [Owner decision: you may choose to give refunds anyway, for example within a set number of days. Lawyer to confirm how the exception applies.]'] },
+      { h: 'Your 7-day right to cancel', p: ['Under the Electronic Transactions Act 2008 (Act 772), you may cancel an online service agreement within 7 days of making it, without giving a reason and without penalty. The Act does not give this right where the service began with your agreement before the 7 days ended.', 'At checkout you are asked to agree that your plan starts as soon as Paystack confirms your payment. If you agree and your access starts, the 7-day right under the Act may not apply. Even so, we give you a refund if you ask for it within 7 days of paying.'] },
       { h: 'If we did not give you the required information', p: ['If we fail to show you the information the Act requires before you pay (such as who we are, the full price and these terms), you may cancel within 14 days of receiving the service, and we must refund you within 30 days.'] },
-      { h: 'Payment problems', p: ['If you were charged twice, charged the wrong amount, or charged without your plan starting, write to info@inbox.jambaconsult.com with your Paystack reference. We will fix it or refund you. [Owner to confirm.]'] },
-      { h: 'How to ask and how you are paid back', p: ['Write to info@inbox.jambaconsult.com from the email on your account and give your name and Paystack reference. Refunds go back to the same card or Mobile Money account through Paystack. [Owner to confirm the time it takes. Where Act 772 requires a refund, it must be made within 30 days.]'] },
+      { h: 'Payment problems', p: ['If you were charged twice, charged the wrong amount, or charged without your plan starting, write to info@inbox.jambaconsult.com with your Paystack reference. We will fix it or refund you.'] },
+      { h: 'How to ask and how you are paid back', p: ['Write to info@inbox.jambaconsult.com from the email on your account and give your name and Paystack reference. Refunds go back to the same card or Mobile Money account through Paystack. We make the refund within 30 days.'] },
     ],
   },
   cookies: {

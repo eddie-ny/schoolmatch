@@ -23,7 +23,7 @@ const SECTIONS = [
     'A buyer, if the business is sold, under the same protections.',
     'We do not let schools pay to change your matches.',
   ] },
-  { h: 'Data sent outside Ghana', p: ['Some of these providers store or process data outside Ghana. [Owner: list the countries, as the Data Protection Commission registration asks which countries data may be sent to.] We choose providers that protect data, and we require them to keep it safe.'] },
+  { h: 'Data sent outside Ghana', p: ['Some of these providers store or process data outside Ghana: Supabase (our database) stores it in Ireland; Paystack stores payment data in Ireland and may share it with other Paystack companies under its binding corporate rules; Sentry (error reports) processes it in Germany; Vercel (hosting) and Formspree (forms) process it in the United States. We choose providers that protect data, and we require them to keep it safe.'] },
   { h: 'Your rights', p: [
     'You can ask us to confirm what personal data we hold about you and to give you a copy. We answer within 40 days.',
     'You can ask us to correct data that is wrong, and to delete or destroy data we are no longer allowed to keep.',

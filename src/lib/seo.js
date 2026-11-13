@@ -5,7 +5,7 @@ import { SHOW_INTERNATIONAL } from './constants'
 // The public address of the site. Used for canonical links. Override with VITE_SITE_URL if the domain changes.
 export const SITE_URL = (import.meta.env.VITE_SITE_URL || 'https://jambaconsult.com').replace(/\/$/, '')
 
-export const DEFAULT_DESCRIPTION = 'Check your WASSCE results against Ghanaian university programmes and scholarships. Some data is still being verified.'
+export const DEFAULT_DESCRIPTION = 'Discover where your results can take you! Check your eligibility for university programmes and scholarships in Ghana, the USA, UK, Australia and beyond. Find opportunities that match your grades and effort.'
 
 // School, programme and scholarship pages show only a sign in prompt to visitors who are signed out, which is all a search
 // engine sees. Keep them out of search results until those pages show real content to everyone, then set this to true

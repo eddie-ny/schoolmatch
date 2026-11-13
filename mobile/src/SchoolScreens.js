@@ -73,6 +73,32 @@ export function SchoolsList({ onBack, onOpen, initialKind = '' }) {
 // ---------- One school: who they are, then their programs ----------
 const PROGRAM_LEVELS = [{ value: '', label: 'All levels' }, ...['Undergraduate', 'Diploma', 'Certificate', 'Masters', 'Graduate Certificate'].map((x) => ({ value: x, label: x }))]
 
+const ADMISSION_ROWS = [['ug', 'Undergraduate entry'], ['pg', 'Masters entry'], ['english', 'English language'], ['how_to_apply', 'How to apply'], ['deadlines', 'Deadlines'], ['application_fee', 'Application fee'], ['documents', 'Documents']]
+
+// Entry requirements for Ghanaian applicants, copied from the school's own pages. Only shown when we have them.
+function AdmissionInfo({ school }) {
+  const a = school.admission
+  if (!a) return null
+  const rows = ADMISSION_ROWS.filter(([k]) => a[k])
+  const links = [[a.ghana_page_link, 'Page for Ghanaian students'], [a.fees_link, 'International fees'], [school.admissionLink, 'Admissions page']].filter(([u]) => u)
+  if (!rows.length && !links.length) return null
+  return (
+    <View style={{ marginTop: 24, gap: 10 }}>
+      <Text style={{ fontSize: 19, fontWeight: '700', color: colors.ink }}>Admission requirements for Ghanaian students</Text>
+      <View style={[cardStyle, { gap: 12 }]}>
+        {rows.map(([k, label]) => (
+          <View key={k}>
+            <Text style={{ fontSize: 13, fontWeight: '600', color: colors.muted }}>{label}</Text>
+            <Text style={styles.body}>{a[k]}</Text>
+          </View>
+        ))}
+        {links.map(([u, t]) => <Text key={t} onPress={() => Linking.openURL(u)} style={{ fontWeight: '700', textDecorationLine: 'underline', color: colors.ink }}>{t}</Text>)}
+      </View>
+      <Text style={styles.hint}>Taken from the school's own website{school.admissionChecked ? ` on ${school.admissionChecked}` : ''}. Requirements change each year, so confirm on the school's page before you apply.</Text>
+    </View>
+  )
+}
+
 export function SchoolDetail({ id, q: q0 = '', field: field0 = '', onBack, onOpenProgram }) {
   const { user } = useAuth()
   const full = getAccess(user).level === 'full'
@@ -143,6 +169,8 @@ export function SchoolDetail({ id, q: q0 = '', field: field0 = '', onBack, onOpe
           {!!credit && <Text style={styles.hint}>{credit}</Text>}
         </View>
       )}
+
+      {full && <AdmissionInfo school={school} />}
 
       {!full ? (
         <View style={{ marginTop: 24, gap: 12 }}>

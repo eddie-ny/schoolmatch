@@ -152,11 +152,11 @@ async function searchSchoolsOnce({ scope, q = '', field = '', level = '', kind =
 export async function getSchool(id) {
   const [s, f] = await Promise.all([
     supabase.from('schools_summary').select('*').eq('id', id).maybeSingle(),
-    supabase.from('schools').select('website, image_url, image_credit, logo_credit, description, description_credit').eq('id', id).maybeSingle(),
+    supabase.from('schools').select('website, image_url, image_credit, logo_credit, description, description_credit, admission_info, admission_link, admission_checked').eq('id', id).maybeSingle(),
   ])
   if (s.error) throw new Error('Could not load the school.')
   const x = s.data && { ...s.data, ...(f.data || {}) }
-  return x && ({ id: x.id, name: x.name, country: x.country, type: x.type, city: x.city, website: x.website || '', category: x.category || '', logoUrl: x.logo_url || '', verified: x.verified, demo: x.demo, programCount: x.program_count ?? 0, imageUrl: x.image_url || '', imageCredit: x.image_credit || '', logoCredit: x.logo_credit || '', description: x.description || '', descriptionCredit: x.description_credit || '' })
+  return x && ({ id: x.id, name: x.name, country: x.country, type: x.type, city: x.city, website: x.website || '', category: x.category || '', logoUrl: x.logo_url || '', verified: x.verified, demo: x.demo, programCount: x.program_count ?? 0, imageUrl: x.image_url || '', imageCredit: x.image_credit || '', logoCredit: x.logo_credit || '', description: x.description || '', descriptionCredit: x.description_credit || '' , admission: x.admission_info || null, admissionLink: x.admission_link || '', admissionChecked: x.admission_checked || ''})
 }
 
 // One page of programs (grouped by school, name and level). Returns { rows, total }.

@@ -1,4 +1,4 @@
--- STEP 175 (NOT APPLIED. Waiting for the owner's approval.)
+-- STEP 175 (APPLIED: checked 13 Nov 2026, all matched rows already carry these deadlines; the two Leahurst patterns match no row.)
 -- These scholarships say in their own text that they closed on a stated date, but their deadline column is empty, so the site still shows them as open.
 -- Setting a deadline in the past makes the site treat them as closed everywhere (lists, eligibility results, school cards). Run only after the owner agrees.
 -- Rows whose text says "closed" with no date are not listed here. They need a date from the owner or the funder.

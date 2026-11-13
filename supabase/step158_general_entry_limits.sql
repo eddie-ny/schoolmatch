@@ -1,3 +1,4 @@
+-- STEP 158 (APPLIED 13 Nov 2026 17:50 UTC through execute_sql, approved by the owner in chat): 26 GCTU and 51 SDD-UBIDS undergraduate cut-offs added; views refreshed.
 -- General entry aggregate limits stored as cut-offs (owner decision 2026-11-02).
 -- UNVERIFIED as programme cut-offs: these are the universities' general entry limits, not per-programme cut-offs.
 -- GCTU: aggregate 24 (SSSCE-style limit stated by owner). SDD-UBIDS: aggregate 36 (nothing below C6).

@@ -40,7 +40,7 @@ export function ContactPage({ onBack }) {
       <BackLink label="Back" onPress={onBack} />
       <Title title="Contact us" sub="Questions about the app, your account or a payment? Reach us here." />
       <Card>
-        <Text style={styles.hint}>Phone or WhatsApp</Text>
+        <Text style={styles.hint}>Phone</Text>
         <Text style={{ fontSize: 20, fontWeight: '700' }}>+233 20 565 8716</Text>
         <Button label="Call us" onPress={() => Linking.openURL('tel:+233205658716')} />
         <Text style={[styles.hint, { marginTop: 8 }]}>Email</Text>

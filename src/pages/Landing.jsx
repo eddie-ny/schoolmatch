@@ -11,7 +11,7 @@ const info = [
 
 // The first page a visitor sees. Two paths, Local and International, then the SAT call and the shared tools.
 export default function Landing() {
-  usePageMeta({ title: 'Jamba | Check your WASSCE results against Ghanaian universities', description: 'Enter your WASSCE results and see which Ghanaian university programmes and scholarships you may qualify for. Some data is still being verified.' })
+  usePageMeta({ title: 'Jamba | Check your WASSCE results against Ghanaian and Foreign universities', description: 'Enter your WASSCE results and see which Ghanaian university programmes and scholarships you may qualify for. Some data is still being verified.' })
   return (
     <div className="space-y-10">
       <section className="grid md:grid-cols-2 gap-8 items-center">

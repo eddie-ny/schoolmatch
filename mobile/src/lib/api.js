@@ -194,14 +194,25 @@ function mapFull(f, school) {
 
 
 // One programme with all the ways it is offered at its school (copied from the web).
+// PostgREST reads a value that starts with a double quote as a quoted string, so wrap and escape such names.
+const eqVal = (v) => (/["\\]/.test(v) ? `"${v.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"` : v)
 export async function getProgramGroup(id) {
   const head = await supabase.from('programs_summary').select('id, school_id, name, level').eq('id', id).maybeSingle()
   if (head.error) throw new Error('Could not load the program.')
   if (!head.data) return null
   const school = await getSchool(head.data.school_id)
-  let q = supabase.from('programs').select('*, program_requirements(subject, min_grade), program_cutoffs(year, cutoff_aggregate, sat_low, sat_high)').eq('school_id', head.data.school_id).eq('name', head.data.name)
+  let q = supabase.from('programs').select('*, program_requirements(subject, min_grade), program_cutoffs(year, cutoff_aggregate, sat_low, sat_high)').eq('school_id', head.data.school_id).eq('name', eqVal(head.data.name))
   q = head.data.level ? q.eq('level', head.data.level) : q.is('level', null)
   const { data, error } = await q
   if (error) throw new Error('Could not load the program details.')
-  return { school, variants: (data || []).map((f) => mapFull(f, school)) }
+  let rows = data || []
+  // Summary-only accounts cannot read the full table, so show the summary facts and let the screen lock the rest.
+  if (!rows.length) {
+    let s = supabase.from('programs_summary').select('id, school_id, name, level, field, demo, mode, campus').eq('school_id', head.data.school_id).eq('name', eqVal(head.data.name))
+    s = head.data.level ? s.eq('level', head.data.level) : s.is('level', null)
+    const sum = await s
+    if (sum.error) throw new Error('Could not load the program details.')
+    rows = sum.data || []
+  }
+  return { school, variants: rows.map((f) => mapFull(f, school)) }
 }

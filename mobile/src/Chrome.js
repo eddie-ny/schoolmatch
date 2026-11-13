@@ -14,7 +14,7 @@ export const TABS = [
   { key: 'eligibility', label: 'Eligibility', icon: 'checkmark-circle' },
 ]
 
-const MENU = [['profile', 'Profile'], ['interested', 'Interested'], ['pricing', 'Pricing'], ['invite', 'Invite friends'], ['settings', 'Account Settings']]
+const MENU = [['profile', 'Profile'], ['interested', 'Interested'], ['pricing', 'Pricing'], ['invite', 'Invite friends'], ['contact', 'Contact us'], ['settings', 'Account Settings']]
 const HEADER_H = 56
 
 // Top bar: the Jamba name on the left, the profile button (with its drop-down menu) on the right.

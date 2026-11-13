@@ -4,12 +4,12 @@ import { useAuth } from './AuthContext'
 import { ConfirmDialog, Header, TABS, TabBar, TrialBanner } from './Chrome'
 import HomeScreen from './HomeScreen'
 import { colors } from './lib/constants'
-import { ComingSoon, ProfilePage } from './Pages'
+import { ComingSoon, ContactPage, ProfilePage } from './Pages'
 import { ProgramDetail, ProgramsList } from './ProgramScreens'
 import { SchoolDetail, SchoolsList } from './SchoolScreens'
 import { InShell, ShellActions } from './ui'
 
-const PAGES = { profile: 'Profile', interested: 'Interested', pricing: 'Pricing', invite: 'Invite friends', settings: 'Account Settings' }
+const PAGES = { profile: 'Profile', interested: 'Interested', pricing: 'Pricing', invite: 'Invite friends', contact: 'Contact us', settings: 'Account Settings' }
 const SOON = { scholarships: 'Scholarships', eligibility: 'Check My Eligibility' }
 
 // Five tabs along the bottom. Each tab keeps its own stack of screens, and every screen stays alive under the one on top,
@@ -52,7 +52,7 @@ export default function Shell() {
   const render = (t, s) => {
     if (s.name === 'school') return <SchoolDetail id={s.id} q={s.q} field={s.field} onBack={back} onOpenProgram={openProgram} />
     if (s.name === 'program') return <ProgramDetail id={s.id} onBack={back} onOpenSchool={openSchool} onCheck={() => goTab('eligibility')} />
-    if (PAGES[s.name]) return s.name === 'profile' ? <ProfilePage onBack={back} /> : <ComingSoon title={PAGES[s.name]} onBack={back} />
+    if (PAGES[s.name]) return s.name === 'profile' ? <ProfilePage onBack={back} /> : s.name === 'contact' ? <ContactPage onBack={back} /> : <ComingSoon title={PAGES[s.name]} onBack={back} />
     if (t === 'home') return <HomeScreen goTab={goTab} onOpenSchool={openSchool} />
     if (t === 'schools') return <SchoolsList initialKind={s.kind} onOpen={openSchool} />
     if (t === 'programs') return <ProgramsList initialQ={s.q} initialField={s.field} onOpen={openProgram} />

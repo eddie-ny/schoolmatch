@@ -3,6 +3,7 @@
 
 import { supabase } from './supabase'
 import { PASSWORD_RULE, isMinorFromDob } from './validation'
+import { CORE_SUBJECTS } from './constants'
 
 // Turns a Supabase error into the plain message the web app shows. Wording copied from the web app (friendly).
 function friendly(error) {
@@ -215,4 +216,70 @@ export async function getProgramGroup(id) {
     rows = sum.data || []
   }
   return { school, variants: rows.map((f) => mapFull(f, school)) }
+}
+
+// ---------- Eligibility (step 7, copied from the web) ----------
+
+// Every row of a table, 1000 at a time, with one quick retry when the database is busy.
+async function fetchAll(table, columns, filter = (q) => q) {
+  let first = await filter(supabase.from(table).select(columns, { count: 'exact' })).order('id').range(0, 999)
+  if (first.error && /timeout|500|internal|gateway/i.test(`${first.error.message} ${first.error.code}`)) {
+    await new Promise((r) => setTimeout(r, 700))
+    first = await filter(supabase.from(table).select(columns, { count: 'exact' })).order('id').range(0, 999)
+  }
+  if (first.error) return { data: [], error: first.error }
+  const rows = first.data
+  const step = rows.length
+  const total = first.count ?? step
+  if (step === 0 || total <= step) return { data: rows, error: null }
+  const jobs = []
+  for (let from = step; from < total; from += step) jobs.push(filter(supabase.from(table).select(columns)).order('id').range(from, from + step - 1))
+  const pages = await Promise.all(jobs)
+  const bad = pages.find((p) => p.error)
+  if (bad) return { data: [], error: bad.error }
+  return { data: rows.concat(...pages.map((p) => p.data)), error: null }
+}
+
+// Local (Ghana) program names for the eligibility picker. Only the teaser columns, which every account may read.
+export async function listEligibilityPrograms() {
+  const ghana = (q) => q.ilike('school_country', 'ghana')
+  const { data: progs, error } = await fetchAll('programs_summary', 'id, school_id, name, level, field, group_name, entry_qualification', ghana)
+  fail(error, 'Could not load programs.')
+  return progs.map((p) => ({ id: p.id, name: p.name, group: p.group_name || p.name, field: p.field, level: p.level, entryQualification: p.entry_qualification || '' }))
+}
+
+// The eligibility maths and the cut-offs live on the server. The app only sends grades and gets labels back.
+export async function checkEligibility({ programName, scope, mode, grades, electives, sat }) {
+  const { data, error } = await supabase.rpc('check_eligibility', {
+    p_program_name: programName, p_scope: scope, p_mode: mode,
+    p_grades: grades, p_electives: electives, p_sat: sat ? Number(sat) : null,
+  })
+  fail(error, 'Could not check eligibility.')
+  return data
+}
+
+// The WASSCE results saved from the website or the app, or null.
+export async function getMyResults(userId) {
+  const { data, error } = await supabase.from('results').select('kind, sat_score, result_grades(subject, subject_type, grade)').eq('student_id', userId).eq('exam', 'WASSCE').maybeSingle()
+  if (error || !data) return null
+  const grades = {}
+  const electives = []
+  for (const g of data.result_grades || []) {
+    grades[g.subject] = g.grade
+    if (g.subject_type === 'elective') electives.push(g.subject)
+  }
+  return { mode: data.kind, grades, electives, sat: data.sat_score ?? '' }
+}
+
+export async function saveResults(userId, { mode, grades, electives, sat }) {
+  const { data: row, error } = await supabase
+    .from('results')
+    .upsert({ student_id: userId, exam: 'WASSCE', kind: mode, sat_score: sat ? Number(sat) : null }, { onConflict: 'student_id,exam' })
+    .select('id')
+    .single()
+  fail(error, 'Could not save your results.')
+  const del = await supabase.from('result_grades').delete().eq('result_id', row.id)
+  fail(del.error, 'Could not save your results.')
+  const rows = Object.entries(grades).map(([subject, grade]) => ({ result_id: row.id, subject, subject_type: CORE_SUBJECTS.includes(subject) ? 'core' : 'elective', grade }))
+  if (rows.length) fail((await supabase.from('result_grades').insert(rows)).error, 'Could not save your grades.')
 }

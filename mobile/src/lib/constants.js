@@ -25,3 +25,13 @@ export const FIELDS = ['Computing', 'Engineering', 'Business', 'Health', 'Scienc
 
 export const SCHOOLS_PAGE = 12
 export const PROGRAMS_PAGE = 20
+
+// WASSCE grades and subjects (same as the website).
+export const GRADES = ['A1', 'B2', 'B3', 'C4', 'C5', 'C6', 'D7', 'E8', 'F9']
+export const CORE_SUBJECTS = ['English Language', 'Core Mathematics', 'Integrated Science', 'Social Studies']
+export const ELECTIVE_SUBJECTS = [
+  'Elective Mathematics', 'Physics', 'Chemistry', 'Biology', 'Economics', 'Geography', 'History', 'Government',
+  'Literature in English', 'Financial Accounting', 'Business Management', 'French', 'Information and Communication Technology',
+  'Applied Electricity', 'Electronics', 'Technical Drawing',
+]
+export const DISCLAIMER = 'This is guidance, not a guarantee of admission. Always confirm requirements with the school.'

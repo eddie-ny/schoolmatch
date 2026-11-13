@@ -149,8 +149,10 @@ export function Gate({ text }) {
   )
 }
 
-export const Badge = ({ children }) => (
-  <View style={styles.badge}><Text style={styles.badgeText}>{children}</Text></View>
+// tone green or orange for eligibility labels (same colours as the website). No tone keeps the plain look.
+const BADGE_TONES = { green: { backgroundColor: colors.greenSoft, borderColor: colors.green }, orange: { backgroundColor: colors.orangeSoft, borderColor: colors.orange } }
+export const Badge = ({ children, tone }) => (
+  <View style={[styles.badge, BADGE_TONES[tone]]}><Text style={styles.badgeText}>{children}</Text></View>
 )
 
 // One row of choices to tap (like the website's All schools / Universities / ...).

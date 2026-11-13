@@ -4,13 +4,14 @@ import { useAuth } from './AuthContext'
 import { ConfirmDialog, Header, TABS, TabBar, TrialBanner } from './Chrome'
 import HomeScreen from './HomeScreen'
 import { colors } from './lib/constants'
+import EligibilityScreen from './EligibilityScreen'
 import { ComingSoon, ContactPage, ProfilePage } from './Pages'
 import { ProgramDetail, ProgramsList } from './ProgramScreens'
 import { SchoolDetail, SchoolsList } from './SchoolScreens'
 import { InShell, ShellActions } from './ui'
 
 const PAGES = { profile: 'Profile', interested: 'Interested', pricing: 'Pricing', invite: 'Invite friends', contact: 'Contact us', settings: 'Account Settings' }
-const SOON = { scholarships: 'Scholarships', eligibility: 'Check My Eligibility' }
+const SOON = { scholarships: 'Scholarships' }
 
 // Five tabs along the bottom. Each tab keeps its own stack of screens, and every screen stays alive under the one on top,
 // so going back finds the search, filters and page as they were left. The Android back button pops one screen,
@@ -51,10 +52,11 @@ export default function Shell() {
 
   const render = (t, s) => {
     if (s.name === 'school') return <SchoolDetail id={s.id} q={s.q} field={s.field} onBack={back} onOpenProgram={openProgram} />
-    if (s.name === 'program') return <ProgramDetail id={s.id} onBack={back} onOpenSchool={openSchool} onCheck={() => goTab('eligibility')} />
+    if (s.name === 'program') return <ProgramDetail id={s.id} onBack={back} onOpenSchool={openSchool} onCheck={(p) => goTab('eligibility', { program: p?.name || '' })} />
     if (PAGES[s.name]) return s.name === 'profile' ? <ProfilePage onBack={back} /> : s.name === 'contact' ? <ContactPage onBack={back} /> : <ComingSoon title={PAGES[s.name]} onBack={back} />
     if (t === 'home') return <HomeScreen goTab={goTab} onOpenSchool={openSchool} />
     if (t === 'schools') return <SchoolsList initialKind={s.kind} onOpen={openSchool} />
+    if (t === 'eligibility') return <EligibilityScreen initialProgram={s.program} onOpenProgram={openProgram} />
     if (t === 'programs') return <ProgramsList initialQ={s.q} initialField={s.field} onOpen={openProgram} />
     return <ComingSoon title={SOON[t]} />
   }

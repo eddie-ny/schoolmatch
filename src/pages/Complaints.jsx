@@ -38,6 +38,7 @@ export default function Complaints() {
   return (
     <div className="max-w-xl">
       <PageTitle title="Complaints and feedback" sub="Something wrong, missing or confusing? Tell us." />
+      <p className="mb-4 text-neutral-700">You can also write to <a href="mailto:info@inbox.jambaconsult.com" className="underline font-semibold">info@inbox.jambaconsult.com</a> or call <a href="tel:+233205658716" className="underline font-semibold">+233 20 565 8716</a>.</p>
       {!FORM_ID ? (
         <p className="card" role="status">The complaint box is not connected yet. Please check back soon.</p>
       ) : (

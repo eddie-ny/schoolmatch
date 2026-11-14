@@ -75,7 +75,7 @@ export async function signOut() {
   await supabase.auth.signOut({ scope: 'local' })
 }
 
-// ---------- Two-step verification (authenticator app): the sign-in challenge only. Turning it on or off comes in step 8. ----------
+// ---------- Two-step verification (authenticator app) ----------
 // current = what this session has proven; next = what it could prove. aal1 -> aal2 means a code is still owed.
 export async function mfaState() {
   const { data, error } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
@@ -96,17 +96,91 @@ export async function mfaVerifyCode(factorId, code) {
   if (v.error) throw new Error('That code is not right or has expired. Try the newest code from your app.')
 }
 
+// Turn two-step verification on: returns the setup key and the otpauth link for the authenticator app.
+export async function mfaStartEnroll() {
+  // Remove any half-finished setup first, so repeated tries do not pile up.
+  const { data: list } = await supabase.auth.mfa.listFactors()
+  for (const f of (list?.all || []).filter((x) => x.status === 'unverified')) await supabase.auth.mfa.unenroll({ factorId: f.id })
+  const { data, error } = await supabase.auth.mfa.enroll({ factorType: 'totp', friendlyName: 'Authenticator app' })
+  fail(error, 'Could not start setup.')
+  return { factorId: data.id, secret: data.totp.secret, uri: data.totp.uri }
+}
+
+export async function mfaRemove(factorId) {
+  const { error } = await supabase.auth.mfa.unenroll({ factorId })
+  fail(error, 'Could not turn off two-step verification.')
+}
+
+export async function setNewPassword(password) {
+  const { error } = await supabase.auth.updateUser({ password })
+  fail(error, 'Could not update your password.')
+}
+
+// Accounts are never deleted. This disables the account and keeps the records.
+export async function closeMyAccount() {
+  const { error } = await supabase.rpc('close_my_account')
+  fail(error, 'Could not close your account.')
+}
+
+export async function saveAccount(userId, { fullName, phone }) {
+  const { error } = await supabase.from('profiles').update({ full_name: fullName, phone }).eq('id', userId)
+  fail(error, 'Could not save your details.')
+}
+
+export async function saveProfile(userId, profile) {
+  const base = {
+    shs_attended: profile.shsAttended,
+    shs_program: profile.shsProgram,
+    funding_type: profile.fundingType || null,
+    desired_programs: profile.desiredPrograms,
+    gender: profile.gender || null,
+  }
+  let { error } = await supabase.from('profiles').update({ ...base, study_level: profile.studyLevel || null, study_field: profile.studyField || null }).eq('id', userId)
+  // If the database does not have the study columns yet, save everything else so the student is not blocked.
+  if (error && (/study_(level|field)/.test(error.message || '') || /permission denied/i.test(error.message || ''))) ({ error } = await supabase.from('profiles').update(base).eq('id', userId))
+  fail(error, 'Could not save your profile.')
+}
+
+// ---------- Interested (hearted programs) ----------
+export async function listSavedIds() {
+  const { data, error } = await supabase.from('saved_programs').select('program_id')
+  fail(error, 'Could not load your interested list.')
+  return (data || []).map((x) => x.program_id)
+}
+export async function setSaved(programId, on) {
+  const { data: sess } = await supabase.auth.getSession()
+  const uid = sess?.session?.user?.id
+  if (!uid) throw new Error('Please sign in first.')
+  const q = on
+    ? supabase.from('saved_programs').upsert({ user_id: uid, program_id: programId }, { onConflict: 'user_id,program_id', ignoreDuplicates: true })
+    : supabase.from('saved_programs').delete().eq('user_id', uid).eq('program_id', programId)
+  const { error } = await q
+  fail(error, 'Could not update your interested list.')
+}
+
+// Full detail for a list of program ids (the hearted ones).
+export async function getProgramsFull(ids) {
+  const out = []
+  for (let i = 0; i < ids.length; i += 80) {
+    const { data, error } = await supabase.from('programs').select('*, schools(id, name, country, type, city, category, logo_url, demo, verified)').in('id', ids.slice(i, i + 80))
+    fail(error, 'Could not load the programs.')
+    for (const f of data || []) out.push(mapFull(f, f.schools))
+  }
+  return out
+}
+
 // The signed-in student, or null. With two-step verification on, the database hides the profile until the code is entered,
 // so a missing profile plus "aal1 -> aal2" means a code is still owed.
 export async function getCurrentUser() {
   const { data: sess } = await supabase.auth.getSession()
   const uid = sess.session?.user?.id
   if (!uid) return null
-  const [prof, parent, sub, adm] = await Promise.all([
+  const [prof, parent, sub, adm, ext] = await Promise.all([
     supabase.from('profiles').select('id, full_name, email, phone, date_of_birth, is_minor, trial_ends_at, disabled_at').eq('id', uid).maybeSingle(),
     supabase.from('parent_contacts').select('confirmed_at').eq('student_id', uid).maybeSingle(),
     supabase.from('subscriptions').select('plan, status, expires_at').eq('user_id', uid).maybeSingle(),
     supabase.from('admin_users').select('role').eq('user_id', uid).maybeSingle(),
+    supabase.from('profiles').select('gender, shs_attended, shs_program, funding_type, desired_programs, study_level, study_field').eq('id', uid).maybeSingle(),
   ])
   const { data: p, error } = prof
   if (error) throw new Error(error.message)
@@ -117,6 +191,7 @@ export async function getCurrentUser() {
   }
   return { id: p.id, fullName: p.full_name, email: p.email, phone: p.phone, dateOfBirth: p.date_of_birth, isMinor: p.is_minor, trialEndsAt: p.trial_ends_at, disabled: !!p.disabled_at,
     staffRole: adm.data ? adm.data.role : null,
+    profile: { gender: ext.data?.gender || '', shsAttended: ext.data?.shs_attended || '', shsProgram: ext.data?.shs_program || '', fundingType: ext.data?.funding_type || '', desiredPrograms: ext.data?.desired_programs || '', studyLevel: ext.data?.study_level || '', studyField: ext.data?.study_field || '' },
     parent: parent.data ? { confirmedAt: parent.data.confirmed_at } : null,
     subscription: sub.data ? { plan: sub.data.plan, status: sub.data.status, expiresAt: sub.data.expires_at } : null }
 }

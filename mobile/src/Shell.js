@@ -5,7 +5,9 @@ import { ConfirmDialog, Header, TABS, TabBar, TrialBanner } from './Chrome'
 import HomeScreen from './HomeScreen'
 import { colors } from './lib/constants'
 import EligibilityScreen from './EligibilityScreen'
-import { ComingSoon, ContactPage, ProfilePage } from './Pages'
+import { InterestedPage, ProfilePage, SettingsPage } from './AccountPages'
+import { ComingSoon, ContactPage } from './Pages'
+import { SavedProvider } from './SavedContext'
 import { ProgramDetail, ProgramsList } from './ProgramScreens'
 import { SchoolDetail, SchoolsList } from './SchoolScreens'
 import { InShell, ShellActions } from './ui'
@@ -53,7 +55,13 @@ export default function Shell() {
   const render = (t, s) => {
     if (s.name === 'school') return <SchoolDetail id={s.id} q={s.q} field={s.field} onBack={back} onOpenProgram={openProgram} />
     if (s.name === 'program') return <ProgramDetail id={s.id} onBack={back} onOpenSchool={openSchool} onCheck={(p) => goTab('eligibility', { program: p?.name || '' })} />
-    if (PAGES[s.name]) return s.name === 'profile' ? <ProfilePage onBack={back} /> : s.name === 'contact' ? <ContactPage onBack={back} /> : <ComingSoon title={PAGES[s.name]} onBack={back} />
+    if (PAGES[s.name]) {
+      if (s.name === 'profile') return <ProfilePage onBack={back} />
+      if (s.name === 'interested') return <InterestedPage onBack={back} onOpenProgram={openProgram} onOpenSchool={openSchool} />
+      if (s.name === 'settings') return <SettingsPage onBack={back} />
+      if (s.name === 'contact') return <ContactPage onBack={back} />
+      return <ComingSoon title={PAGES[s.name]} onBack={back} />
+    }
     if (t === 'home') return <HomeScreen goTab={goTab} onOpenSchool={openSchool} />
     if (t === 'schools') return <SchoolsList initialKind={s.kind} onOpen={openSchool} />
     if (t === 'eligibility') return <EligibilityScreen initialProgram={s.program} onOpenProgram={openProgram} />
@@ -62,6 +70,7 @@ export default function Shell() {
   }
 
   return (
+    <SavedProvider>
     <InShell.Provider value>
       <ShellActions.Provider value={{ openPage, goTab }}>
       <View style={{ flex: 1, backgroundColor: colors.page }}>
@@ -85,5 +94,6 @@ export default function Shell() {
       </View>
       </ShellActions.Provider>
     </InShell.Provider>
+    </SavedProvider>
   )
 }

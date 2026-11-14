@@ -35,3 +35,5 @@ export const ELECTIVE_SUBJECTS = [
   'Applied Electricity', 'Electronics', 'Technical Drawing',
 ]
 export const DISCLAIMER = 'This is guidance, not a guarantee of admission. Always confirm requirements with the school.'
+
+export const SHS_PROGRAMS = ['General Science', 'General Arts', 'Business', 'Visual Arts', 'Home Economics', 'Agriculture', 'Technical']

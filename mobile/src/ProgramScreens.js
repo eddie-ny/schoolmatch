@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { ActivityIndicator, Image, Linking, Pressable, Text, View } from 'react-native'
 import { useAuth } from './AuthContext'
+import { useSaved } from './SavedContext'
+import { Ionicons } from '@expo/vector-icons'
 import * as api from './lib/api'
 import { getAccess } from './lib/access'
 import { PROGRAMS_PAGE, colors } from './lib/constants'
@@ -95,6 +97,7 @@ function Fact({ label, children }) {
 // ---------- One program: facts first, then entry requirements and fees ----------
 export function ProgramDetail({ id, onBack, onOpenSchool, onCheck }) {
   const { user } = useAuth()
+  const saved = useSaved()
   const [st, setSt] = useState({ loading: true, data: null, error: '' })
   const [imgBad, setImgBad] = useState(false)
   const [more, setMore] = useState(false)
@@ -114,6 +117,7 @@ export function ProgramDetail({ id, onBack, onOpenSchool, onCheck }) {
   const alt = variants.find((v) => v.cutoffAggregate != null)
   const p = variants[0].cutoffAggregate == null && alt ? { ...variants[0], cutoffFrom: alt } : variants[0]
   const full = getAccess(user).level === 'full'
+  const isSaved = variants.some((v) => saved.ids.has(v.id))
   const masters = p.level === 'Masters'
   const feeUsd = variants.find((v) => v.feesUsd != null)?.feesUsd
   const feeGhs = variants.find((v) => v.feesGhs != null)?.feesGhs
@@ -156,6 +160,11 @@ export function ProgramDetail({ id, onBack, onOpenSchool, onCheck }) {
           </View>
           {schoolRow}
           <Text style={{ fontSize: 22, fontWeight: '800', color: colors.ink, lineHeight: 28 }}>{p.name}</Text>
+          <Pressable onPress={() => saved.toggle(variants.map((v) => v.id), !isSaved)} accessibilityRole="button" accessibilityState={{ selected: isSaved }} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 44 }}>
+            <Ionicons name={isSaved ? 'heart' : 'heart-outline'} size={26} color={isSaved ? '#dc2626' : colors.muted} />
+            <Text style={{ fontSize: 15, fontWeight: '600', color: colors.ink }}>{isSaved ? 'In your Interested list' : 'Add to Interested'}</Text>
+          </Pressable>
+          {!!saved.error && <ErrorText>{saved.error}</ErrorText>}
           {!!school?.website && <Button label="Visit school website" onPress={() => Linking.openURL(school.website)} />}
         </View>
       </View>

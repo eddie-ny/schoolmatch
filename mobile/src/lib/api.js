@@ -141,6 +141,40 @@ export async function saveProfile(userId, profile) {
   fail(error, 'Could not save your profile.')
 }
 
+// ---------- Scholarships ----------
+// Everyone reads the summary list. The details (criteria, deadline, link) come from the full table, which the database only opens to people with full access.
+export async function listScholarships() {
+  return retrying(async () => {
+    const { data, error } = await supabase.from('scholarships_summary').select('id, name, funder, country, funding_type, verified, demo, gender, school_id').order('id').range(0, 999)
+    if (error) throw new Error(error.message || 'Could not load scholarships.')
+    const ids = [...new Set((data || []).map((x) => x.school_id).filter(Boolean))]
+    const schools = {}
+    for (let i = 0; i < ids.length; i += 60) {
+      const r = await supabase.from('schools_summary').select('id, name, country, logo_url').in('id', ids.slice(i, i + 60))
+      for (const x of r.data || []) schools[x.id] = x
+    }
+    return (data || []).map((x) => ({
+      id: x.id, name: x.name, funder: x.funder, country: x.country, fundingType: x.funding_type, verified: x.verified, demo: x.demo, gender: x.gender || null,
+      schoolId: x.school_id || null, schoolName: schools[x.school_id]?.name || '', schoolLogo: schools[x.school_id]?.logo_url || '',
+    }))
+  })
+}
+
+export async function getScholarship(id) {
+  const sum = await supabase.from('scholarships_summary').select('id, name, funder, country, funding_type, verified, demo, gender, school_id').eq('id', id).maybeSingle()
+  fail(sum.error, 'Could not load this scholarship.')
+  if (!sum.data) return null
+  const x = sum.data
+  const f = (await supabase.from('scholarships').select('*').eq('id', id).maybeSingle()).data || {}
+  let school = null
+  if (x.school_id) school = (await supabase.from('schools_summary').select('id, name, country, logo_url').eq('id', x.school_id).maybeSingle()).data || null
+  return {
+    id: x.id, name: x.name, funder: x.funder, country: x.country, fundingType: x.funding_type, verified: x.verified, demo: x.demo, gender: x.gender || null,
+    schoolId: x.school_id || null, schoolName: school?.name || '', schoolLogo: school?.logo_url || '', field: f.field || '', sourceUrl: f.source_url || '', awardNote: f.award_note || '',
+    level: f.level || '', minAggregate: f.min_aggregate ?? null, minSat: f.min_sat ?? null, criteria: f.criteria || '', deadline: f.deadline || '', link: f.link || '',
+  }
+}
+
 // ---------- Interested (hearted programs) ----------
 export async function listSavedIds() {
   const { data, error } = await supabase.from('saved_programs').select('program_id')

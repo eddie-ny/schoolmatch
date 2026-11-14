@@ -9,11 +9,11 @@ import { InterestedPage, ProfilePage, SettingsPage } from './AccountPages'
 import { ComingSoon, ContactPage } from './Pages'
 import { SavedProvider } from './SavedContext'
 import { ProgramDetail, ProgramsList } from './ProgramScreens'
+import { ScholarshipDetail, ScholarshipsList } from './ScholarshipScreens'
 import { SchoolDetail, SchoolsList } from './SchoolScreens'
 import { InShell, ShellActions } from './ui'
 
 const PAGES = { profile: 'Profile', interested: 'Interested', pricing: 'Pricing', invite: 'Invite friends', contact: 'Contact us', settings: 'Account Settings' }
-const SOON = { scholarships: 'Scholarships' }
 
 // Five tabs along the bottom. Each tab keeps its own stack of screens, and every screen stays alive under the one on top,
 // so going back finds the search, filters and page as they were left. The Android back button pops one screen,
@@ -50,11 +50,13 @@ export default function Shell() {
 
   const openSchool = (p) => push({ name: 'school', ...p })
   const openProgram = (p) => push({ name: 'program', ...p })
+  const openScholarship = (p) => push({ name: 'scholarship', ...p })
   const back = () => pop(tab)
 
   const render = (t, s) => {
     if (s.name === 'school') return <SchoolDetail id={s.id} q={s.q} field={s.field} onBack={back} onOpenProgram={openProgram} />
     if (s.name === 'program') return <ProgramDetail id={s.id} onBack={back} onOpenSchool={openSchool} onCheck={(p) => goTab('eligibility', { program: p?.name || '' })} />
+    if (s.name === 'scholarship') return <ScholarshipDetail id={s.id} onBack={back} onOpenSchool={openSchool} />
     if (PAGES[s.name]) {
       if (s.name === 'profile') return <ProfilePage onBack={back} />
       if (s.name === 'interested') return <InterestedPage onBack={back} onOpenProgram={openProgram} onOpenSchool={openSchool} />
@@ -66,7 +68,8 @@ export default function Shell() {
     if (t === 'schools') return <SchoolsList initialKind={s.kind} onOpen={openSchool} />
     if (t === 'eligibility') return <EligibilityScreen initialProgram={s.program} onOpenProgram={openProgram} />
     if (t === 'programs') return <ProgramsList initialQ={s.q} initialField={s.field} onOpen={openProgram} />
-    return <ComingSoon title={SOON[t]} />
+    if (t === 'scholarships') return <ScholarshipsList initialFunding={s.funding} onOpen={openScholarship} />
+    return null
   }
 
   return (

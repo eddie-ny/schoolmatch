@@ -33,6 +33,10 @@ export const ELECTIVE_SUBJECTS = [
   'Elective Mathematics', 'Physics', 'Chemistry', 'Biology', 'Economics', 'Geography', 'History', 'Government',
   'Literature in English', 'Financial Accounting', 'Business Management', 'French', 'Information and Communication Technology',
   'Applied Electricity', 'Electronics', 'Technical Drawing',
+  // Added 14 Nov 2026 for UEAS entry requirements (official PDF).
+  'Basic Electronics', 'Computing', 'Computer Science', 'Electrical and Electronic Engineering Technology', 'Engineering',
+  'Robotic Engineering', 'Engineering Science', 'Metalwork', 'Woodwork', 'Manufacturing Engineering', 'Aviation and Aerospace Engineering',
+  'General Agriculture', 'Animal Husbandry', 'Crop Husbandry', 'Horticulture',
 ]
 export const DISCLAIMER = 'This is guidance, not a guarantee of admission. Always confirm requirements with the school.'
 

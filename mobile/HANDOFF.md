@@ -75,7 +75,7 @@ Done and published (owner tested through the home redo; later items published bu
 11. International eligibility (SAT, WASSCE grades, English test).
 12. SAT test and SAT classes pages.
 Also: masters and top-up eligibility in the app, field-only for masters and top-up.
-Then: password reset inside the app (reset emails still link to jambaconsult.com), payments (read Apple guideline 3.1.1 and Google Play payments policy first: may need in-app billing for digital subscriptions; not checked), push notifications, store listings, legal (Privacy and Terms placeholders, Data Protection Commission registration), final APK or store builds.
+Then: payments (read Apple guideline 3.1.1 and Google Play payments policy first: may need in-app billing for digital subscriptions; not checked), push notifications, store listings, legal (Privacy and Terms placeholders, Data Protection Commission registration), final APK or store builds.
 Menu pages still "Coming soon": Pricing, Invite.
 
 ## 11. Data work (admission requirements and scholarships) status
@@ -95,7 +95,7 @@ Still to do: Nevada State, Peru State, University of Central Oklahoma and New Je
 - Formspree notification email must be changed by the owner in the Formspree dashboard to info@inbox.jambaconsult.com.
 - UEAS (local school) row exists but its programs are missing: owner must paste the text from ueas.edu.gh/academics/agricultural-sciences/programmes/ (robots blocks the tool).
 - Vercel Pro trial and spend limit to watch. `npm audit fix` was run on the web repo on 14 Nov (0 vulnerabilities, build passes); mobile not checked.
-- Layout uses fixed top padding on Android edge to edge; not checked on other phones. The web already has forgot-password (/forgot-password, /reset-password), a 30 minute inactivity sign-out and a day/month/year date of birth picker (an earlier note here said otherwise; it was wrong). The mobile app has no forgot-password yet.
+- Layout uses fixed top padding on Android edge to edge; not checked on other phones. The web already has forgot-password (/forgot-password, /reset-password), a 30 minute inactivity sign-out and a day/month/year date of birth picker (an earlier note here said otherwise; it was wrong). The mobile sign-in screen now has "Forgot password?" (14 Nov): it sends the reset email; the link opens the website's reset page in the phone browser (no in-app reset screen).
 
 ## 13. Making it more impressive (ideas, not started)
 - Real navigation library (expo-router or React Navigation) for deep links and smooth transitions.

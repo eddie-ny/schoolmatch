@@ -16,6 +16,14 @@ export function Login({ goSignup }) {
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const [needsCode, setNeedsCode] = useState(false)
+  const [reset, setReset] = useState(false)
+  const [sent, setSent] = useState(false)
+
+  const sendReset = async () => {
+    setError('')
+    setBusy(true)
+    try { await api.requestPasswordReset(email.trim()); setSent(true) } catch (err) { setError(err.message) } finally { setBusy(false) }
+  }
 
   const submit = async () => {
     clearNotice()
@@ -33,6 +41,22 @@ export function Login({ goSignup }) {
   }
 
   if (needsCode) return <VerifyCode email={email.trim()} firstWait={0} onBack={() => setNeedsCode(false)} />
+  if (reset) {
+    return (
+      <Screen>
+        <Title title="Forgot password" sub="Type your email and we will send you a link to choose a new password." />
+        <Card>
+          <Field label="Email">
+            <Input keyboardType="email-address" autoCapitalize="none" autoCorrect={false} autoComplete="email" value={email} onChangeText={(v) => { setEmail(v); setSent(false) }} />
+          </Field>
+          <ErrorText>{error}</ErrorText>
+          {sent && <Notice>If an account uses that email, a reset link is on its way. Open it on this phone and choose a new password on the website, then come back and sign in.</Notice>}
+          <Button label={busy ? 'Sending...' : sent ? 'Send again' : 'Send reset link'} busy={busy} disabled={!email.trim()} onPress={sendReset} />
+          <TextLink label="Back to sign in" onPress={() => { setReset(false); setSent(false); setError('') }} />
+        </Card>
+      </Screen>
+    )
+  }
   return (
     <Screen>
       <Title title="Sign in" />
@@ -46,6 +70,7 @@ export function Login({ goSignup }) {
         </Field>
         <ErrorText>{error}</ErrorText>
         <Button label={busy ? 'Signing in...' : 'Sign in'} busy={busy} disabled={!email.trim() || !password} onPress={submit} />
+        <TextLink label="Forgot password?" onPress={() => { setReset(true); setError('') }} />
         <Text style={[styles.hint, { backgroundColor: '#f3f3f3', borderRadius: 12, padding: 12 }]}>
           On a phone that other people use, sign out when you finish.
         </Text>

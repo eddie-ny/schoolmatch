@@ -3,7 +3,7 @@
 
 import { supabase } from './supabase'
 import { PASSWORD_RULE, isMinorFromDob } from './validation'
-import { CORE_SUBJECTS } from './constants'
+import { CORE_SUBJECTS, SITE } from './constants'
 
 // Turns a Supabase error into the plain message the web app shows. Wording copied from the web app (friendly).
 function friendly(error) {
@@ -68,6 +68,12 @@ export async function resendConfirmation(email) {
 export async function signIn(email, password) {
   const { error } = await supabase.auth.signInWithPassword({ email, password })
   fail(error, 'Could not sign in.')
+}
+
+// Sends the reset email. The link opens the website's reset page in the phone's browser, where the new password is set.
+export async function requestPasswordReset(email) {
+  const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${SITE}/reset-password` })
+  fail(error, 'Could not send the reset email.')
 }
 
 export async function signOut() {

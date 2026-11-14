@@ -93,7 +93,7 @@ function ProgramPicker({ options, value, onChange, disabled }) {
   )
 }
 
-export default function EligibilityScreen({ initialProgram = '', onOpenProgram }) {
+export default function EligibilityScreen({ initialProgram = '', onOpenProgram, scopeSwitch = null }) {
   const { user } = useAuth()
   const [programs, setPrograms] = useState([])
   const [loading, setLoading] = useState(true)
@@ -194,6 +194,7 @@ export default function EligibilityScreen({ initialProgram = '', onOpenProgram }
   return (
     <Screen>
       <Title title="Check My Eligibility" sub="Choose a field, a program, or both. A program gives a precise answer. A field alone shows your chances across every program in it." />
+      {scopeSwitch}
       {!programs.length && !!error && <View style={{ gap: 6, marginBottom: 12 }}><ErrorText>{error}</ErrorText><Button variant="outline" label="Try again" onPress={() => setTries((n) => n + 1)} /></View>}
 
       <View style={{ gap: 16 }}>

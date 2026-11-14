@@ -4,7 +4,7 @@ import { useAuth } from './AuthContext'
 import { ConfirmDialog, Header, TABS, TabBar, TrialBanner } from './Chrome'
 import HomeScreen from './HomeScreen'
 import { colors } from './lib/constants'
-import EligibilityScreen from './EligibilityScreen'
+import EligibilityTab from './IntlEligibilityScreen'
 import { InterestedPage, ProfilePage, SettingsPage } from './AccountPages'
 import { ComingSoon, ContactPage } from './Pages'
 import { SavedProvider } from './SavedContext'
@@ -67,7 +67,7 @@ export default function Shell() {
     }
     if (t === 'home') return <HomeScreen goTab={goTab} onOpenSchool={openSchool} />
     if (t === 'schools') return <SchoolsList initialKind={s.kind} onOpen={openSchool} />
-    if (t === 'eligibility') return <EligibilityScreen initialProgram={s.program} onOpenProgram={openProgram} />
+    if (t === 'eligibility') return <EligibilityTab initialProgram={s.program} onOpenProgram={openProgram} />
     if (t === 'programs') return <ProgramsList initialQ={s.q} initialField={s.field} onOpen={openProgram} />
     if (t === 'scholarships') return <ScholarshipsList initialFunding={s.funding} onOpen={openScholarship} />
     return null

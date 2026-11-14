@@ -147,6 +147,37 @@ export async function saveProfile(userId, profile) {
   fail(error, 'Could not save your profile.')
 }
 
+// ---------- International eligibility ----------
+// Programs with their published entry rules (WASSCE grade, SAT, English tests, degree class, GPA).
+// Reads the full programs table, which the database only opens to accounts with full access.
+export async function getProgramsWithRules(ids) {
+  const out = []
+  for (let i = 0; i < ids.length; i += 80) {
+    const { data, error } = await supabase.from('programs').select('*, program_requirements(subject, min_grade), program_cutoffs(year, cutoff_aggregate, sat_low, sat_high), schools(id, name, country)').in('id', ids.slice(i, i + 80))
+    fail(error, 'Could not load the programs.')
+    for (const f of data || []) out.push(mapFull(f, f.schools))
+  }
+  return out
+}
+
+// Program ids at the given schools (used so schools with scholarships are never lost in a long list).
+export async function listProgramsAtSchools({ schoolIds, q = '', level = '', limit = 40 }) {
+  if (!schoolIds.length) return []
+  let query = supabase.from('programs_summary').select('id').in('school_id', schoolIds.slice(0, 150)).limit(limit)
+  if (level) query = query.eq('level', level)
+  if (q.trim()) query = query.ilike('name', `%${q.trim().replace(/[%_,]/g, ' ')}%`)
+  const { data, error } = await query
+  return error ? [] : (data || []).map((x) => x.id)
+}
+
+export async function saveSat(userId, sat) {
+  const val = sat === '' || sat == null ? null : Number(sat)
+  const { data: row, error } = await supabase.from('results').select('id').eq('student_id', userId).eq('exam', 'WASSCE').maybeSingle()
+  fail(error, 'Could not save your SAT score.')
+  if (row) fail((await supabase.from('results').update({ sat_score: val }).eq('id', row.id)).error, 'Could not save your SAT score.')
+  else fail((await supabase.from('results').insert({ student_id: userId, exam: 'WASSCE', kind: 'final', sat_score: val })).error, 'Could not save your SAT score.')
+}
+
 // ---------- Scholarships ----------
 // Everyone reads the summary list. The details (criteria, deadline, link) come from the full table, which the database only opens to people with full access.
 export async function listScholarships() {
@@ -326,7 +357,7 @@ const isLocalCountry = (c) => (c || '').toLowerCase() === 'ghana'
 function mapFull(f, school) {
   const latest = [...(f?.program_cutoffs || [])].sort((a, b) => b.year - a.year)[0]
   return {
-    id: f.id, schoolId: f.school_id, schoolName: school?.name || '', name: f.name, level: f.level, field: f.field, demo: f.demo, mode: f.mode || 'Regular', campus: f.campus || '',
+    id: f.id, schoolId: f.school_id, schoolName: school?.name || '', schoolCountry: school?.country || '', name: f.name, level: f.level, field: f.field, demo: f.demo, mode: f.mode || 'Regular', campus: f.campus || '',
     international: school ? !isLocalCountry(school.country) : false,
     feesUsd: f.fees_usd ?? null, feesGhs: f.fees_ghs ?? null, feeAmount: f.fee_amount != null ? Number(f.fee_amount) : null, feeCurrency: f.fee_currency || '', entryNote: f.entry_note || '', mastersFormat: f.masters_format || '', entryQualification: f.entry_qualification || '', minDegreeClass: f.min_degree_class || '', minGpa: f.min_gpa != null ? Number(f.min_gpa) : null, grePolicy: f.gre_policy || '', minGre: f.min_gre ?? null, credentialEval: f.credential_eval || '', durationYears: f.duration_years ?? null,
     satPolicy: f.sat_policy || '', minWassceGrade: f.min_wassce_grade || '', minIelts: f.min_ielts != null ? Number(f.min_ielts) : null, minToefl: f.min_toefl ?? null, minDuolingo: f.min_duolingo ?? null,

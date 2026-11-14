@@ -178,6 +178,34 @@ export async function saveSat(userId, sat) {
   else fail((await supabase.from('results').insert({ student_id: userId, exam: 'WASSCE', kind: 'final', sat_score: val })).error, 'Could not save your SAT score.')
 }
 
+// ---------- Plans and payments (Paystack, through the same server function as the website) ----------
+export async function listPlans() {
+  const { data, error } = await supabase.from('plans').select('id, label, months, price_minor, currency, price_usd_cents').order('sort')
+  fail(error, 'Could not load plans.')
+  return data || []
+}
+export async function getRate() {
+  const { data } = await supabase.from('fx_rates').select('per_usd, updated_at').eq('currency', 'GHS').maybeSingle()
+  return data ? { perUsd: Number(data.per_usd), updatedAt: data.updated_at } : null
+}
+// The server looks up the price itself; the app only says which plan. The server sends Paystack back to the website's
+// pricing page, so the app passes the website as its origin. Paystack also tells the server directly (webhook), so the plan
+// starts even if the person never goes back to the website.
+export async function startCheckout(plan) {
+  const { data, error } = await supabase.functions.invoke('paystack/init', { body: { plan }, headers: { Origin: SITE } })
+  if (error) {
+    let msg = ''
+    try { msg = (await error.context.json()).error } catch { /* not JSON */ }
+    throw new Error(msg || 'Could not start the payment. Please try again.')
+  }
+  return data // { url, reference }
+}
+export async function verifyPayment(reference) {
+  const { data, error } = await supabase.functions.invoke('paystack/verify', { body: { reference } })
+  if (error) throw new Error('Could not confirm the payment yet. If you were charged, it will appear shortly.')
+  return data.status // activated | already_activated | not_paid | rejected
+}
+
 // ---------- Scholarships ----------
 // Every scholarship with its entry rules (gender, SAT, aggregate, course, deadline, level), for "Scholarships you may qualify for".
 // The full table is only open to accounts with full access.
@@ -434,6 +462,22 @@ export async function listEligibilityPrograms() {
   const { data: progs, error } = await fetchAll('programs_summary', 'id, school_id, name, level, field, group_name, entry_qualification', ghana)
   fail(error, 'Could not load programs.')
   return progs.map((p) => ({ id: p.id, name: p.name, group: p.group_name || p.name, field: p.field, level: p.level, entryQualification: p.entry_qualification || '' }))
+}
+
+// Masters: compares the student's first-degree class (and CGPA when typed) with the class each school states. Same call as the website.
+export async function checkMastersEligibility({ programName, degreeClass, cgpa, scope = 'local' }) {
+  const args = { p_program_name: programName, p_degree_class: degreeClass, p_scope: scope }
+  if (cgpa !== '' && cgpa != null) args.p_cgpa = Number(cgpa)
+  const { data, error } = await supabase.rpc('check_masters_eligibility_cgpa', args)
+  fail(error, 'Could not check masters eligibility.')
+  return data
+}
+
+// Top-up programs: compares the qualification the student holds (a diploma or HND) with the one each school asks for.
+export async function checkTopupEligibility({ programName, qualification }) {
+  const { data, error } = await supabase.rpc('check_topup_eligibility', { p_program_name: programName, p_qualification: qualification })
+  fail(error, 'Could not check top-up eligibility.')
+  return data
 }
 
 // The eligibility maths and the cut-offs live on the server. The app only sends grades and gets labels back.

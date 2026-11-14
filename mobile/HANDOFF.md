@@ -75,12 +75,14 @@ Done and published (owner tested through the home redo; later items published bu
 
 12. SAT pages (14 Nov). `src/SatScreens.js`: `SatTestPage` (the same 10 sample questions as the web, `lib/satSample.js`; practice score 400 to 1600, review of every answer, "Check my eligibility" switches to International and opens the check with the score filled in) and `SatClassesPage` (content from `lib/satClasses.js`, which the client still has to fill in; the web's message form is not connected because there is no Formspree id, so the app shows the Jamba phone and email instead). Reached from Home (card shown on the International side), from the International eligibility form ("Take the short practice test") and from the test result. Shell pages: `sat`, `satclasses`. The questions are samples written for the site, not official SAT questions; the client is meant to supply her own set.
 
+13. Masters, top-up, Pricing, Invite (14 Nov). Local eligibility (`EligibilityScreen.js`) now has Undergraduate / Diploma or HND holder / Masters, same as the web: masters uses `check_masters_eligibility_cgpa` (degree class, optional CGPA), top-up uses `check_topup_eligibility` (qualification held); both need a program chosen, like the web. Results: chosen program first, then everything else you qualify for, then a fold with the ones you do not. `src/MorePages.js`: `PricingPage` (plans from the `plans` table, USD with the cedi checkout amount, VAT line, terms tick box, Paystack checkout through the same `paystack/init` server function with `Origin: https://jambaconsult.com` so Paystack returns to the website; the webhook activates the plan; when the person returns to the app it calls `paystack/verify` and refreshes; "I have paid" does the same by hand) and `InvitePage` (phone share sheet plus WhatsApp, Telegram, Facebook, X, SMS, Email links). Untested on a phone; a real payment has not been tried from the app. Store rules not checked: Apple and Google may require their own in-app billing for digital subscriptions sold inside an app (Apple guideline 3.1.1, Google Play payments policy). Check before store release.
+
 ## 10. What is left (in order)
 Steps 1 to 12 are built. Still open:
 - Phone test of steps 8 to 12 (only syntax-checked so far).
 - Small gaps: document upload in Profile, QR picture for 2-step (setup key and authenticator link work instead), elective subject names in the International check (not used by the check).
-- Masters and top-up eligibility on the Local side of the app (web has them), and field-only search for them.
-- Menu pages still "Coming soon": Pricing, Invite.
+- Field-only search for masters and top-up (web needs a program too).
+- Check store payment rules before release (see step 13).
 - Then: payments (read Apple guideline 3.1.1 and Google Play payments policy first: may need in-app billing for digital subscriptions; not checked), push notifications, store listings, legal (Privacy and Terms placeholders, Data Protection Commission registration), final APK or store builds.
 
 ## 11. Data work (admission requirements and scholarships) status

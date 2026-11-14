@@ -2,14 +2,22 @@ import { useEffect, useMemo, useState } from 'react'
 import { ActivityIndicator, Pressable, Text, View } from 'react-native'
 import { useAuth } from './AuthContext'
 import * as api from './lib/api'
-import { CORE_SUBJECTS, DISCLAIMER, ELECTIVE_SUBJECTS, FIELDS, GRADES, colors } from './lib/constants'
+import { CORE_SUBJECTS, DEGREE_CLASSES, DISCLAIMER, ELECTIVE_SUBJECTS, FIELDS, GRADES, colors } from './lib/constants'
 import { Badge, Button, Card, Chips, ErrorText, Field, Gate, Input, Screen, SelectField, Title, styles } from './ui'
 
 // Check My Eligibility, local undergraduate (step 7). Copied from the website's src/pages/Eligibility.jsx.
 // The labels come from the database (check_eligibility), so the app and the website give the same answer for the same grades.
-// Masters and top-up checks are not in the app yet.
+// Masters (first-degree class, optional CGPA) and top-up (diploma or HND held) use the website's checks too.
 
-const labelTone = { 'Strong match': 'green', 'Good chance': 'green', 'Worth a try': 'orange', 'Long shot': 'orange' }
+const labelTone = {
+  'Strong match': 'green', 'Good chance': 'green', 'Worth a try': 'orange', 'Long shot': 'orange',
+  'Meets stated class': 'green', 'Below stated class': 'orange', 'Meets stated CGPA': 'green', 'Below stated CGPA': 'orange',
+  'Qualification matches': 'green', 'Different qualification needed': 'orange',
+}
+// Masters and top-up results: schools you meet first, then schools that state no rule, then schools asking for more.
+const classRank = (r) => (/^Meets|^Qualification matches/.test(r.label) ? 0 : /^Below|^Different|^Not yet/.test(r.label) ? 2 : 1)
+const outOfReach = (r) => /^(Below|Not yet|Different)/.test(r.label)
+const byClass = (list) => [...(list || [])].sort((a, b) => classRank(a) - classRank(b))
 const H2 = { fontSize: 20, fontWeight: '700', color: colors.ink }
 const H3 = { fontSize: 16, fontWeight: '700', color: colors.ink }
 const gradeOptions = [{ value: '', label: 'Grade' }, ...GRADES.map((g) => ({ value: g, label: g }))]
@@ -106,6 +114,12 @@ export default function EligibilityScreen({ initialProgram = '', onOpenProgram, 
   const [programName, setProgramName] = useState('')
   const [output, setOutput] = useState(null)
   const [tries, setTries] = useState(0)
+  const [level, setLevel] = useState('undergraduate')
+  const [degreeClass, setDegreeClass] = useState('')
+  const [cgpa, setCgpa] = useState('')
+  const [qualification, setQualification] = useState('')
+  const masters = level === 'masters'
+  const topup = level === 'topup'
 
   useEffect(() => {
     let live = true
@@ -129,8 +143,9 @@ export default function EligibilityScreen({ initialProgram = '', onOpenProgram, 
     return () => { live = false }
   }, [user.id])
 
-  // Undergraduate programs only: not masters, diploma, certificate or top-up.
-  const scoped = useMemo(() => programs.filter((p) => p.level !== 'Masters' && p.level !== 'Diploma' && p.level !== 'Certificate' && !p.entryQualification), [programs])
+  // Programs for the chosen level: masters, top-up (they list an entry qualification), or undergraduate (everything else except diplomas and certificates).
+  const scoped = useMemo(() => programs.filter((p) => (masters ? p.level === 'Masters' : topup ? !!p.entryQualification : p.level !== 'Masters' && p.level !== 'Diploma' && p.level !== 'Certificate' && !p.entryQualification)), [programs, masters, topup])
+  const qualifications = useMemo(() => [...new Set(programs.map((p) => p.entryQualification).filter(Boolean))].sort(), [programs])
   const programNames = useMemo(() => [...new Set(scoped.filter((p) => !field || p.field === field).map((p) => p.group))].sort((a, b) => a.localeCompare(b)), [scoped, field])
 
   // Arriving from a program page: fill in that program by its common name once the list is loaded.
@@ -146,6 +161,21 @@ export default function EligibilityScreen({ initialProgram = '', onOpenProgram, 
 
   const run = async () => {
     setError('')
+    if (topup) {
+      if (!qualification) return setError('Choose the qualification you hold.')
+      if (!programName) return setError('Type the top-up program you want and choose it from the list.')
+      setBusy(true)
+      try { setOutput(await api.checkTopupEligibility({ programName, qualification })) } catch (e) { setError(e.message) }
+      return setBusy(false)
+    }
+    if (masters) {
+      if (!degreeClass) return setError('Choose your first-degree class.')
+      if (!programName) return setError('Type the masters program you want and choose it from the list.')
+      if (cgpa !== '' && !(Number(cgpa) >= 0 && Number(cgpa) <= 5)) return setError('Your CGPA must be a number from 0 to 5, for example 3.2.')
+      setBusy(true)
+      try { setOutput(await api.checkMastersEligibility({ programName, degreeClass, cgpa, scope: 'local' })) } catch (e) { setError(e.message) }
+      return setBusy(false)
+    }
     const chosen = electives.filter(Boolean)
     if (new Set(chosen).size !== chosen.length) return setError('Each elective can only be picked once.')
     const missing = []
@@ -198,6 +228,26 @@ export default function EligibilityScreen({ initialProgram = '', onOpenProgram, 
       {!programs.length && !!error && <View style={{ gap: 6, marginBottom: 12 }}><ErrorText>{error}</ErrorText><Button variant="outline" label="Try again" onPress={() => setTries((n) => n + 1)} /></View>}
 
       <View style={{ gap: 16 }}>
+        <Chips value={level} onChange={(v) => { setLevel(v); setProgramName(''); setField(''); setOutput(null); setError('') }}
+          options={[{ value: 'undergraduate', label: 'Undergraduate' }, ...(qualifications.length ? [{ value: 'topup', label: 'Diploma or HND holder' }] : []), { value: 'masters', label: 'Masters' }]} />
+        {topup ? (
+        <Card>
+          <Text style={H2}>1. Your qualification</Text>
+          <Field label="Qualification you hold" hint="Top-up programs are for people who already have a diploma or HND. Schools may also ask for credit passes, a good pass or registration, which the result lists.">
+            <SelectField title="Qualification" placeholder="Choose qualification" value={qualification} onChange={setQualification} options={qualifications.map((c) => ({ value: c, label: c }))} />
+          </Field>
+        </Card>
+        ) : masters ? (
+        <Card>
+          <Text style={H2}>1. Your first degree</Text>
+          <Field label="Degree class" hint="Schools set their own minimum class. We compare yours with the class each school states, and we say so when a school does not publish one.">
+            <SelectField title="Degree class" placeholder="Choose class" value={degreeClass} onChange={setDegreeClass} options={DEGREE_CLASSES.map((c) => ({ value: c, label: c }))} />
+          </Field>
+          <Field label="CGPA (optional)" hint="Only a few schools ask for it, for example 2.5 out of 4.0. Leave it empty if you do not know it.">
+            <Input keyboardType="decimal-pad" placeholder="For example 3.2" value={cgpa} onChangeText={(v) => setCgpa(v.replace(/[^0-9.]/g, '').slice(0, 4))} />
+          </Field>
+        </Card>
+        ) : (
         <Card>
           <Text style={H2}>1. Your results</Text>
           <Chips value={mode} onChange={setMode} options={[{ value: 'final', label: 'Final WASSCE results' }, { value: 'terminal', label: 'Terminal or mock' }]} />
@@ -223,13 +273,14 @@ export default function EligibilityScreen({ initialProgram = '', onOpenProgram, 
           ))}
           {electives.length < 5 && <Button variant="outline" label="Add another elective" onPress={() => setElectives([...electives, ''])} />}
         </Card>
+        )}
 
         <Card>
           <Text style={H2}>2. What do you want to study?</Text>
-          <Field label="Field" hint="Pick a field to see your chances across all its programs, or pick a program below for a precise answer. One is enough.">
+          <Field label="Field" hint={masters || topup ? 'Optional. Narrows the program list below.' : 'Pick a field to see your chances across all its programs, or pick a program below for a precise answer. One is enough.'}>
             <SelectField title="Field" placeholder="All fields" value={field} onChange={(v) => { setField(v); setProgramName('') }} options={[{ value: '', label: 'All fields' }, ...FIELDS.map((f) => ({ value: f, label: f }))]} />
           </Field>
-          <Field label="Program" hint={programNames.length === 0 ? 'No programs added yet.' : 'Type part of the name, then choose from the list.'}>
+          <Field label="Program" hint={programNames.length === 0 ? (masters ? 'No masters programs added yet. We are adding them school by school.' : topup ? 'No top-up programs added yet.' : 'No programs added yet.') : 'Type part of the name, then choose from the list.'}>
             <ProgramPicker key={field} options={programNames} value={programName} onChange={setProgramName} disabled={programNames.length === 0} />
           </Field>
         </Card>
@@ -246,7 +297,27 @@ export default function EligibilityScreen({ initialProgram = '', onOpenProgram, 
         </View>
       )}
 
-      {output && !output.locked && (
+      {output && !output.locked && (output.yourClass || output.yourQualification) && (
+        <View style={{ gap: 14, marginTop: 24 }}>
+          <Text style={H2}>Results</Text>
+          <Text style={styles.body}>{output.yourClass ? <>Your first-degree class: <Text style={{ fontWeight: '700' }}>{output.yourClass}</Text>.</> : <>Your qualification: <Text style={{ fontWeight: '700' }}>{output.yourQualification}</Text>.</>} Each school sets its own entry rules, so confirm with the school before you apply.</Text>
+          <Text style={H3}>Schools offering {output.programName}</Text>
+          {(output.targets || []).length === 0 && <Text style={styles.body}>No schools offer this {output.yourClass ? 'masters' : 'top-up'} program yet.</Text>}
+          <ResultList items={byClass(output.targets)} highlight onOpen={onOpenProgram} />
+          <Text style={H3}>All {output.yourClass ? 'masters' : 'top-up'} programs you qualify for</Text>
+          <Text style={styles.hint}>{output.yourClass ? 'Every masters program your degree class fits, including ones you did not choose. Programs that state no minimum class are included, so check with the school.' : 'Every top-up program your qualification fits, including ones you did not choose.'}</Text>
+          {(output.others || []).filter((r) => !outOfReach(r)).length === 0 && <Text style={styles.body}>No other programs match yet.</Text>}
+          <ResultList items={byClass((output.others || []).filter((r) => !outOfReach(r)))} onOpen={onOpenProgram} />
+          {(output.others || []).some(outOfReach) && (
+            <Fold title={`${output.yourClass ? 'Masters' : 'Top-up'} programs you do not qualify for yet (${output.others.filter(outOfReach).length})`}>
+              <ResultList items={output.others.filter(outOfReach)} onOpen={onOpenProgram} />
+            </Fold>
+          )}
+          <Text style={styles.hint}>{DISCLAIMER}</Text>
+        </View>
+      )}
+
+      {output && !output.locked && !output.yourClass && !output.yourQualification && (
         <View style={{ gap: 14, marginTop: 24 }}>
           <Text style={H2}>Results</Text>
           {output.aggregate != null ? (

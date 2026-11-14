@@ -6,6 +6,7 @@ import HomeScreen from './HomeScreen'
 import { colors } from './lib/constants'
 import EligibilityTab from './IntlEligibilityScreen'
 import { InterestedPage, ProfilePage, SettingsPage } from './AccountPages'
+import { InvitePage, PricingPage } from './MorePages'
 import { ComingSoon, ContactPage } from './Pages'
 import { SavedProvider } from './SavedContext'
 import { ScholarshipProvider } from './ScholarshipContext'
@@ -66,6 +67,8 @@ export default function Shell() {
       if (s.name === 'profile') return <ProfilePage onBack={back} />
       if (s.name === 'interested') return <InterestedPage onBack={back} onOpenProgram={openProgram} onOpenSchool={openSchool} />
       if (s.name === 'settings') return <SettingsPage onBack={back} />
+      if (s.name === 'pricing') return <PricingPage onBack={back} />
+      if (s.name === 'invite') return <InvitePage onBack={back} />
       if (s.name === 'contact') return <ContactPage onBack={back} />
       return <ComingSoon title={PAGES[s.name]} onBack={back} />
     }

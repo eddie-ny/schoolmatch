@@ -43,7 +43,7 @@ Tables and views: `schools`, `schools_summary` (view, no website/description), `
 - `App.js`: auth gate (loading, Login or Signup, MfaChallenge, Shell).
 - `src/AuthContext.js`: session state; listens to `supabase.auth.onAuthStateChange`.
 - `src/AuthScreens.js`: Login, Signup (6-box email code, month picker), VerifyCode, MfaChallenge.
-- `src/Shell.js`: screen stack, bottom tabs (Home, Schools, Programs, Scholarships, Eligibility), `ShellActions` context (`openPage`, `goTab`), PAGES map (profile, interested, pricing, invite, contact, settings). `SOON` list = screens still "Coming soon" (scholarships, eligibility).
+- `src/Shell.js`: screen stack, bottom tabs (Home, Schools, Programs, Scholarships, Eligibility), `ShellActions` context (`openPage`, `goTab`), PAGES map (profile, interested, pricing, invite, contact, settings); `src/AccountPages.js` and `src/SavedContext.js` added in step 8. `SOON` list = screens still "Coming soon" (scholarships, eligibility).
 - `src/Chrome.js`: header, profile circle menu (Profile, Interested, Pricing, Invite friends, Contact us, Settings, Sign out), trial banner (orange summary-only or green trial strip).
 - `src/HomeScreen.js`: app-style home: greeting, search bar to Programs, green "YOUR NEXT STEP" card to Eligibility, swipe rows of schools with kind chips, "What do you want to study?" icon circles, Scholarships card, pull to refresh.
 - `src/SchoolScreens.js`: `SchoolsList`, `SchoolDetail`, `AdmissionInfo` (admission requirements block, full access only).
@@ -64,17 +64,18 @@ Done and published (owner tested through the home redo; later items published bu
 6b. App-style Home (e7b3725). Locked accounts see summary plus Subscribe, quote-safe name lookup (9e1f35f). Contact us page (99fb7b9).
 6c. Admission requirements section on the school page (55ba0f3).
 7. Local eligibility screen (`src/EligibilityScreen.js`, commit 7fa860b, written in another session on 13 Nov; masters and top-up checks NOT in the app yet).
-7b. Eligibility by field OR program (14 Nov, commit 963b7e7 on mobile; web commit 615c1ce on main). Owner rule: one of field or program is enough. A program gives a precise answer; a field alone shows chances across all programs in the field (it calls `check_eligibility` with an empty program name and filters the "others" list by field, no database change). Masters and top-up checks still need a program. Expo publish run 01a1d8fb was started; confirm it finished and rerun if not.
+7b. Eligibility by field OR program (14 Nov, commit 963b7e7 on mobile; web commit 615c1ce on main). Owner rule: one of field or program is enough. A program gives a precise answer; a field alone shows chances across all programs in the field (it calls `check_eligibility` with an empty program name and filters the "others" list by field, no database change). Masters and top-up checks still need a program. Expo publish run 01a1d8fb finished SUCCESS.
+8. Profile, Interested, Settings (14 Nov, commit 4714735 on mobile; Expo run 01a1d93d). `src/AccountPages.js`: editable `ProfilePage` (phone, gender, SHS attended and program, funding, level, field, desired programs, parent-waiting banner, access card; name, email, date of birth read-only), `InterestedPage` (hearted programs grouped by school, remove button), `SettingsPage` (change password, 2-step on/off, close account with confirm). `src/SavedContext.js`: one shared list of hearted ids (`useSaved`), heart button on `ProgramDetail` (toggles every way of studying the program). `api.js` gained saveProfile, saveAccount, closeMyAccount, setNewPassword, mfaStartEnroll, mfaRemove, listSavedIds, setSaved, getProgramsFull; `getCurrentUser` now returns `user.profile`. Differences from web: 2-step setup shows the setup key plus an "Open in authenticator app" button (otpauth link) instead of a QR picture (no SVG library installed); document upload is not in the app yet; hearts are only on the program detail page, not on list cards. Not tested on a phone yet: check that a heart or profile save on the phone shows on the web.
 
 ## 10. What is left (in order)
-8. Profile editing, saved/interested programs, turn 2-step on or off. Check: a save on the phone shows on the web.
+8b. Small gaps from step 8: document upload in Profile, hearts on list cards, QR picture for 2-step.
 9. Scholarships tab: toggle, badges, school scholarships, funder scholarships (same list as web). Data is now much richer, see section 11.
 10. International schools and programs (the international search timed out before: Sentry SCHOOLMATCH-2; test on phone).
 11. International eligibility (SAT, WASSCE grades, English test).
 12. SAT test and SAT classes pages.
 Also: masters and top-up eligibility in the app, field-only for masters and top-up.
 Then: password reset inside the app (reset emails still link to jambaconsult.com), payments (read Apple guideline 3.1.1 and Google Play payments policy first: may need in-app billing for digital subscriptions; not checked), push notifications, store listings, legal (Privacy and Terms placeholders, Data Protection Commission registration), final APK or store builds.
-Menu pages still "Coming soon": Scholarships, Interested, Pricing, Invite, Settings.
+Menu pages still "Coming soon": Scholarships, Pricing, Invite.
 
 ## 11. Data work (admission requirements and scholarships) status
 Goal from owner: every school (UK, Ghana, Australia, US) gets admission requirements and as many real scholarships as possible, from OFFICIAL pages only. Method: batches of about 34 schools per general agent (agents have the Supabase tool); each writes JSON to the scratchpad; a Python script builds the SQL files; owner runs them in the Supabase SQL editor (files are in `supabase/` on main and the mobile branch).

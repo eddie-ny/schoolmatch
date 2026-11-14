@@ -3,24 +3,26 @@ import { ActivityIndicator, Pressable, Text, View } from 'react-native'
 import { useAuth } from './AuthContext'
 import EligibilityScreen from './EligibilityScreen'
 import { useSaved } from './SavedContext'
-import { useScholarships } from './ScholarshipContext'
+import { forLevel, useScholarships } from './ScholarshipContext'
+import { matchScholarship } from './lib/scholarshipMatch'
+import { useContext } from 'react'
 import * as api from './lib/api'
 import { getAccess } from './lib/access'
 import { DEGREE_CLASSES, GRADES, colors } from './lib/constants'
 import { fundingRank } from './lib/scholarshipSections'
 import { useDebounced } from './SchoolParts'
-import { Badge, Button, Card, Chips, ErrorText, Field, Gate, Input, ScopeSwitch, Screen, SelectField, Title, styles } from './ui'
+import { Badge, Button, Card, Chips, ErrorText, Field, Gate, Input, ScopeSwitch, Screen, SelectField, ShellActions, Title, styles, useScope } from './ui'
 
-// Check My Eligibility: Ghana or Abroad. Ghana is the local check (EligibilityScreen); Abroad is below.
+// Check My Eligibility: Local or International (the app-wide choice). Local is EligibilityScreen; International is below.
 export default function EligibilityTab({ initialProgram = '', onOpenProgram }) {
-  const [scope, setScope] = useState('local')
-  const sw = <View style={{ marginBottom: 16 }}><ScopeSwitch value={scope} onChange={setScope} /></View>
+  const { scope } = useScope()
+  const sw = <View style={{ marginBottom: 16 }}><ScopeSwitch /></View>
   return scope === 'local'
     ? <EligibilityScreen initialProgram={initialProgram} onOpenProgram={onOpenProgram} scopeSwitch={sw} />
     : <IntlEligibility onOpenProgram={onOpenProgram} scopeSwitch={sw} />
 }
 
-// ---------- Abroad. Same rules as the website's src/pages/InternationalEligibility.jsx ----------
+// ---------- International. Same rules as the website's src/pages/InternationalEligibility.jsx ----------
 // Bachelors: WASSCE grades, SAT and English proof, checked against each program's published rules. Masters: first degree class and GPA.
 // A rule the school has not published is shown as "not published", never guessed.
 const rank = (c) => DEGREE_CLASSES.indexOf(c)
@@ -117,6 +119,52 @@ function IntlResult({ p, lab, checks, onOpen }) {
   )
 }
 
+// Scholarships the student may qualify for, checked against the same answers. Same rules as the website's ScholarshipsForYou:
+// only rules a scholarship states are used; ones the student does not fit, or that have closed, are left out.
+const stateBadge = { meets: ['You fit', 'green'], unknown: ['Check details', undefined] }
+function ScholarshipsForYou({ me, fields, masters }) {
+  const { openScholarship } = useContext(ShellActions)
+  const [st, setSt] = useState({ list: [], busy: true, error: '' })
+  const [shown, setShown] = useState(12)
+  useEffect(() => {
+    let live = true
+    api.listScholarshipsFull().then((list) => live && setSt({ list, busy: false, error: '' })).catch((e) => live && setSt({ list: [], busy: false, error: e.message }))
+    return () => { live = false }
+  }, [])
+  const rows = useMemo(() => {
+    const mine = { ...me, fields: (fields || []).filter(Boolean) }
+    const order = { meets: 0, unknown: 1 }
+    return forLevel(st.list, masters)
+      .filter((s) => (s.country || '').toLowerCase() !== 'ghana')
+      .map((s) => ({ s, m: matchScholarship(s, mine) }))
+      .filter((r) => r.m.state === 'meets' || r.m.state === 'unknown')
+      .sort((a, b) => order[a.m.state] - order[b.m.state] || fundingRank(a.s.fundingType) - fundingRank(b.s.fundingType) || Number(!!b.s.field) - Number(!!a.s.field))
+  }, [st.list, me, fields, masters])
+  if (st.busy) return <View style={{ paddingVertical: 32 }}><ActivityIndicator color={colors.orangeInk} /></View>
+  return (
+    <View style={{ gap: 12 }}>
+      <Text style={H3}>Scholarships you may qualify for ({rows.length})</Text>
+      <Text style={styles.hint}>Checked against your answers and the entry rules each scholarship states. "Check details" means the rules are not published, so confirm with the funder.</Text>
+      <ErrorText>{st.error}</ErrorText>
+      {!st.error && rows.length === 0 && <Text style={styles.body}>No open scholarships match your answers yet.</Text>}
+      {rows.slice(0, shown).map(({ s, m }) => (
+        <Pressable key={s.id} onPress={() => openScholarship({ id: s.id })} accessibilityRole="button" style={{ backgroundColor: '#fff', borderRadius: 16, padding: 16, gap: 8, borderWidth: 1, borderColor: colors.line }}>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+            <Badge tone={stateBadge[m.state][1]}>{stateBadge[m.state][0]}</Badge>
+            <Badge tone={s.fundingType === 'Not stated' ? undefined : 'green'}>{s.fundingType === 'Not stated' ? 'Funding not stated' : `${s.fundingType} funding`}</Badge>
+            {!!s.field && <Badge tone="orange">{String(s.field).split('|').join(' or ')} only</Badge>}
+          </View>
+          <Text style={H3}>{s.name}</Text>
+          {!!s.funder && <Text style={styles.hint}>{s.funder}</Text>}
+          {m.reasons.slice(0, 3).map((r) => <Text key={r} style={styles.body}>{'\u2022'} {r}</Text>)}
+          <Text style={styles.link}>View scholarship</Text>
+        </Pressable>
+      ))}
+      {rows.length > shown && <Button variant="outline" label={`Show more (${rows.length - shown} left)`} onPress={() => setShown((n) => n + 12)} />}
+    </View>
+  )
+}
+
 function IntlEligibility({ onOpenProgram, scopeSwitch }) {
   const { user } = useAuth()
   const full = getAccess(user).level === 'full'
@@ -136,6 +184,7 @@ function IntlEligibility({ onOpenProgram, scopeSwitch }) {
   const [go, setGo] = useState(false)
   const [note, setNote] = useState('')
   const [pool, setPool] = useState({ items: [], total: 0, busy: false, error: '' })
+  const [view, setView] = useState('schools')
 
   useEffect(() => { let live = true; api.listCountries('intl').then((r) => live && setCountries(r)); return () => { live = false } }, [])
   // Saved WASSCE results and SAT fill the form once.
@@ -198,9 +247,9 @@ function IntlEligibility({ onOpenProgram, scopeSwitch }) {
 
   return (
     <Screen>
-      <Title title="Check My Eligibility" sub="Abroad. Bachelors use your WASSCE grades, SAT score and English proof. Masters use your first degree class." />
+      <Title title="Check My Eligibility" sub="International. Bachelors use your WASSCE grades, SAT score and English proof. Masters use your first degree class." />
       {scopeSwitch}
-      {!full ? <Gate text="Subscribe to check your eligibility for universities abroad." /> : (
+      {!full ? <Gate text="Subscribe to check your eligibility for international universities." /> : (
         <View style={{ gap: 16 }}>
           <Card>
             <Chips value={level} onChange={(v) => { setLevel(v); setGo(false) }} options={[{ value: 'Undergraduate', label: 'Bachelors' }, { value: 'Masters', label: 'Masters' }]} />
@@ -244,7 +293,10 @@ function IntlEligibility({ onOpenProgram, scopeSwitch }) {
           </Card>
 
           <ErrorText>{pool.error}</ErrorText>
-          {pool.busy ? <View style={{ paddingVertical: 32 }}><ActivityIndicator color={colors.orangeInk} /></View> : !ready ? (
+          {ready && !pool.busy && <Chips value={view} onChange={setView} options={[{ value: 'schools', label: 'Schools' }, { value: 'scholarships', label: 'Scholarships' }]} />}
+          {ready && !pool.busy && view === 'scholarships' ? (
+            <ScholarshipsForYou me={{ gender: user?.profile?.gender || '', sat: satNum || '' }} fields={study ? [...new Set(pool.items.map((p) => p.field).filter(Boolean))] : []} masters={masters} />
+          ) : pool.busy ? <View style={{ paddingVertical: 32 }}><ActivityIndicator color={colors.orangeInk} /></View> : !ready ? (
             <Text style={styles.body}>{masters ? 'Choose your degree class, then press Check my eligibility.' : 'Fill in what you have and press Check my eligibility. You can leave out the SAT and English test.'}</Text>
           ) : rows.length === 0 ? (
             <Text style={styles.body}>{study ? 'No programs match that search. Try a broader word.' : `No international ${masters ? 'masters' : 'bachelors'} programs found yet.`}</Text>

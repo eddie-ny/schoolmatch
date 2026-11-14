@@ -12,7 +12,7 @@ import { SAT, keyFacts, money } from './lib/programFacts'
 import { thumbUrl } from './lib/thumb'
 import { variantLabel } from './lib/variants'
 import { Monogram, cardStyle, useDebounced, usePull } from './SchoolParts'
-import { Badge, BackLink, Button, ErrorText, Gate, Input, Pager, Screen, ScopeSwitch, SelectField, Title, styles } from './ui'
+import { Badge, BackLink, Button, ErrorText, Gate, Input, Pager, Screen, ScopeSwitch, SelectField, Title, styles, useScope } from './ui'
 
 const LEVELS = [{ value: '', label: 'All levels' }, ...['Undergraduate', 'Diploma', 'Certificate', 'Masters', 'Graduate Certificate'].map((x) => ({ value: x, label: x }))]
 const Spinner = () => <View style={{ paddingVertical: 32 }}><ActivityIndicator color={colors.orangeInk} /></View>
@@ -21,7 +21,9 @@ const H2 = { fontSize: 20, fontWeight: '700', color: colors.ink }
 
 // ---------- Programs tab (local) ----------
 export function ProgramsList({ initialQ = '', initialField = '', onOpen }) {
-  const [f, setF] = useState({ scope: 'local', country: '', q: initialQ, field: initialField, level: '', page: 1 })
+  const { scope } = useScope()
+  const [f, setF] = useState({ scope, country: '', q: initialQ, field: initialField, level: '', page: 1 })
+  useEffect(() => { setF((cur) => (cur.scope === scope ? cur : { ...cur, scope, country: '', field: '', page: 1 })) }, [scope])
   const [countries, setCountries] = useState([])
   const dq = useDebounced(f.q)
   const [fields, setFields] = useState([])
@@ -45,9 +47,9 @@ export function ProgramsList({ initialQ = '', initialField = '', onOpen }) {
   const pages = Math.ceil(total / PROGRAMS_PAGE)
   return (
     <Screen onRefresh={pull.onRefresh} refreshing={pull.refreshing}>
-      <Title title={f.field ? `${f.field} programs` : 'Programs'} sub={f.scope === 'intl' ? 'Programs at universities abroad.' : 'Every program, at every university.'} />
+      <Title title={f.field ? `${f.field} programs` : 'Programs'} sub={f.scope === 'intl' ? 'Programs at international universities.' : 'Every program, at every university.'} />
       <View style={{ gap: 12, marginBottom: 16 }}>
-        <ScopeSwitch value={f.scope} onChange={(v) => setF((cur) => ({ ...cur, scope: v, country: '', field: '', page: 1 }))} />
+        <ScopeSwitch />
         <Input placeholder="What do you want to study? (for example nursing, law)" value={f.q} onChangeText={set('q')} autoCorrect={false} style={{ borderWidth: 2, borderColor: colors.green }} />
         <SelectField title="Field of study" placeholder="Any field" value={f.field} onChange={set('field')} options={[{ value: '', label: 'Any field' }, ...fields.map((x) => ({ value: x.field, label: `${x.field} (${Number(x.n).toLocaleString()})` }))]} />
         {f.scope === 'intl' && <SelectField title="Country" placeholder="Any country" value={f.country} onChange={set('country')} options={[{ value: '', label: 'Any country' }, ...countries.map((c) => ({ value: c.country, label: c.country }))]} />}

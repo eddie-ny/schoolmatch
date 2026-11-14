@@ -29,7 +29,7 @@ export function ScholarshipProvider({ children }) {
 }
 
 // Narrow a school's scholarships to the level a student is looking at. A scholarship with no level stated is kept.
-// The summary list carries no level, so this only matters once details are loaded; masters=null keeps everything.
+// masters=null keeps everything.
 export function forLevel(list = [], masters) {
   if (masters == null) return list
   return list.filter((s) => {

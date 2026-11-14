@@ -171,10 +171,14 @@ export function Chips({ value, options, onChange }) {
   )
 }
 
-// Ghana or Abroad, at the top of the Schools and Programs lists (the website's Local and International sides).
-export const ScopeSwitch = ({ value, onChange }) => (
-  <Chips value={value} onChange={onChange} options={[{ value: 'local', label: 'Ghana' }, { value: 'intl', label: 'Abroad' }]} />
-)
+// Local (Ghana) or International: one choice for the whole app, like the website's two sides.
+// The header shows it and switches it; the switch on Schools, Programs and Eligibility changes the same value.
+export const ScopeContext = createContext({ scope: 'local', setScope: () => {} })
+export const useScope = () => useContext(ScopeContext)
+export function ScopeSwitch() {
+  const { scope, setScope } = useScope()
+  return <Chips value={scope} onChange={setScope} options={[{ value: 'local', label: 'Local' }, { value: 'intl', label: 'International' }]} />
+}
 
 export const BackLink = ({ label, onPress }) => (
   <Pressable onPress={onPress} accessibilityRole="button" style={styles.backLink} hitSlop={8}>

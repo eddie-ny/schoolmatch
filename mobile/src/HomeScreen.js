@@ -6,7 +6,7 @@ import * as api from './lib/api'
 import { colors } from './lib/constants'
 import { SCHOOL_CATEGORIES, schoolCategory, schoolCategoryLabel } from './lib/schoolCategory'
 import { Monogram } from './SchoolParts'
-import { Screen } from './ui'
+import { Screen, useScope } from './ui'
 
 const FIELDS = [
   ['Computing', 'laptop-outline'], ['Engineering', 'construct-outline'], ['Business', 'briefcase-outline'], ['Health', 'medkit-outline'],
@@ -21,7 +21,9 @@ const press = ({ pressed }) => ({ opacity: pressed ? 0.7 : 1, transform: [{ scal
 export default function HomeScreen({ goTab, onOpenSchool }) {
   const { user } = useAuth()
   const first = (user?.fullName || '').trim().split(/\s+/)[0]
+  const { scope } = useScope()
   const [kind, setKind] = useState('')
+  useEffect(() => { setKind('') }, [scope])
   const [st, setSt] = useState({ rows: [], total: 0, loading: true, error: '' })
   const [tries, setTries] = useState(0)
   const [refreshing, setRefreshing] = useState(false)
@@ -29,12 +31,12 @@ export default function HomeScreen({ goTab, onOpenSchool }) {
   useEffect(() => {
     let live = true
     setSt((s) => ({ ...s, loading: true, error: '' }))
-    api.searchSchools({ scope: 'local', kind, limit: 8, offset: 0 })
+    api.searchSchools({ scope, kind: scope === 'local' ? kind : '', limit: 8, offset: 0 })
       .then((r) => live && setSt({ ...r, loading: false, error: '' }))
       .catch((e) => live && setSt({ rows: [], total: 0, loading: false, error: e.message }))
       .finally(() => live && setRefreshing(false))
     return () => { live = false }
-  }, [kind, tries])
+  }, [kind, scope, tries])
 
   const onRefresh = useCallback(() => { setRefreshing(true); setTries((n) => n + 1) }, [])
   const { rows, total, loading, error } = st
@@ -64,11 +66,11 @@ export default function HomeScreen({ goTab, onOpenSchool }) {
       </Pressable>
 
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-        <Text style={H2}>Schools</Text>
+        <Text style={H2}>{scope === 'local' ? 'Schools' : 'International schools'}</Text>
         <Text onPress={() => goTab('schools', { kind })} style={{ fontSize: 14, fontWeight: '700', color: colors.orangeInk }}>See all{!loading && total ? ` ${total.toLocaleString()}` : ''}</Text>
       </View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingRight: 16 }} style={{ marginHorizontal: -16, paddingLeft: 16, marginBottom: 12, flexGrow: 0 }}>
-        {KINDS.map((k) => {
+        {scope === 'local' && KINDS.map((k) => {
           const on = k.value === kind
           return (
             <Pressable key={k.value || 'all'} onPress={() => setKind(k.value)} accessibilityRole="button" accessibilityState={{ selected: on }} style={{ paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999, borderWidth: 1, borderColor: on ? colors.green : colors.line, backgroundColor: on ? colors.green : '#fff' }}>

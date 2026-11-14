@@ -8,7 +8,7 @@ import { SCHOOL_CATEGORIES, schoolCategory, schoolCategoryLabel } from './lib/sc
 import { thumbUrl } from './lib/thumb'
 import { useScholarships } from './ScholarshipContext'
 import { Monogram, SchoolCard, cardStyle, useDebounced, usePull } from './SchoolParts'
-import { Badge, BackLink, Button, Gate, Chips, ErrorText, Input, Pager, Screen, ScopeSwitch, SelectField, ShellActions, Title, styles } from './ui'
+import { Badge, BackLink, Button, Gate, Chips, ErrorText, Input, Pager, Screen, ScopeSwitch, SelectField, ShellActions, Title, styles, useScope } from './ui'
 
 const LEVELS = [
   { value: '', label: 'Any level' },
@@ -23,7 +23,10 @@ const Spinner = () => <View style={{ paddingVertical: 32 }}><ActivityIndicator c
 
 // ---------- Find a School (local) ----------
 export function SchoolsList({ onBack, onOpen, initialKind = '' }) {
-  const [f, setF] = useState({ scope: 'local', country: '', q: '', kind: initialKind, field: '', offers: '', page: 1 })
+  const { scope } = useScope()
+  const [f, setF] = useState({ scope, country: '', q: '', kind: initialKind, field: '', offers: '', page: 1 })
+  // Switching Local or International clears the filters that only make sense on one side.
+  useEffect(() => { setF((cur) => (cur.scope === scope ? cur : { ...cur, scope, country: '', kind: '', field: '', offers: '', page: 1 })) }, [scope])
   const abroad = f.scope === 'intl'
   const [countries, setCountries] = useState([])
   const dq = useDebounced(f.q)
@@ -48,9 +51,9 @@ export function SchoolsList({ onBack, onOpen, initialKind = '' }) {
   return (
     <Screen onRefresh={pull.onRefresh} refreshing={pull.refreshing}>
       {onBack && <BackLink label="Back" onPress={onBack} />}
-      <Title title="Find a School" sub={abroad ? 'Universities abroad and their programs.' : 'Ghanaian universities and their programs.'} />
+      <Title title="Find a School" sub={abroad ? 'International universities and their programs.' : 'Ghanaian universities and their programs.'} />
       <View style={{ gap: 12, marginBottom: 16 }}>
-        <ScopeSwitch value={f.scope} onChange={(v) => setF((cur) => ({ ...cur, scope: v, country: '', kind: '', field: '', offers: '', page: 1 }))} />
+        <ScopeSwitch />
         <Input placeholder="Search by school, program (for example law), city or country" value={f.q} onChangeText={set('q')} autoCorrect={false} />
         {abroad ? (
           <SelectField title="Country" placeholder="Any country" value={f.country} onChange={set('country')} options={[{ value: '', label: 'Any country' }, ...countries.map((c) => ({ value: c.country, label: c.country }))]} />

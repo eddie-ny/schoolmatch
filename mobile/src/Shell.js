@@ -12,7 +12,7 @@ import { ScholarshipProvider } from './ScholarshipContext'
 import { ProgramDetail, ProgramsList } from './ProgramScreens'
 import { ScholarshipDetail, ScholarshipsList } from './ScholarshipScreens'
 import { SchoolDetail, SchoolsList } from './SchoolScreens'
-import { InShell, ShellActions } from './ui'
+import { InShell, ShellActions, ScopeContext } from './ui'
 
 const PAGES = { profile: 'Profile', interested: 'Interested', pricing: 'Pricing', invite: 'Invite friends', contact: 'Contact us', settings: 'Account Settings' }
 
@@ -20,6 +20,7 @@ const PAGES = { profile: 'Profile', interested: 'Interested', pricing: 'Pricing'
 // so going back finds the search, filters and page as they were left. The Android back button pops one screen,
 // then goes to Home, then leaves the app.
 export default function Shell() {
+  const [scope, setScope] = useState('local')
   const { user, signOut } = useAuth()
   const counter = useRef(1)
   const mk = (s) => ({ key: counter.current++, ...s })
@@ -76,10 +77,11 @@ export default function Shell() {
   return (
     <SavedProvider>
     <ScholarshipProvider>
+    <ScopeContext.Provider value={{ scope, setScope }}>
     <InShell.Provider value>
       <ShellActions.Provider value={{ openPage, goTab, openSchool, openScholarship }}>
       <View style={{ flex: 1, backgroundColor: colors.page }}>
-        <Header user={user} onHome={() => { toRoot('home'); show('home') }} onPage={openPage} onSignOut={() => setConfirmOut(true)} />
+        <Header user={user} scope={scope} onScope={() => setScope((s) => (s === 'local' ? 'intl' : 'local'))} onHome={() => { toRoot('home'); show('home') }} onPage={openPage} onSignOut={() => setConfirmOut(true)} />
         <TrialBanner user={user} onPricing={() => openPage('pricing')} />
         <View style={{ flex: 1 }}>
           {TABS.filter((t) => seen[t.key]).map((t) => (
@@ -99,6 +101,7 @@ export default function Shell() {
       </View>
       </ShellActions.Provider>
     </InShell.Provider>
+    </ScopeContext.Provider>
     </ScholarshipProvider>
     </SavedProvider>
   )

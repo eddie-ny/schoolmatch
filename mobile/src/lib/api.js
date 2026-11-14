@@ -179,6 +179,19 @@ export async function saveSat(userId, sat) {
 }
 
 // ---------- Scholarships ----------
+// Every scholarship with its entry rules (gender, SAT, aggregate, course, deadline, level), for "Scholarships you may qualify for".
+// The full table is only open to accounts with full access.
+export async function listScholarshipsFull() {
+  const out = []
+  for (let from = 0; ; from += 1000) {
+    const { data, error } = await supabase.from('scholarships').select('id, name, funder, country, funding_type, level, min_aggregate, min_sat, gender, deadline, school_id, field').order('id').range(from, from + 999)
+    fail(error, 'Could not load scholarships.')
+    for (const x of data || []) out.push({ id: x.id, name: x.name, funder: x.funder || '', country: x.country || '', fundingType: x.funding_type, level: x.level || '', minAggregate: x.min_aggregate, minSat: x.min_sat, gender: x.gender || null, deadline: x.deadline || '', schoolId: x.school_id || null, field: x.field || '' })
+    if ((data || []).length < 1000) break
+  }
+  return out
+}
+
 // Everyone reads the summary list. The details (criteria, deadline, link) come from the full table, which the database only opens to people with full access.
 export async function listScholarships() {
   return retrying(async () => {

@@ -18,7 +18,7 @@ const MENU = [['profile', 'Profile'], ['interested', 'Interested'], ['pricing', 
 const HEADER_H = 56
 
 // Top bar: the Jamba name on the left, the profile button (with its drop-down menu) on the right.
-export function Header({ user, onHome, onPage, onSignOut }) {
+export function Header({ user, scope = 'local', onScope, onHome, onPage, onSignOut }) {
   const insets = useSafeAreaInsets()
   const [open, setOpen] = useState(false)
   const initial = (user.fullName || user.email || '?').trim().charAt(0).toUpperCase()
@@ -26,10 +26,17 @@ export function Header({ user, onHome, onPage, onSignOut }) {
   return (
     <View style={{ backgroundColor: '#fff', paddingTop: insets.top, borderBottomWidth: 1, borderColor: colors.line }}>
       <View style={{ height: HEADER_H, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16 }}>
-        <Pressable onPress={onHome} accessibilityRole="button" accessibilityLabel="Jamba local, home">
-          <Text style={{ fontSize: 22, fontWeight: '700' }}><Text style={{ color: colors.orange }}>Jam</Text><Text style={{ color: colors.green }}>ba</Text></Text>
-          <Text style={{ fontSize: 11, fontWeight: '600', letterSpacing: 1, color: '#737373', marginTop: -2 }}>LOCAL</Text>
-        </Pressable>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+          <Pressable onPress={onHome} accessibilityRole="button" accessibilityLabel="Jamba, home">
+            <Text style={{ fontSize: 22, fontWeight: '700' }}><Text style={{ color: colors.orange }}>Jam</Text><Text style={{ color: colors.green }}>ba</Text></Text>
+          </Pressable>
+          {/* Local or International for the whole app. Tap to switch. */}
+          <Pressable onPress={onScope} accessibilityRole="button" accessibilityLabel={`Showing ${scope === 'local' ? 'local' : 'international'}. Tap to switch.`} hitSlop={8}
+            style={{ flexDirection: 'row', alignItems: 'center', gap: 4, borderRadius: 999, borderWidth: 1, borderColor: colors.line, paddingHorizontal: 10, paddingVertical: 5, backgroundColor: scope === 'local' ? '#fff' : colors.greenSoft }}>
+            <Text style={{ fontSize: 11, fontWeight: '700', letterSpacing: 1, color: colors.ink }}>{scope === 'local' ? 'LOCAL' : 'INTERNATIONAL'}</Text>
+            <Ionicons name="swap-horizontal" size={14} color={colors.ink} />
+          </Pressable>
+        </View>
         <Pressable onPress={() => setOpen(true)} accessibilityRole="button" accessibilityLabel="Account menu" hitSlop={8} style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
           <View style={{ width: 38, height: 38, borderRadius: 19, backgroundColor: colors.orange, alignItems: 'center', justifyContent: 'center' }}>
             <Text style={{ fontWeight: '700', fontSize: 17, color: '#1f1f1f' }}>{initial}</Text>

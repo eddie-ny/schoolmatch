@@ -208,7 +208,7 @@ function EligibilityInner() {
   )
   // The course group(s) of the programme the student searched, used for scholarships tied to a course.
   const chosenFields = useMemo(
-    () => [...new Set(programs.filter((p) => output && p.group === output.programName).map((p) => p.field).filter(Boolean))],
+    () => (output?.fieldOnly ? [output.fieldOnly] : [...new Set(programs.filter((p) => output && p.group === output.programName).map((p) => p.field).filter(Boolean))]),
     [programs, output]
   )
   const qualifications = useMemo(() => [...new Set(programs.map((p) => p.entryQualification).filter(Boolean))].sort(), [programs])
@@ -272,7 +272,8 @@ function EligibilityInner() {
     const gradedElectives = chosen.filter((x) => grades[x])
     if (gradedElectives.length < 3) missing.push(`${3 - gradedElectives.length} more elective${3 - gradedElectives.length === 1 ? '' : 's'} with a grade`)
     if (missing.length) return setError(`We cannot work out your aggregate yet. Please add: ${missing.join(', ')}.`)
-    if (!programName) return setError('Type the program you want to study and choose it from the list.')
+    // One of field or program is enough. A program gives a precise answer; a field alone shows your chances across every program in it.
+    if (!programName && !field) return setError('Pick a field or type a program. One of them is enough.')
 
     const clean = {}
     ;[...CORE_SUBJECTS, ...chosen].forEach((s) => { if (grades[s]) clean[s] = grades[s] })
@@ -280,7 +281,7 @@ function EligibilityInner() {
     setBusy(true)
     try {
       const res = await checkEligibility({ programName, scope, mode, grades: clean, electives: chosen, sat })
-      setOutput(res)
+      setOutput(programName ? res : { ...res, programName: '', fieldOnly: field })
     } catch (err) {
       setBusy(false)
       return setError(err.message)
@@ -302,15 +303,22 @@ function EligibilityInner() {
   const qualified = bucket(output?.targets, 'yes')
   const longShots = bucket(output?.targets, 'long')
   const notYet = bucket(output?.targets, 'not')
-  const othersQualify = bucket(output?.others, 'yes')
-  const othersLong = bucket(output?.others, 'long')
-  const othersNot = bucket(output?.others, 'not')
+  // Field only (no program chosen): the programs in that field are the main list, the rest of the programs come after.
+  const fieldIds = useMemo(() => (output?.fieldOnly ? new Set(programs.filter((p) => p.field === output.fieldOnly).map((p) => p.id)) : null), [programs, output])
+  const inField = (list) => (fieldIds ? (list || []).filter((r) => fieldIds.has(r.programId)) : [])
+  const outField = (list) => (fieldIds ? (list || []).filter((r) => !fieldIds.has(r.programId)) : list)
+  const fq = bucket(inField(output?.others), 'yes')
+  const fl = bucket(inField(output?.others), 'long')
+  const fn = bucket(inField(output?.others), 'not')
+  const othersQualify = bucket(outField(output?.others), 'yes')
+  const othersLong = bucket(outField(output?.others), 'long')
+  const othersNot = bucket(outField(output?.others), 'not')
 
   if (loading) return <Spinner />
 
   return (
     <div className="space-y-8 max-w-3xl">
-      <PageTitle title="Check My Eligibility" sub="Choose what you want to study. We check it first, then show every school that offers it." />
+      <PageTitle title="Check My Eligibility" sub="Choose a field, a program, or both. A program gives a precise answer. A field alone shows your chances across every program in it." />
 
       <Segmented value={level} onChange={(v) => { setLevel(v); setProgramName(''); setField(''); setOutput(null); setError('') }}
         options={[{ value: 'undergraduate', label: 'Undergraduate' }, ...(qualifications.length ? [{ value: 'topup', label: 'Diploma or HND holder' }] : []), { value: 'masters', label: 'Masters' }]} />
@@ -377,7 +385,7 @@ function EligibilityInner() {
         <div className="card space-y-4">
           <h2 className="font-bold text-lg">2. What do you want to study?</h2>
           {SHOW_INTERNATIONAL && <Segmented value={scope} onChange={(v) => { setScope(v); setProgramName('') }} options={[{ value: 'local', label: 'Local' }, { value: 'intl', label: 'International' }, { value: 'both', label: 'Both' }]} />}
-          <Field label="Field (optional)" hint="Pick a field to shorten the list, or leave it and search all programs.">
+          <Field label="Field" hint="Pick a field to see your chances across all its programs, or pick a program below for a precise answer. One is enough.">
             <select className="input" value={field} onChange={(e) => { setField(e.target.value); setProgramName('') }}>
               <option value="">All fields</option>
               {FIELDS.map((f) => <option key={f.id}>{f.id}</option>)}
@@ -395,7 +403,9 @@ function EligibilityInner() {
       {output && output.locked && (
         <section className="space-y-4">
           <h2 className="text-xl font-bold">Results</h2>
-          <p>We found {output.targetCount} school{output.targetCount === 1 ? '' : 's'} offering this program and {output.otherCount} other option{output.otherCount === 1 ? '' : 's'}.</p>
+          {output.fieldOnly
+            ? <p>We found {fieldIds ? fieldIds.size : 0} program{fieldIds && fieldIds.size === 1 ? '' : 's'} in {output.fieldOnly}.</p>
+            : <p>We found {output.targetCount} school{output.targetCount === 1 ? '' : 's'} offering this program and {output.otherCount} other option{output.otherCount === 1 ? '' : 's'}.</p>}
           <Gate text="Subscribe to see your aggregate, your match labels and how you rank." />
         </section>
       )}
@@ -444,7 +454,37 @@ function EligibilityInner() {
         </section>
       )}
 
-      {output && !output.locked && view === 'schools' && !output.yourClass && !output.yourQualification && (
+      {output && !output.locked && view === 'schools' && output.fieldOnly && (
+        <section className="space-y-4">
+          <h2 className="text-xl font-bold">Results</h2>
+          {output.aggregate != null
+            ? <p>Your aggregate: <b>{output.aggregate}</b> (lower is better, 6 is the best possible). Each program below shows your aggregate for that program.</p>
+            : <p className="text-neutral-600">{output.reason}</p>}
+          {output.mode === 'terminal' && <p className="text-sm font-semibold">These are projections based on terminal or mock grades.</p>}
+          <h3 className="font-semibold">{output.fieldOnly} programs you qualify for, best first</h3>
+          <p className="text-sm text-neutral-600">This shows your chances across the whole field. Pick a program above if you want a precise answer for one program.</p>
+          {fq.length === 0 && <p className="text-neutral-600">{fl.length > 0 ? 'None of these programs is a realistic match for your aggregate yet. The ones where you meet the requirements but are well above the cut-off are listed below.' : 'You do not meet the entry requirements for any program in this field yet. What is missing is listed below.'}</p>}
+          <PagedGrid items={fq} render={(r) => <ResultCard key={r.programId} item={r} highlight scholarships={schFor(r)} me={me} />} />
+          {fl.length > 0 && (
+            <details className="card" open={fq.length === 0 && fn.length === 0}>
+              <summary className="font-semibold cursor-pointer">{output.fieldOnly} programs where your aggregate is well above the cut-off ({fl.length})</summary>
+              <PagedGrid items={fl} render={(r) => <ResultCard key={r.programId} item={r} scholarships={schFor(r)} me={me} />} />
+            </details>
+          )}
+          {fn.length > 0 && (
+            <details className="card" open={fq.length === 0 && fl.length === 0}>
+              <summary className="font-semibold cursor-pointer">{output.fieldOnly} programs you do not qualify for yet ({fn.length})</summary>
+              <PagedGrid items={fn} render={(r) => <ResultCard key={r.programId} item={r} scholarships={schFor(r)} me={me} />} />
+            </details>
+          )}
+          <h3 className="font-semibold">Programs in other fields you qualify for</h3>
+          {othersQualify.length === 0 && <p className="text-neutral-600">No programs in other fields match your results yet.</p>}
+          <PagedGrid items={othersQualify} render={(r) => <ResultCard key={r.programId} item={r} scholarships={schFor(r)} me={me} />} />
+          <p className="text-xs text-neutral-500">{DISCLAIMER}</p>
+        </section>
+      )}
+
+      {output && !output.locked && view === 'schools' && !output.fieldOnly && !output.yourClass && !output.yourQualification && (
         <section className="space-y-4">
           <h2 className="text-xl font-bold">Results</h2>
           {output.aggregate != null

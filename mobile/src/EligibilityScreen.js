@@ -155,13 +155,15 @@ export default function EligibilityScreen({ initialProgram = '', onOpenProgram }
     const graded = chosen.filter((x) => grades[x])
     if (graded.length < 3) missing.push(`${3 - graded.length} more elective${3 - graded.length === 1 ? '' : 's'} with a grade`)
     if (missing.length) return setError(`We cannot work out your aggregate yet. Please add: ${missing.join(', ')}.`)
-    if (!programName) return setError('Type the program you want to study and choose it from the list.')
+    // One of field or program is enough. A program gives a precise answer; a field alone shows your chances across every program in it.
+    if (!programName && !field) return setError('Pick a field or type a program. One of them is enough.')
 
     const clean = {}
     ;[...CORE_SUBJECTS, ...chosen].forEach((s) => { if (grades[s]) clean[s] = grades[s] })
     setBusy(true)
     try {
-      setOutput(await api.checkEligibility({ programName, scope: 'local', mode, grades: clean, electives: chosen, sat: '' }))
+      const res = await api.checkEligibility({ programName, scope: 'local', mode, grades: clean, electives: chosen, sat: '' })
+      setOutput(programName ? res : { ...res, programName: '', fieldOnly: field })
     } catch (e) {
       setBusy(false)
       return setError(e.message)
@@ -176,15 +178,22 @@ export default function EligibilityScreen({ initialProgram = '', onOpenProgram }
   const qualified = bucket(output?.targets, 'yes')
   const longShots = bucket(output?.targets, 'long')
   const notYet = bucket(output?.targets, 'not')
-  const othersQualify = bucket(output?.others, 'yes')
-  const othersLong = bucket(output?.others, 'long')
-  const othersNot = bucket(output?.others, 'not')
+  // Field only (no program chosen): programs in that field are the main list, the rest come after.
+  const fieldIds = useMemo(() => (output?.fieldOnly ? new Set(programs.filter((p) => p.field === output.fieldOnly).map((p) => p.id)) : null), [programs, output])
+  const inField = (list) => (fieldIds ? (list || []).filter((r) => fieldIds.has(r.programId)) : [])
+  const outField = (list) => (fieldIds ? (list || []).filter((r) => !fieldIds.has(r.programId)) : list)
+  const fq = bucket(inField(output?.others), 'yes')
+  const fl = bucket(inField(output?.others), 'long')
+  const fn = bucket(inField(output?.others), 'not')
+  const othersQualify = bucket(outField(output?.others), 'yes')
+  const othersLong = bucket(outField(output?.others), 'long')
+  const othersNot = bucket(outField(output?.others), 'not')
 
   if (loading) return <Screen><View style={{ paddingVertical: 32 }}><ActivityIndicator color={colors.orangeInk} /></View></Screen>
 
   return (
     <Screen>
-      <Title title="Check My Eligibility" sub="Choose what you want to study. We check it first, then show every school that offers it." />
+      <Title title="Check My Eligibility" sub="Choose a field, a program, or both. A program gives a precise answer. A field alone shows your chances across every program in it." />
       {!programs.length && !!error && <View style={{ gap: 6, marginBottom: 12 }}><ErrorText>{error}</ErrorText><Button variant="outline" label="Try again" onPress={() => setTries((n) => n + 1)} /></View>}
 
       <View style={{ gap: 16 }}>
@@ -216,7 +225,7 @@ export default function EligibilityScreen({ initialProgram = '', onOpenProgram }
 
         <Card>
           <Text style={H2}>2. What do you want to study?</Text>
-          <Field label="Field (optional)" hint="Pick a field to shorten the list, or leave it and search all programs.">
+          <Field label="Field" hint="Pick a field to see your chances across all its programs, or pick a program below for a precise answer. One is enough.">
             <SelectField title="Field" placeholder="All fields" value={field} onChange={(v) => { setField(v); setProgramName('') }} options={[{ value: '', label: 'All fields' }, ...FIELDS.map((f) => ({ value: f, label: f }))]} />
           </Field>
           <Field label="Program" hint={programNames.length === 0 ? 'No programs added yet.' : 'Type part of the name, then choose from the list.'}>
@@ -231,7 +240,7 @@ export default function EligibilityScreen({ initialProgram = '', onOpenProgram }
       {output && output.locked && (
         <View style={{ gap: 12, marginTop: 24 }}>
           <Text style={H2}>Results</Text>
-          <Text style={styles.body}>We found {output.targetCount} school{output.targetCount === 1 ? '' : 's'} offering this program and {output.otherCount} other option{output.otherCount === 1 ? '' : 's'}.</Text>
+          <Text style={styles.body}>{output.fieldOnly ? `We found ${fieldIds ? fieldIds.size : 0} program${fieldIds && fieldIds.size === 1 ? '' : 's'} in ${output.fieldOnly}.` : `We found ${output.targetCount} school${output.targetCount === 1 ? '' : 's'} offering this program and ${output.otherCount} other option${output.otherCount === 1 ? '' : 's'}.`}</Text>
           <Gate text="Subscribe to see your aggregate, your match labels and how you rank." />
         </View>
       )}
@@ -247,6 +256,30 @@ export default function EligibilityScreen({ initialProgram = '', onOpenProgram }
           ) : <Text style={styles.body}>{output.reason}</Text>}
           {output.mode === 'terminal' && <Text style={[styles.body, { fontWeight: '700' }]}>These are projections based on terminal or mock grades.</Text>}
 
+          {output.fieldOnly && (
+            <>
+              <Text style={H3}>{output.fieldOnly} programs you qualify for, best first</Text>
+              <Text style={styles.hint}>This shows your chances across the whole field. Pick a program above for a precise answer.</Text>
+              {fq.length === 0 && <Text style={styles.body}>{fl.length > 0 ? 'None of these programs is a realistic match for your aggregate yet. The ones where you meet the requirements but are well above the cut-off are listed below.' : 'You do not meet the entry requirements for any program in this field yet. What is missing is listed below.'}</Text>}
+              <ResultList items={fq} highlight onOpen={onOpenProgram} />
+              {fl.length > 0 && (
+                <Fold title={`${output.fieldOnly} programs where your aggregate is well above the cut-off (${fl.length})`} open={fq.length === 0 && fn.length === 0}>
+                  <ResultList items={fl} onOpen={onOpenProgram} />
+                </Fold>
+              )}
+              {fn.length > 0 && (
+                <Fold title={`${output.fieldOnly} programs you do not qualify for yet (${fn.length})`} open={fq.length === 0 && fl.length === 0}>
+                  <ResultList items={fn} onOpen={onOpenProgram} />
+                </Fold>
+              )}
+              <Text style={H3}>Programs in other fields you qualify for</Text>
+              {othersQualify.length === 0 && <Text style={styles.body}>No programs in other fields match your results yet.</Text>}
+              <ResultList items={othersQualify} onOpen={onOpenProgram} />
+              <Text style={styles.hint}>{DISCLAIMER}</Text>
+            </>
+          )}
+          {!output.fieldOnly && (
+          <>
           <Text style={H3}>Schools offering {output.programName} that you qualify for</Text>
           {output.targets.length === 0 && <Text style={styles.body}>No schools offer this program yet.</Text>}
           {output.targets.length > 0 && qualified.length === 0 && (
@@ -280,6 +313,8 @@ export default function EligibilityScreen({ initialProgram = '', onOpenProgram }
             </Fold>
           )}
           <Text style={styles.hint}>{DISCLAIMER}</Text>
+          </>
+          )}
         </View>
       )}
     </Screen>

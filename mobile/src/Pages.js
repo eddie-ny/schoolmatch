@@ -31,10 +31,11 @@ export function ContactPage({ onBack }) {
       <BackLink label="Back" onPress={onBack} />
       <View style={{ backgroundColor: colors.greenSoft, borderRadius: 22, padding: 22, marginBottom: 16, gap: 8 }}>
         <Text style={{ fontSize: 26, fontWeight: '800', color: colors.ink }}>We are here to help</Text>
-        <Text style={{ fontSize: 15, color: '#444', lineHeight: 22 }}>Questions about your account, a payment or a school? Call or write to us and we will get back to you.</Text>
+        <Text style={{ fontSize: 15, color: '#444', lineHeight: 22 }}>Questions about your account, a payment or a school? Call, WhatsApp or write to us and we will get back to you.</Text>
       </View>
       <View style={{ gap: 12 }}>
         <Way icon="call" tint={colors.orange} title="Call us" text="+233 20 565 8716" action="Call now" onPress={() => Linking.openURL('tel:+233205658716')} />
+        <Way icon="logo-whatsapp" tint="#25D366" title="WhatsApp us" text="+233 20 565 8716" action="Open WhatsApp" onPress={() => Linking.openURL('https://wa.me/233205658716')} />
         <Way icon="mail" tint={colors.green} title="Email us" text="info@inbox.jambaconsult.com" action="Send an email" onPress={() => Linking.openURL('mailto:info@inbox.jambaconsult.com')} />
         <Way icon="flag" tint={colors.orangeSoft} title="Report a problem" text="Wrong information, something broken, or feedback." action="Email us the details" onPress={() => Linking.openURL('mailto:info@inbox.jambaconsult.com?subject=Problem%20report')} />
       </View>

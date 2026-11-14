@@ -7,7 +7,7 @@ const topPad = Platform.OS === 'android' ? (StatusBar.currentHeight || 24) + 16 
 
 export const InShell = createContext(false)
 // Lets any screen open a menu page (for example Pricing) or switch tab without passing functions down.
-export const ShellActions = createContext({ openPage: () => {}, goTab: () => {} })
+export const ShellActions = createContext({ openPage: () => {}, goTab: () => {}, openSchool: () => {}, openScholarship: () => {} })
 
 export function Screen({ children, onRefresh, refreshing = false }) {
   const inShell = useContext(InShell) // inside the tabs, the header already covers the status bar

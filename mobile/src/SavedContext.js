@@ -29,5 +29,5 @@ export function SavedProvider({ children }) {
     try { for (const i of programIds) await api.setSaved(i, on) } catch (e) { setIds(before); setError(e.message) }
   }, [ids])
 
-  return <SavedContext.Provider value={{ ids, error, toggle, reload: () => setN((x) => x + 1) }}>{children}</SavedContext.Provider>
+  return <SavedContext.Provider value={{ ids, error, toggle, fail: setError, reload: () => setN((x) => x + 1) }}>{children}</SavedContext.Provider>
 }

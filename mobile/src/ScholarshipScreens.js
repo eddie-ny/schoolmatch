@@ -6,6 +6,7 @@ import { getAccess } from './lib/access'
 import { colors } from './lib/constants'
 import { buildSections, fundingRank, officialLink } from './lib/scholarshipSections'
 import { Monogram, cardStyle, usePull } from './SchoolParts'
+import { useScholarships } from './ScholarshipContext'
 import { Badge, BackLink, Button, Chips, ErrorText, Gate, Pager, Screen, Title, styles } from './ui'
 
 const PAGE = 12
@@ -36,19 +37,12 @@ function ScholarshipCard({ s, onOpen }) {
 // ---------- Scholarships tab ----------
 export function ScholarshipsList({ initialFunding = 'all', onOpen }) {
   const { user } = useAuth()
-  const [st, setSt] = useState({ rows: [], loading: true, error: '' })
-  const [tries, setTries] = useState(0)
+  const { rows, loading: sLoading, error: sError, reload } = useScholarships()
+  const st = { rows, loading: sLoading, error: sError }
   const [f, setF] = useState({ funding: initialFunding, where: 'all', page: 1 })
   const full = getAccess(user).level === 'full'
-  const pull = usePull(() => setTries((n) => n + 1), st.loading)
+  const pull = usePull(reload, st.loading)
   const set = (k) => (v) => setF((c) => ({ ...c, [k]: v, page: 1 }))
-
-  useEffect(() => {
-    let live = true
-    setSt((s) => ({ ...s, loading: true, error: '' }))
-    api.listScholarships().then((rows) => live && setSt({ rows, loading: false, error: '' })).catch((e) => live && setSt({ rows: [], loading: false, error: e.message }))
-    return () => { live = false }
-  }, [tries])
 
   // Fully funded first, then partial, then the rest. The sort is stable, so the database order holds inside each group.
   const list = useMemo(() => st.rows
@@ -67,7 +61,7 @@ export function ScholarshipsList({ initialFunding = 'all', onOpen }) {
         <Text style={styles.hint}>{st.loading ? 'Loading...' : `${list.length.toLocaleString()} scholarship${list.length === 1 ? '' : 's'}${pages > 1 ? `, page ${page} of ${pages}` : ''}`}</Text>
       </View>
       {!full && <View style={{ marginBottom: 16 }}><Gate /></View>}
-      {!!st.error && <View style={{ marginBottom: 12, gap: 6 }}><ErrorText>{st.error}</ErrorText><Button variant="outline" label="Try again" onPress={() => setTries((n) => n + 1)} /></View>}
+      {!!st.error && <View style={{ marginBottom: 12, gap: 6 }}><ErrorText>{st.error}</ErrorText><Button variant="outline" label="Try again" onPress={reload} /></View>}
       {st.loading && st.rows.length === 0 ? <Spinner /> : (
         <View style={{ gap: 14 }}>
           {list.slice((page - 1) * PAGE, page * PAGE).map((s) => <ScholarshipCard key={s.id} s={s} onOpen={() => onOpen({ id: s.id })} />)}

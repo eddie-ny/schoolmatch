@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { ActivityIndicator, Image, Linking, Pressable, Text, View } from 'react-native'
 import { useAuth } from './AuthContext'
 import { useSaved } from './SavedContext'
+import { ScholarshipBadge } from './ScholarshipContext'
 import { Ionicons } from '@expo/vector-icons'
 import * as api from './lib/api'
 import { getAccess } from './lib/access'
@@ -64,6 +65,15 @@ export function ProgramsList({ initialQ = '', initialField = '', onOpen }) {
 
 function ProgramCard({ p, onOpen }) {
   const where = [p.schoolCity, p.schoolCountry].filter(Boolean).join(', ')
+  const saved = useSaved()
+  const [busy, setBusy] = useState(false)
+  const isSaved = saved.ids.has(p.id)
+  // One heart covers every way of studying the program, so look the others up before saving.
+  const heart = async () => {
+    if (busy) return
+    setBusy(true)
+    try { saved.toggle(await api.programVariantIds(p), !isSaved) } catch (e) { saved.fail?.(e.message) } finally { setBusy(false) }
+  }
   return (
     <View style={cardStyle}>
       <View style={{ flexDirection: 'row', gap: 12, alignItems: 'flex-start' }}>
@@ -74,13 +84,19 @@ function ProgramCard({ p, onOpen }) {
         </View>
       </View>
       <Text style={{ fontSize: 19, fontWeight: '700', color: colors.ink, lineHeight: 25 }}>{p.name}</Text>
+      <ScholarshipBadge schoolId={p.schoolId} />
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
         {!!p.level && <Badge>{p.level}</Badge>}
         {!!p.field && <Badge>{p.field}</Badge>}
         {!!modeText(p.modes) && <Badge>{modeText(p.modes)}</Badge>}
         {p.variantCount > 1 && <Badge>{`${p.variantCount} ways to study`}</Badge>}
       </View>
-      <Button variant="outline" label="View programme information" onPress={onOpen} />
+      <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center' }}>
+        <View style={{ flex: 1 }}><Button variant="outline" label="View programme information" onPress={onOpen} /></View>
+        <Pressable onPress={heart} accessibilityRole="button" accessibilityLabel={isSaved ? 'Remove from Interested' : 'Add to Interested'} accessibilityState={{ selected: isSaved }} hitSlop={6} style={{ width: 48, height: 48, alignItems: 'center', justifyContent: 'center', borderRadius: 24, borderWidth: 1, borderColor: colors.line }}>
+          <Ionicons name={isSaved ? 'heart' : 'heart-outline'} size={26} color={isSaved ? '#dc2626' : colors.muted} />
+        </Pressable>
+      </View>
     </View>
   )
 }

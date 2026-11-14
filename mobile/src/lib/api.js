@@ -182,6 +182,16 @@ export async function getScholarship(id) {
 }
 
 // ---------- Interested (hearted programs) ----------
+// Every way of studying one program at one school (regular, fee-paying, distance...). A heart on a list card saves all of them.
+export async function programVariantIds({ id, schoolId, name, level }) {
+  let q = supabase.from('programs_summary').select('id').eq('school_id', schoolId).eq('name', eqVal(name))
+  q = level ? q.eq('level', level) : q
+  const { data, error } = await q
+  fail(error, 'Could not read this program.')
+  const ids = (data || []).map((x) => x.id)
+  return ids.length ? ids : [id]
+}
+
 export async function listSavedIds() {
   const { data, error } = await supabase.from('saved_programs').select('program_id')
   fail(error, 'Could not load your interested list.')

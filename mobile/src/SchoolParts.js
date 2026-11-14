@@ -6,6 +6,7 @@ import { logoFor } from './lib/logos'
 import { schoolCategory, schoolCategoryLabel } from './lib/schoolCategory'
 import { thumbUrl } from './lib/thumb'
 import { Badge, Button } from './ui'
+import { ScholarshipBadge } from './ScholarshipContext'
 
 export function useDebounced(value, ms = 350) {
   const [v, setV] = useState(value)
@@ -60,6 +61,7 @@ export function SchoolCard({ s, count, matches = [], matched, onOpen }) {
         {!!s.type && <Badge>{s.type}</Badge>}
         <Badge>{count === 0 ? 'Programmes not listed yet' : `${count} program${count === 1 ? '' : 's'}`}</Badge>
       </View>
+      <ScholarshipBadge schoolId={s.id} />
       {matches.length > 0 && (
         <View>
           <Text style={{ fontSize: 14, color: '#777' }}>Matching programs</Text>

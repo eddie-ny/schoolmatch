@@ -8,6 +8,7 @@ import EligibilityScreen from './EligibilityScreen'
 import { InterestedPage, ProfilePage, SettingsPage } from './AccountPages'
 import { ComingSoon, ContactPage } from './Pages'
 import { SavedProvider } from './SavedContext'
+import { ScholarshipProvider } from './ScholarshipContext'
 import { ProgramDetail, ProgramsList } from './ProgramScreens'
 import { ScholarshipDetail, ScholarshipsList } from './ScholarshipScreens'
 import { SchoolDetail, SchoolsList } from './SchoolScreens'
@@ -74,8 +75,9 @@ export default function Shell() {
 
   return (
     <SavedProvider>
+    <ScholarshipProvider>
     <InShell.Provider value>
-      <ShellActions.Provider value={{ openPage, goTab }}>
+      <ShellActions.Provider value={{ openPage, goTab, openSchool, openScholarship }}>
       <View style={{ flex: 1, backgroundColor: colors.page }}>
         <Header user={user} onHome={() => { toRoot('home'); show('home') }} onPage={openPage} onSignOut={() => setConfirmOut(true)} />
         <TrialBanner user={user} onPricing={() => openPage('pricing')} />
@@ -97,6 +99,7 @@ export default function Shell() {
       </View>
       </ShellActions.Provider>
     </InShell.Provider>
+    </ScholarshipProvider>
     </SavedProvider>
   )
 }

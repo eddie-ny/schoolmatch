@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useContext, useEffect, useState } from 'react'
 import { ActivityIndicator, Image, Linking, Pressable, Text, View } from 'react-native'
 import { useAuth } from './AuthContext'
 import * as api from './lib/api'
@@ -6,8 +6,9 @@ import { getAccess } from './lib/access'
 import { FIELDS, PROGRAMS_PAGE, SCHOOLS_PAGE, colors } from './lib/constants'
 import { SCHOOL_CATEGORIES, schoolCategory, schoolCategoryLabel } from './lib/schoolCategory'
 import { thumbUrl } from './lib/thumb'
+import { useScholarships } from './ScholarshipContext'
 import { Monogram, SchoolCard, cardStyle, useDebounced, usePull } from './SchoolParts'
-import { Badge, BackLink, Button, Gate, Chips, ErrorText, Input, Pager, Screen, SelectField, Title, styles } from './ui'
+import { Badge, BackLink, Button, Gate, Chips, ErrorText, Input, Pager, Screen, SelectField, ShellActions, Title, styles } from './ui'
 
 const LEVELS = [
   { value: '', label: 'Any level' },
@@ -171,6 +172,8 @@ export function SchoolDetail({ id, q: q0 = '', field: field0 = '', onBack, onOpe
         </View>
       )}
 
+      <SchoolScholarships schoolId={school.id} name={school.name} />
+
       {full && <AdmissionInfo school={school} />}
 
       {!full ? (
@@ -207,5 +210,28 @@ export function SchoolDetail({ id, q: q0 = '', field: field0 = '', onBack, onOpe
       </View>
       )}
     </Screen>
+  )
+}
+
+// The scholarships this school gives, best funded first. Everyone sees the list; the details open on the scholarship page.
+function SchoolScholarships({ schoolId, name }) {
+  const { bySchool } = useScholarships()
+  const { openScholarship } = useContext(ShellActions)
+  const list = bySchool[schoolId] || []
+  if (!list.length) return null
+  return (
+    <View style={{ marginTop: 24, gap: 12 }}>
+      <Text style={{ fontSize: 19, fontWeight: '700', color: colors.ink }}>Scholarships at {name}</Text>
+      {list.map((s) => (
+        <Pressable key={s.id} onPress={() => openScholarship({ id: s.id })} accessibilityRole="button" style={cardStyle}>
+          <Text style={{ fontSize: 17, fontWeight: '700', color: colors.ink, lineHeight: 23 }}>{s.name}</Text>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+            <Badge tone={s.fundingType === 'Not stated' ? undefined : 'green'}>{s.fundingType === 'Not stated' ? 'Funding not stated' : `${s.fundingType} funding`}</Badge>
+            {!!s.gender && <Badge tone="orange">{s.gender === 'female' ? 'Women only' : 'Men only'}</Badge>}
+          </View>
+          <Text style={{ fontWeight: '700', color: colors.orangeInk }}>View scholarship information</Text>
+        </Pressable>
+      ))}
+    </View>
   )
 }

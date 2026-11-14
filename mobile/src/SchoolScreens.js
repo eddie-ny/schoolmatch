@@ -6,7 +6,7 @@ import { getAccess } from './lib/access'
 import { FIELDS, PROGRAMS_PAGE, SCHOOLS_PAGE, colors } from './lib/constants'
 import { SCHOOL_CATEGORIES, schoolCategory, schoolCategoryLabel } from './lib/schoolCategory'
 import { thumbUrl } from './lib/thumb'
-import { Monogram, SchoolCard, cardStyle, useDebounced } from './SchoolParts'
+import { Monogram, SchoolCard, cardStyle, useDebounced, usePull } from './SchoolParts'
 import { Badge, BackLink, Button, Gate, Chips, ErrorText, Input, Pager, Screen, SelectField, Title, styles } from './ui'
 
 const LEVELS = [
@@ -39,9 +39,10 @@ export function SchoolsList({ onBack, onOpen, initialKind = '' }) {
   }, [dq, f.field, f.offers, f.kind, f.page, tries])
 
   const { rows, total, loading, error } = state
+  const pull = usePull(() => setTries((n) => n + 1), loading)
   const pages = Math.ceil(total / SCHOOLS_PAGE)
   return (
-    <Screen>
+    <Screen onRefresh={pull.onRefresh} refreshing={pull.refreshing}>
       {onBack && <BackLink label="Back" onPress={onBack} />}
       <Title title="Find a School" sub="Ghanaian universities and their programs." />
       <View style={{ gap: 12, marginBottom: 16 }}>

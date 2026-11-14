@@ -5,7 +5,7 @@ import * as api from './lib/api'
 import { getAccess } from './lib/access'
 import { colors } from './lib/constants'
 import { buildSections, fundingRank, officialLink } from './lib/scholarshipSections'
-import { Monogram, cardStyle } from './SchoolParts'
+import { Monogram, cardStyle, usePull } from './SchoolParts'
 import { Badge, BackLink, Button, Chips, ErrorText, Gate, Pager, Screen, Title, styles } from './ui'
 
 const PAGE = 12
@@ -40,6 +40,7 @@ export function ScholarshipsList({ initialFunding = 'all', onOpen }) {
   const [tries, setTries] = useState(0)
   const [f, setF] = useState({ funding: initialFunding, where: 'all', page: 1 })
   const full = getAccess(user).level === 'full'
+  const pull = usePull(() => setTries((n) => n + 1), st.loading)
   const set = (k) => (v) => setF((c) => ({ ...c, [k]: v, page: 1 }))
 
   useEffect(() => {
@@ -58,7 +59,7 @@ export function ScholarshipsList({ initialFunding = 'all', onOpen }) {
   const page = Math.min(f.page, pages || 1)
 
   return (
-    <Screen>
+    <Screen onRefresh={pull.onRefresh} refreshing={pull.refreshing}>
       <Title title="Scholarships" sub="Funding for study in Ghana and abroad." />
       <View style={{ gap: 12, marginBottom: 16 }}>
         <Chips value={f.funding} onChange={set('funding')} options={[{ value: 'all', label: 'Any funding' }, { value: 'partial', label: 'Partial' }, { value: 'full', label: 'Fully funded' }]} />

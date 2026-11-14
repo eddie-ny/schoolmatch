@@ -3,7 +3,7 @@ import { useAuth } from './AuthContext'
 import * as api from './lib/api'
 
 // The programs the student hearted. One list for the whole app, so a heart on a program page and the Interested page always agree.
-const SavedContext = createContext({ ids: new Set(), error: '', toggle: async () => {} })
+const SavedContext = createContext({ ids: new Set(), error: '', toggle: async () => {}, reload: () => {} })
 export const useSaved = () => useContext(SavedContext)
 
 export function SavedProvider({ children }) {
@@ -11,6 +11,7 @@ export function SavedProvider({ children }) {
   const uid = user?.id
   const [ids, setIds] = useState(new Set())
   const [error, setError] = useState('')
+  const [n, setN] = useState(0)
 
   useEffect(() => {
     let live = true
@@ -18,7 +19,7 @@ export function SavedProvider({ children }) {
     if (!uid) return undefined
     api.listSavedIds().then((x) => live && setIds(new Set(x))).catch((e) => live && setError(e.message))
     return () => { live = false }
-  }, [uid])
+  }, [uid, n])
 
   // programIds: every way of studying the program (one heart covers them all).
   const toggle = useCallback(async (programIds, on) => {
@@ -28,5 +29,5 @@ export function SavedProvider({ children }) {
     try { for (const i of programIds) await api.setSaved(i, on) } catch (e) { setIds(before); setError(e.message) }
   }, [ids])
 
-  return <SavedContext.Provider value={{ ids, error, toggle }}>{children}</SavedContext.Provider>
+  return <SavedContext.Provider value={{ ids, error, toggle, reload: () => setN((x) => x + 1) }}>{children}</SavedContext.Provider>
 }

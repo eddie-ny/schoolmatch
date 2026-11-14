@@ -13,6 +13,13 @@ export function useDebounced(value, ms = 350) {
   return v
 }
 
+// Pull down to reload. bump() reloads the screen's data; the spinner shows until `loading` turns false again.
+export function usePull(bump, loading) {
+  const [pulled, setPulled] = useState(false)
+  useEffect(() => { if (!loading) setPulled(false) }, [loading])
+  return { onRefresh: () => { setPulled(true); bump() }, refreshing: pulled && loading }
+}
+
 const ICONS = { 'Nursing college': 'heart', 'College of Education': 'school' }
 const absolute = (u) => (u && u.startsWith('/') ? SITE + u : u)
 

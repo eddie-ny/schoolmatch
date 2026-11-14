@@ -145,8 +145,14 @@ export async function saveProfile(userId, profile) {
 // Everyone reads the summary list. The details (criteria, deadline, link) come from the full table, which the database only opens to people with full access.
 export async function listScholarships() {
   return retrying(async () => {
-    const { data, error } = await supabase.from('scholarships_summary').select('id, name, funder, country, funding_type, verified, demo, gender, school_id').order('id').range(0, 999)
-    if (error) throw new Error(error.message || 'Could not load scholarships.')
+    // The database returns at most 1000 rows a request, so read page after page until a short page comes back.
+    const data = []
+    for (let from = 0; ; from += 1000) {
+      const r = await supabase.from('scholarships_summary').select('id, name, funder, country, funding_type, verified, demo, gender, school_id').order('id').range(from, from + 999)
+      if (r.error) throw new Error(r.error.message || 'Could not load scholarships.')
+      data.push(...(r.data || []))
+      if ((r.data || []).length < 1000) break
+    }
     const ids = [...new Set((data || []).map((x) => x.school_id).filter(Boolean))]
     const schools = {}
     for (let i = 0; i < ids.length; i += 60) {
@@ -192,15 +198,22 @@ export async function setSaved(programId, on) {
   fail(error, 'Could not update your interested list.')
 }
 
-// Full detail for a list of program ids (the hearted ones).
+// Name, level, field and school for a list of program ids (the hearted ones). Reads the summary views, which every signed-in account can read,
+// so the Interested list also works for accounts without full access.
 export async function getProgramsFull(ids) {
-  const out = []
+  const progs = []
   for (let i = 0; i < ids.length; i += 80) {
-    const { data, error } = await supabase.from('programs').select('*, schools(id, name, country, type, city, category, logo_url, demo, verified)').in('id', ids.slice(i, i + 80))
+    const { data, error } = await supabase.from('programs_summary').select('id, school_id, name, level, field, demo, mode, campus').in('id', ids.slice(i, i + 80))
     fail(error, 'Could not load the programs.')
-    for (const f of data || []) out.push(mapFull(f, f.schools))
+    progs.push(...(data || []))
   }
-  return out
+  const sids = [...new Set(progs.map((p) => p.school_id))]
+  const schools = {}
+  for (let i = 0; i < sids.length; i += 60) {
+    const r = await supabase.from('schools_summary').select('id, name, country').in('id', sids.slice(i, i + 60))
+    for (const x of r.data || []) schools[x.id] = x
+  }
+  return progs.map((p) => ({ id: p.id, schoolId: p.school_id, schoolName: schools[p.school_id]?.name || '', name: p.name, level: p.level, field: p.field, demo: p.demo, mode: p.mode || 'Regular', campus: p.campus || '' }))
 }
 
 // The signed-in student, or null. With two-step verification on, the database hides the profile until the code is entered,

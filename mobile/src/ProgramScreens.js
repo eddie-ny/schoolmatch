@@ -10,7 +10,7 @@ import { fullDegreeName } from './lib/degreeNames'
 import { SAT, keyFacts, money } from './lib/programFacts'
 import { thumbUrl } from './lib/thumb'
 import { variantLabel } from './lib/variants'
-import { Monogram, cardStyle, useDebounced } from './SchoolParts'
+import { Monogram, cardStyle, useDebounced, usePull } from './SchoolParts'
 import { Badge, BackLink, Button, ErrorText, Gate, Input, Pager, Screen, SelectField, Title, styles } from './ui'
 
 const LEVELS = [{ value: '', label: 'All levels' }, ...['Undergraduate', 'Diploma', 'Certificate', 'Masters', 'Graduate Certificate'].map((x) => ({ value: x, label: x }))]
@@ -38,9 +38,10 @@ export function ProgramsList({ initialQ = '', initialField = '', onOpen }) {
   }, [dq, f.field, f.level, f.page, tries])
 
   const { rows, total, loading, error } = st
+  const pull = usePull(() => setTries((n) => n + 1), loading)
   const pages = Math.ceil(total / PROGRAMS_PAGE)
   return (
-    <Screen>
+    <Screen onRefresh={pull.onRefresh} refreshing={pull.refreshing}>
       <Title title={f.field ? `${f.field} programs` : 'Programs'} sub="Every program, at every university." />
       <View style={{ gap: 12, marginBottom: 16 }}>
         <Input placeholder="What do you want to study? (for example nursing, law)" value={f.q} onChangeText={set('q')} autoCorrect={false} style={{ borderWidth: 2, borderColor: colors.green }} />

@@ -3,6 +3,7 @@ import { ActivityIndicator, Linking, Text, View } from 'react-native'
 import { useAuth } from './AuthContext'
 import { ConfirmDialog } from './Chrome'
 import { useSaved } from './SavedContext'
+import { usePull } from './SchoolParts'
 import * as api from './lib/api'
 import { getAccess, timeLeft } from './lib/access'
 import { FIELDS, SHS_PROGRAMS, colors } from './lib/constants'
@@ -89,18 +90,22 @@ export function ProfilePage({ onBack }) {
 
 // ---------- Interested: hearted programs, grouped by university ----------
 export function InterestedPage({ onBack, onOpenProgram, onOpenSchool }) {
-  const { ids, error, toggle } = useSaved()
+  const { ids, error, toggle, reload } = useSaved()
+  const [loadErr, setLoadErr] = useState('')
   const { goTab } = useContext(ShellActions)
   const [programs, setPrograms] = useState([])
   const [busy, setBusy] = useState(true)
+  const [tries, setTries] = useState(0)
+  const pull = usePull(() => { reload(); setTries((n) => n + 1) }, busy)
   const key = [...ids].sort().join(',')
   useEffect(() => {
     let live = true
     if (!ids.size) { setPrograms([]); setBusy(false); return undefined }
     setBusy(true)
-    api.getProgramsFull([...ids]).then((x) => live && setPrograms(x)).catch(() => live && setPrograms([])).finally(() => live && setBusy(false))
+    setLoadErr('')
+    api.getProgramsFull([...ids]).then((x) => live && setPrograms(x)).catch((e) => { if (live) { setPrograms([]); setLoadErr(e.message) } }).finally(() => live && setBusy(false))
     return () => { live = false }
-  }, [key]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [key, tries]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const groups = useMemo(() => {
     const g = {}
@@ -110,10 +115,10 @@ export function InterestedPage({ onBack, onOpenProgram, onOpenSchool }) {
   const total = groups.reduce((n, g) => n + g.items.length, 0)
 
   return (
-    <Screen>
+    <Screen onRefresh={pull.onRefresh} refreshing={pull.refreshing}>
       <BackLink label="Back" onPress={onBack} />
       <Title title="Interested" sub="Programs you have marked with a heart, with their universities." />
-      <ErrorText>{error}</ErrorText>
+      <ErrorText>{error || loadErr}</ErrorText>
       {busy ? <View style={{ paddingVertical: 32 }}><ActivityIndicator color={colors.orangeInk} /></View> : total === 0 ? (
         <Card>
           <Text style={styles.body}>You have not marked any programs yet. Press the heart on a program to keep it here.</Text>

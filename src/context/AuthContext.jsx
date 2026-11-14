@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useRef, useState, useCallback } f
 import * as api from '../lib/api'
 import { supabase } from '../lib/supabase'
 import { getAccess } from '../lib/access'
+import { Sentry } from '../lib/sentry'
 
 const AuthContext = createContext(null)
 
@@ -52,6 +53,9 @@ export function AuthProvider({ children }) {
     })
     return () => data.subscription.unsubscribe()
   }, [refresh])
+
+  // Crash reports carry the account id only (no name, email or grades), so Sentry can count how many people an error hits.
+  useEffect(() => { Sentry.setUser(user?.id ? { id: user.id } : null) }, [user?.id])
 
   // Sign out after 30 minutes with no activity. This runs in the browser only (the server-side
   // inactivity timeout is a paid Supabase feature), so it protects shared computers, not stolen tokens.

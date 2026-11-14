@@ -9,6 +9,9 @@ import { Sentry } from './lib/sentry.js'
 // Vite fires this when a preloaded page file is missing (a new version went live). Reload once, then let it fail normally.
 window.addEventListener('vite:preloadError', () => {
   try { if (sessionStorage.getItem('chunk-reloaded') === '1') return; sessionStorage.setItem('chunk-reloaded', '1') } catch { return }
+  // Vite still passes the error on to the page loader in App.jsx. This tells it a reload is already on the way,
+  // so it waits instead of showing the error screen and reporting a false error to Sentry.
+  window.__chunkReloading = true
   window.location.reload()
 })
 

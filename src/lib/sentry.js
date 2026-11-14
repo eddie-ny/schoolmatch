@@ -8,6 +8,8 @@ if (dsn) {
   Sentry.init({
     dsn,
     environment: import.meta.env.MODE,
+    // Set at build time in index.html (see vite.config.js), so it matches the uploaded source maps.
+    release: document.querySelector('meta[name="sentry-release"]')?.content || undefined,
     sendDefaultPii: false,
     tracesSampleRate: 0,
     // Browser noise that is not our bug.

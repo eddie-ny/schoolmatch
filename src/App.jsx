@@ -16,6 +16,7 @@ function ToLocal() {
 const lazy = (load) => reactLazy(() => load().then(
   (m) => { try { sessionStorage.removeItem('chunk-reloaded') } catch { /* ignore */ } return m },
   (err) => {
+    if (window.__chunkReloading) return new Promise(() => {})
     let done = true
     try { done = sessionStorage.getItem('chunk-reloaded') === '1'; if (!done) sessionStorage.setItem('chunk-reloaded', '1') } catch { /* ignore */ }
     if (done) throw err

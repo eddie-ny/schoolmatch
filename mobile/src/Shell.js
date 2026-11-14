@@ -10,6 +10,7 @@ import { ComingSoon, ContactPage } from './Pages'
 import { SavedProvider } from './SavedContext'
 import { ScholarshipProvider } from './ScholarshipContext'
 import { ProgramDetail, ProgramsList } from './ProgramScreens'
+import { SatClassesPage, SatTestPage } from './SatScreens'
 import { ScholarshipDetail, ScholarshipsList } from './ScholarshipScreens'
 import { SchoolDetail, SchoolsList } from './SchoolScreens'
 import { InShell, ShellActions, ScopeContext } from './ui'
@@ -58,6 +59,8 @@ export default function Shell() {
   const render = (t, s) => {
     if (s.name === 'school') return <SchoolDetail id={s.id} q={s.q} field={s.field} onBack={back} onOpenProgram={openProgram} />
     if (s.name === 'program') return <ProgramDetail id={s.id} onBack={back} onOpenSchool={openSchool} onCheck={(p) => goTab('eligibility', { program: p?.name || '' })} />
+    if (s.name === 'sat') return <SatTestPage onBack={back} />
+    if (s.name === 'satclasses') return <SatClassesPage onBack={back} />
     if (s.name === 'scholarship') return <ScholarshipDetail id={s.id} onBack={back} onOpenSchool={openSchool} />
     if (PAGES[s.name]) {
       if (s.name === 'profile') return <ProfilePage onBack={back} />
@@ -68,7 +71,7 @@ export default function Shell() {
     }
     if (t === 'home') return <HomeScreen goTab={goTab} onOpenSchool={openSchool} />
     if (t === 'schools') return <SchoolsList initialKind={s.kind} onOpen={openSchool} />
-    if (t === 'eligibility') return <EligibilityTab initialProgram={s.program} onOpenProgram={openProgram} />
+    if (t === 'eligibility') return <EligibilityTab key={s.sat || 'e'} initialProgram={s.program} initialSat={s.sat || ''} onOpenProgram={openProgram} />
     if (t === 'programs') return <ProgramsList initialQ={s.q} initialField={s.field} onOpen={openProgram} />
     if (t === 'scholarships') return <ScholarshipsList initialFunding={s.funding} onOpen={openScholarship} />
     return null

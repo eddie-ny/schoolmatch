@@ -14,12 +14,12 @@ import { useDebounced } from './SchoolParts'
 import { Badge, Button, Card, Chips, ErrorText, Field, Gate, Input, ScopeSwitch, Screen, SelectField, ShellActions, Title, styles, useScope } from './ui'
 
 // Check My Eligibility: Local or International (the app-wide choice). Local is EligibilityScreen; International is below.
-export default function EligibilityTab({ initialProgram = '', onOpenProgram }) {
+export default function EligibilityTab({ initialProgram = '', initialSat = '', onOpenProgram }) {
   const { scope } = useScope()
   const sw = <View style={{ marginBottom: 16 }}><ScopeSwitch /></View>
   return scope === 'local'
     ? <EligibilityScreen initialProgram={initialProgram} onOpenProgram={onOpenProgram} scopeSwitch={sw} />
-    : <IntlEligibility onOpenProgram={onOpenProgram} scopeSwitch={sw} />
+    : <IntlEligibility initialSat={initialSat} onOpenProgram={onOpenProgram} scopeSwitch={sw} />
 }
 
 // ---------- International. Same rules as the website's src/pages/InternationalEligibility.jsx ----------
@@ -165,7 +165,8 @@ function ScholarshipsForYou({ me, fields, masters }) {
   )
 }
 
-function IntlEligibility({ onOpenProgram, scopeSwitch }) {
+function IntlEligibility({ initialSat = '', onOpenProgram, scopeSwitch }) {
+  const { openPage } = useContext(ShellActions)
   const { user } = useAuth()
   const full = getAccess(user).level === 'full'
   const { bySchool } = useScholarships()
@@ -176,7 +177,7 @@ function IntlEligibility({ onOpenProgram, scopeSwitch }) {
   const [countries, setCountries] = useState([])
   const [picked, setPicked] = useState([])
   const [grades, setGrades] = useState(['', '', '', '', '', ''])
-  const [sat, setSat] = useState('')
+  const [sat, setSat] = useState(initialSat)
   const [test, setTest] = useState('none')
   const [score, setScore] = useState('')
   const [cls, setCls] = useState('')
@@ -193,7 +194,7 @@ function IntlEligibility({ onOpenProgram, scopeSwitch }) {
     api.getMyResults(user.id).then((r) => {
       if (!live || !r) return
       setGrades(gradesFromSaved(r))
-      if (r.sat) setSat(String(r.sat))
+      if (r.sat && !initialSat) setSat(String(r.sat))
     }).catch(() => {})
     return () => { live = false }
   }, [user.id])
@@ -284,6 +285,7 @@ function IntlEligibility({ onOpenProgram, scopeSwitch }) {
                   <Input keyboardType="number-pad" placeholder="For example 1200" value={sat} onChangeText={(v) => setSat(v.replace(/[^0-9]/g, '').slice(0, 4))} />
                 </Field>
                 {satBad && <ErrorText>Enter a score from 400 to 1600, or leave it empty.</ErrorText>}
+                <Text style={styles.hint}>No score yet? <Text style={styles.link} onPress={() => openPage('sat')}>Take the short practice test</Text>. It gives a practice score, not an official one.</Text>
                 <Field label="English test you have taken"><SelectField title="English test" placeholder="No English test yet" value={test} onChange={setTest} options={TESTS} /></Field>
                 {test !== 'none' && <Field label="Your score"><Input keyboardType="decimal-pad" value={score} onChangeText={(v) => setScore(v.replace(/[^0-9.]/g, '').slice(0, 5))} /></Field>}
                 <Button label="Check my eligibility" disabled={satBad} onPress={check} />

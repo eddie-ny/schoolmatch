@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useContext, useEffect, useState } from 'react'
 import { Pressable, ScrollView, Text, View } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { useAuth } from './AuthContext'
@@ -6,7 +6,7 @@ import * as api from './lib/api'
 import { colors } from './lib/constants'
 import { SCHOOL_CATEGORIES, schoolCategory, schoolCategoryLabel } from './lib/schoolCategory'
 import { Monogram } from './SchoolParts'
-import { Screen, useScope } from './ui'
+import { Screen, ShellActions, useScope } from './ui'
 
 const FIELDS = [
   ['Computing', 'laptop-outline'], ['Engineering', 'construct-outline'], ['Business', 'briefcase-outline'], ['Health', 'medkit-outline'],
@@ -22,6 +22,7 @@ export default function HomeScreen({ goTab, onOpenSchool }) {
   const { user } = useAuth()
   const first = (user?.fullName || '').trim().split(/\s+/)[0]
   const { scope } = useScope()
+  const { openPage } = useContext(ShellActions)
   const [kind, setKind] = useState('')
   useEffect(() => { setKind('') }, [scope])
   const [st, setSt] = useState({ rows: [], total: 0, loading: true, error: '' })
@@ -64,6 +65,19 @@ export default function HomeScreen({ goTab, onOpenSchool }) {
         </View>
         <Ionicons name="chevron-forward" size={22} color={colors.ink} />
       </Pressable>
+
+      {scope === 'intl' && (
+        <Pressable onPress={() => openPage('sat')} accessibilityRole="button" style={(s) => [{ flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: colors.orangeSoft, borderRadius: 18, padding: 16, marginBottom: 24, borderWidth: 1, borderColor: colors.orange }, press(s)]}>
+          <View style={{ width: 46, height: 46, borderRadius: 23, backgroundColor: colors.orange, alignItems: 'center', justifyContent: 'center' }}>
+            <Ionicons name="create" size={24} color="#1f1f1f" />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={{ fontSize: 17, fontWeight: '700', color: colors.ink }}>Take a short SAT test</Text>
+            <Text style={{ fontSize: 14, color: '#525252' }}>10 questions. Get a practice score, then check your eligibility.</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={22} color={colors.ink} />
+        </Pressable>
+      )}
 
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
         <Text style={H2}>{scope === 'local' ? 'Schools' : 'International schools'}</Text>

@@ -12,7 +12,7 @@ import { SAT, keyFacts, money } from './lib/programFacts'
 import { thumbUrl } from './lib/thumb'
 import { variantLabel } from './lib/variants'
 import { Monogram, cardStyle, useDebounced, usePull } from './SchoolParts'
-import { Badge, BackLink, Button, ErrorText, Gate, Input, Pager, Screen, SelectField, Title, styles } from './ui'
+import { Badge, BackLink, Button, ErrorText, Gate, Input, Pager, Screen, ScopeSwitch, SelectField, Title, styles } from './ui'
 
 const LEVELS = [{ value: '', label: 'All levels' }, ...['Undergraduate', 'Diploma', 'Certificate', 'Masters', 'Graduate Certificate'].map((x) => ({ value: x, label: x }))]
 const Spinner = () => <View style={{ paddingVertical: 32 }}><ActivityIndicator color={colors.orangeInk} /></View>
@@ -21,34 +21,38 @@ const H2 = { fontSize: 20, fontWeight: '700', color: colors.ink }
 
 // ---------- Programs tab (local) ----------
 export function ProgramsList({ initialQ = '', initialField = '', onOpen }) {
-  const [f, setF] = useState({ q: initialQ, field: initialField, level: '', page: 1 })
+  const [f, setF] = useState({ scope: 'local', country: '', q: initialQ, field: initialField, level: '', page: 1 })
+  const [countries, setCountries] = useState([])
   const dq = useDebounced(f.q)
   const [fields, setFields] = useState([])
   const [st, setSt] = useState({ rows: [], total: 0, loading: true, error: '' })
   const [tries, setTries] = useState(0)
   const set = (k) => (v) => setF((cur) => ({ ...cur, [k]: v, page: 1 }))
 
-  useEffect(() => { let live = true; api.listFields('local').then((r) => live && setFields(r)); return () => { live = false } }, [])
+  useEffect(() => { let live = true; api.listFields(f.scope).then((r) => live && setFields(r)); return () => { live = false } }, [f.scope])
+  useEffect(() => { let live = true; if (f.scope === 'intl') api.listCountries('intl').then((r) => live && setCountries(r)); return () => { live = false } }, [f.scope])
   useEffect(() => {
     let live = true
     setSt((s) => ({ ...s, loading: true, error: '' }))
-    api.searchPrograms({ scope: 'local', q: dq, field: f.field, level: f.level, limit: PROGRAMS_PAGE, offset: (f.page - 1) * PROGRAMS_PAGE })
+    api.searchPrograms({ scope: f.scope, country: f.country, q: dq, field: f.field, level: f.level, limit: PROGRAMS_PAGE, offset: (f.page - 1) * PROGRAMS_PAGE })
       .then((r) => live && setSt({ ...r, loading: false, error: '' }))
       .catch((e) => live && setSt({ rows: [], total: 0, loading: false, error: e.message }))
     return () => { live = false }
-  }, [dq, f.field, f.level, f.page, tries])
+  }, [dq, f.scope, f.country, f.field, f.level, f.page, tries])
 
   const { rows, total, loading, error } = st
   const pull = usePull(() => setTries((n) => n + 1), loading)
   const pages = Math.ceil(total / PROGRAMS_PAGE)
   return (
     <Screen onRefresh={pull.onRefresh} refreshing={pull.refreshing}>
-      <Title title={f.field ? `${f.field} programs` : 'Programs'} sub="Every program, at every university." />
+      <Title title={f.field ? `${f.field} programs` : 'Programs'} sub={f.scope === 'intl' ? 'Programs at universities abroad.' : 'Every program, at every university.'} />
       <View style={{ gap: 12, marginBottom: 16 }}>
+        <ScopeSwitch value={f.scope} onChange={(v) => setF((cur) => ({ ...cur, scope: v, country: '', field: '', page: 1 }))} />
         <Input placeholder="What do you want to study? (for example nursing, law)" value={f.q} onChangeText={set('q')} autoCorrect={false} style={{ borderWidth: 2, borderColor: colors.green }} />
         <SelectField title="Field of study" placeholder="Any field" value={f.field} onChange={set('field')} options={[{ value: '', label: 'Any field' }, ...fields.map((x) => ({ value: x.field, label: `${x.field} (${Number(x.n).toLocaleString()})` }))]} />
+        {f.scope === 'intl' && <SelectField title="Country" placeholder="Any country" value={f.country} onChange={set('country')} options={[{ value: '', label: 'Any country' }, ...countries.map((c) => ({ value: c.country, label: c.country }))]} />}
         <SelectField title="Level" placeholder="All levels" value={f.level} onChange={set('level')} options={LEVELS} />
-        {!!(f.q || f.field || f.level) && <Button variant="outline" label="Clear all filters" onPress={() => setF({ q: '', field: '', level: '', page: 1 })} />}
+        {!!(f.q || f.field || f.level || f.country) && <Button variant="outline" label="Clear all filters" onPress={() => setF((cur) => ({ ...cur, q: '', field: '', level: '', country: '', page: 1 }))} />}
         <Text style={styles.hint}>{loading ? 'Searching...' : `${total.toLocaleString()} program${total === 1 ? '' : 's'}${pages > 1 ? `, page ${Math.min(f.page, pages)} of ${pages.toLocaleString()}` : ''}`}</Text>
       </View>
       {!!error && <View style={{ marginBottom: 12, gap: 6 }}><ErrorText>{error}</ErrorText><Button variant="outline" label="Try again" onPress={() => setTries((n) => n + 1)} /></View>}

@@ -8,7 +8,7 @@ import { SCHOOL_CATEGORIES, schoolCategory, schoolCategoryLabel } from './lib/sc
 import { thumbUrl } from './lib/thumb'
 import { useScholarships } from './ScholarshipContext'
 import { Monogram, SchoolCard, cardStyle, useDebounced, usePull } from './SchoolParts'
-import { Badge, BackLink, Button, Gate, Chips, ErrorText, Input, Pager, Screen, SelectField, ShellActions, Title, styles } from './ui'
+import { Badge, BackLink, Button, Gate, Chips, ErrorText, Input, Pager, Screen, ScopeSwitch, SelectField, ShellActions, Title, styles } from './ui'
 
 const LEVELS = [
   { value: '', label: 'Any level' },
@@ -23,21 +23,24 @@ const Spinner = () => <View style={{ paddingVertical: 32 }}><ActivityIndicator c
 
 // ---------- Find a School (local) ----------
 export function SchoolsList({ onBack, onOpen, initialKind = '' }) {
-  const [f, setF] = useState({ q: '', kind: initialKind, field: '', offers: '', page: 1 })
+  const [f, setF] = useState({ scope: 'local', country: '', q: '', kind: initialKind, field: '', offers: '', page: 1 })
+  const abroad = f.scope === 'intl'
+  const [countries, setCountries] = useState([])
   const dq = useDebounced(f.q)
   const [state, setState] = useState({ rows: [], total: 0, loading: true, error: '' })
   const [tries, setTries] = useState(0)
   // Any change to a filter goes back to page 1, like the website.
   const set = (k) => (v) => setF((cur) => ({ ...cur, [k]: v, page: 1 }))
 
+  useEffect(() => { let live = true; if (abroad) api.listCountries('intl').then((r) => live && setCountries(r)); return () => { live = false } }, [abroad])
   useEffect(() => {
     let live = true
     setState((s) => ({ ...s, loading: true, error: '' }))
-    api.searchSchools({ scope: 'local', q: dq, field: f.field, level: f.offers, kind: f.kind, limit: SCHOOLS_PAGE, offset: (f.page - 1) * SCHOOLS_PAGE })
+    api.searchSchools({ scope: f.scope, country: f.country, q: dq, field: f.field, level: f.offers, kind: f.kind, limit: SCHOOLS_PAGE, offset: (f.page - 1) * SCHOOLS_PAGE })
       .then((r) => live && setState({ ...r, loading: false, error: '' }))
       .catch((e) => live && setState({ rows: [], total: 0, loading: false, error: e.message }))
     return () => { live = false }
-  }, [dq, f.field, f.offers, f.kind, f.page, tries])
+  }, [dq, f.scope, f.country, f.field, f.offers, f.kind, f.page, tries])
 
   const { rows, total, loading, error } = state
   const pull = usePull(() => setTries((n) => n + 1), loading)
@@ -45,12 +48,19 @@ export function SchoolsList({ onBack, onOpen, initialKind = '' }) {
   return (
     <Screen onRefresh={pull.onRefresh} refreshing={pull.refreshing}>
       {onBack && <BackLink label="Back" onPress={onBack} />}
-      <Title title="Find a School" sub="Ghanaian universities and their programs." />
+      <Title title="Find a School" sub={abroad ? 'Universities abroad and their programs.' : 'Ghanaian universities and their programs.'} />
       <View style={{ gap: 12, marginBottom: 16 }}>
+        <ScopeSwitch value={f.scope} onChange={(v) => setF((cur) => ({ ...cur, scope: v, country: '', kind: '', field: '', offers: '', page: 1 }))} />
         <Input placeholder="Search by school, program (for example law), city or country" value={f.q} onChangeText={set('q')} autoCorrect={false} />
-        <Chips value={f.kind} options={KINDS} onChange={set('kind')} />
-        <SelectField title="Field of study" placeholder="Any field" value={f.field} onChange={set('field')} options={[{ value: '', label: 'Any field' }, ...FIELDS.map((x) => ({ value: x, label: x }))]} />
-        <SelectField title="Level offered" placeholder="Any level" value={f.offers} onChange={set('offers')} options={LEVELS} />
+        {abroad ? (
+          <SelectField title="Country" placeholder="Any country" value={f.country} onChange={set('country')} options={[{ value: '', label: 'Any country' }, ...countries.map((c) => ({ value: c.country, label: c.country }))]} />
+        ) : (
+          <>
+            <Chips value={f.kind} options={KINDS} onChange={set('kind')} />
+            <SelectField title="Field of study" placeholder="Any field" value={f.field} onChange={set('field')} options={[{ value: '', label: 'Any field' }, ...FIELDS.map((x) => ({ value: x, label: x }))]} />
+            <SelectField title="Level offered" placeholder="Any level" value={f.offers} onChange={set('offers')} options={LEVELS} />
+          </>
+        )}
         <Text style={styles.hint}>{loading ? 'Searching...' : `${total.toLocaleString()} result${total === 1 ? '' : 's'}`}</Text>
       </View>
       {!!error && (

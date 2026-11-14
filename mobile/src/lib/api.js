@@ -309,6 +309,12 @@ async function searchProgramsOnce({ scope = 'all', q = '', field = '', level = '
   return { rows, total: data?.[0] ? Number(data[0].total) : 0 }
 }
 
+// The countries that have schools on this side of the site (for the Abroad filter).
+export async function listCountries(scope = 'intl') {
+  const { data } = await supabase.rpc('program_countries', { p_scope: toScope(scope) })
+  return data || []
+}
+
 // The fields of study that have programs on this side of the site.
 export async function listFields(scope = 'local') {
   const { data } = await supabase.rpc('program_fields', { p_scope: toScope(scope) })

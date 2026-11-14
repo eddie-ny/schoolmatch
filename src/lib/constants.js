@@ -31,6 +31,22 @@ export const ELECTIVE_SUBJECTS = [
   'Applied Electricity',
   'Electronics',
   'Technical Drawing',
+  // Added 14 Nov 2026 for UEAS entry requirements (official PDF), so students can enter these electives.
+  'Basic Electronics',
+  'Computing',
+  'Computer Science',
+  'Electrical and Electronic Engineering Technology',
+  'Engineering',
+  'Robotic Engineering',
+  'Engineering Science',
+  'Metalwork',
+  'Woodwork',
+  'Manufacturing Engineering',
+  'Aviation and Aerospace Engineering',
+  'General Agriculture',
+  'Animal Husbandry',
+  'Crop Husbandry',
+  'Horticulture',
 ]
 
 export const SHS_PROGRAMS = [

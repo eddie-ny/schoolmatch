@@ -1,5 +1,5 @@
 // SAT-style math questions (no calculator and calculator sections), made fresh each time the test starts.
-// Each maker below copies the TYPE of one question from the owner's practice tests (section 3 of tests 1 to 8, section 4 of tests 1 to 3), with new numbers and names,
+// Each maker below copies the TYPE of one question from the owner's practice tests (section 3 of tests 1 to 8, section 4 of tests 1 to 4), with new numbers and names,
 // so every attempt is different but tests the same skill. The wording is written for this site, not copied.
 // Grid-in (type the answer) questions in the source are multiple choice here, like the rest of the test.
 // Same file in the web app (src/data/satMath.js) and the phone app (mobile/src/lib/satMath.js): keep them identical.
@@ -2010,7 +2010,270 @@ const T3_CALC = [
   }),
 ]
 
-export const MAKERS = [...NO_CALC, ...CALC, ...T5_NOCALC, ...T2_NOCALC, ...T3_NOCALC, ...T4_NOCALC, ...T6_NOCALC, ...T7_NOCALC, ...T8_NOCALC, ...T2_CALC, ...T3_CALC]
+// Practice test 4, section 4 (calculator), questions 1 to 38.
+const T4_CALC = [
+  // 12. Percent loss then percent gain.
+  function percentChange() {
+    const p = pick([10, 20, 25, 30, 40, 50]), q = pick([10, 20, 25, 30, 40, 50]), P = 1000 * r(2, 20), end = P * (1 - p / 100) * (1 + q / 100), ch = (100 * (end - P)) / P
+    const say = (c) => (c === 0 ? 'It did not change.' : `It ${c > 0 ? 'increased' : 'decreased'} by ${dec(Math.abs(c))} percent.`)
+    return ask(`An investment of $${P.toLocaleString('en-US')} lost ${p}% in the first year, then gained ${q}% in the second year. How did it change over the two years?`, say(ch), [say(q - p), say(-ch), say(ch + (ch === 0 ? 5 : 0) - (ch === 0 ? 0 : 1))].filter((x) => x !== say(ch)),
+      `After year 1: ${100 - p}% remains, so ${dec(1 - p / 100)} of it. After year 2: × ${dec(1 + q / 100)}. In all × ${dec((1 - p / 100) * (1 + q / 100), 4)}, which is ${say(ch).toLowerCase().replace('it ', '')}`, [say(ch + 2), say(ch - 3)])
+  },
+  // 1. Add two equations to get a sum.
+  form(T3_CALC[7], function addEquations() {
+    const m = r(2, 9), g = r(2, 9), a = r(1, 4), b = r(a + 1, 6), C1 = a * m + b * g, C2 = b * m + a * g
+    return ask(`${a === 1 ? '' : a} movie${a > 1 ? 's' : ''} and ${b} games cost $${C1} to rent. ${b} movies and ${a === 1 ? 'one game' : `${a} games`} cost $${C2}. How much does one movie and one game cost together, in dollars?`, m + g, [m, g, Math.round((C1 + C2) / 2)].filter((x) => x !== m + g),
+      `Add the two equations: ${a + b} movies + ${a + b} games = $${C1 + C2}. Divide by ${a + b}: one movie + one game = $${m + g}.`, [m + g + 1])
+  }),
+  // 2. Difference between two slices of a pie chart.
+  form(T3_NOCALC[0], function pieDifference() {
+    let a, c, o, N; do { a = r(25, 45); c = r(5, 20); o = r(10, 25); N = 100 * r(1, 5) } while (100 - a - c - o <= 5 || a <= 100 - a - c - o)
+    const g = 100 - a - c - o
+    return ask(`A pie chart shows the subjects ${N} students take: Algebra ${a}%, Calculus ${c}%, Other ${o}%, and Geometry the rest. How many more students take Algebra than Geometry?`, ((a - g) * N) / 100, [(a * N) / 100, (g * N) / 100, ((a - c) * N) / 100].filter((x) => x !== ((a - g) * N) / 100),
+      `Geometry is 100 ${M} ${a} ${M} ${c} ${M} ${o} = ${g}%. The gap is ${a} ${M} ${g} = ${a - g}% of ${N} = ${((a - g) * N) / 100}.`, [((a - g) * N) / 100 + 2])
+  }),
+  // 3. A middle value from a known difference.
+  form(CALC[0], function tableFromDifference() {
+    const f0 = r(-4, 9), s = r(-3, 5) || 2, d = 3 * s
+    return ask(`A linear function f has f(${M}1) = a, f(0) = ${num(f0)}, f(1) = k and f(2) = b. If b ${M} a = ${num(d)}, what is k?`, num(f0 + s), [num(f0 + d), num(f0 - s), num(d)].filter((x) => x !== num(f0 + s)),
+      `From x = ${M}1 to x = 2 is 3 steps, so each step adds ${num(d)}/3 = ${num(s)}. k = f(1) = ${num(f0)} + ${num(s)} = ${num(f0 + s)}.`, [num(f0 + s + 1)])
+  }),
+  // 4. Scale a two-way table sample to a whole school.
+  form(T2_CALC[15], function tableToSchool() {
+    let BF, GA, G, T, B, BA, A, N; do { BF = 5 * r(3, 10); GA = r(10, 30); G = GA + r(10, 30); T = 100; B = T - G; BA = B - BF; A = BA + GA; N = 100 * r(3, 12) } while (BA <= 0)
+    return ask(`In a random sample of ${T} students, ${BF} boys were for a new piano, ${GA} girls were against it, and ${G} of the students were girls. About how many of the ${N} students in the school would be expected to be against it?`, (A * N) / T, [(GA * N) / T, ((T - A) * N) / T, A].filter((x) => x !== (A * N) / T),
+      `Boys: ${T} ${M} ${G} = ${B}, so ${B} ${M} ${BF} = ${BA} boys were against. Against in all: ${BA} + ${GA} = ${A} of ${T} = ${A}%. ${A}% of ${N} = ${(A * N) / T}.`, [(A * N) / T + 8])
+  }),
+  // 5. Average growth per year from a growth chart.
+  form(CALC[18], function averageGrowth() {
+    const ages = [0, 1, 2, 3, 4, 5, 6, 7], h = [r(18, 21)]; for (let i = 1; i < 8; i++) h.push(h[i - 1] + (i < 3 ? r(4, 6) : r(1, 3)))
+    const a1 = r(1, 3), a2 = r(a1 + 2, 7), g = (h[a2] - h[a1]) / (a2 - a1)
+    return ask(`A chart of boys' average height (inches) by age shows: ${ages.map((a, i) => `age ${a}: ${h[i]}`).join(', ')}. What is the average growth per year, in inches, from age ${a1} to age ${a2}?`, dec(g), [String(h[a2] - h[a1]), dec(h[a2] / a2), dec(g + 1)].filter((x) => x !== dec(g)),
+      `(${h[a2]} ${M} ${h[a1]})/(${a2} ${M} ${a1}) = ${h[a2] - h[a1]}/${a2 - a1} = ${dec(g)} inches a year.`, [dec(g + 2)])
+  }),
+  // 6. Percent increase between two values.
+  function percentIncreaseValues() {
+    const a = pick([20, 25, 30, 40, 50, 60, 80]), p = pick([10, 20, 25, 40, 50, 60, 75]), b = (a * (100 + p)) / 100
+    if (!Number.isInteger(b)) return percentIncreaseValues()
+    return ask(`A boy's height went from ${a} inches to ${b} inches. By what percent did his height increase?`, p, [Math.round((100 * (b - a)) / b), b - a, p + 10].filter((x) => x !== p),
+      `Increase = ${b} ${M} ${a} = ${b - a}. Percent increase = ${b - a}/${a} × 100 = ${p}% (divide by the starting value).`, [p - 5])
+  },
+  // 7. Intercept of a parallel line.
+  form(NO_CALC[14], function parallelIntercept() {
+    const p = r(1, 4), q = r(1, 6), X = r(2, 9), s = q / p, b = -s * X
+    return ask(`Line ℓ passes through (${M}${p}, 0) and (0, ${q}). Line m is parallel to ℓ and passes through (${X}, 0) and (0, b). What is b?`, dec(b), [dec(-X / s), dec(-b), dec(-q * X)].filter((x) => x !== dec(b)),
+      `Line ℓ has slope ${q}/${p} = ${frac(q, p)}. Parallel lines share the slope, so line m rises ${frac(q, p)} per step: going from x = ${X} back to x = 0 drops ${frac(q * X, p)}, so b = ${dec(b)}.`, [dec(b - 1)])
+  }),
+  // 8. Area of a circle from an expanded equation.
+  form(CALC[17], function circleAreaExpanded() {
+    const h = r(-5, 5) || 4, k = pick([0, r(-4, 4)]), R2 = h * h + k * k
+    const xs = `x² ${h > 0 ? M : '+'} ${Math.abs(2 * h)}x`, ys = k ? `y² ${k > 0 ? M : '+'} ${Math.abs(2 * k)}y` : 'y²'
+    return ask(`${xs} + ${ys} = 0 is the equation of a circle. What is its area?`, `${R2}π`, [`${2 * R2}π`, `${Math.abs(h)}π`, `${R2 * R2}π`, `${R2 + 2}π`, `${4 * R2}π`].filter((x) => x !== `${R2}π`),
+      `Complete the squares: (x ${M} ${num(h)})² + (y ${M} ${num(k)})² = ${R2}. So r² = ${R2} and the area is ${R2}π.`, [`${R2 + 1}π`])
+  }),
+  // 9. A value from a shifted rule.
+  form(T4_NOCALC[4], function shiftedRuleValue() {
+    const s = r(1, 6), a = r(2, 5), c = r(-12, 6), t = r(-5, 3), x = t + s
+    return ask(`If f(x ${M} ${s}) = ${a}x${tail(c)} for all x, what is f(${num(t)})?`, num(a * x + c), [num(a * t + c), num(a * (t - s) + c), num(a * x)].filter((v) => v !== num(a * x + c)),
+      `f(${num(t)}) needs x ${M} ${s} = ${num(t)}, so x = ${num(x)}. Then f(${num(t)}) = ${a}(${num(x)})${tail(c)} = ${num(a * x + c)}.`, [num(a * x + c + 1)])
+  }),
+  // 10. A linear model from a start and an end.
+  form(CALC[14], function linearSupply() {
+    const start = 5 * r(3, 10), d = r(4, 12), rate = r(1, Math.floor(start / d) - 0 || 1), end = start - rate * d
+    if (end < 0) return linearSupply()
+    return ask(`A family starts a trip with ${start} pounds of rice. After ${d} days they have ${end} pounds left, using the same amount each day. Which function gives the amount T left after d days?`, `T(d) = ${start} ${M} ${rate}d`, [`T(d) = ${rate}d`, `T(d) = ${rate}d + ${start}`, `T(d) = ${start} ${M} ${d}d`, `T(d) = ${start} ${M} ${rate + 1}d`, `T(d) = ${end} + ${rate}d`],
+      `They use (${start} ${M} ${end})/${d} = ${rate} pounds a day, starting from ${start}: T(d) = ${start} ${M} ${rate}d.`)
+  }),
+  // 11. Meaning of a point on a model's graph.
+  form(T2_CALC[3], function interpretIntercept() {
+    const H = 50 * r(4, 12), v = pick([4, 5, 8, 10, 16]), t = H / v
+    return ask(`A lift moving down from a height of ${H} feet follows ${v}x + y = ${H}, where y is its height above the lobby and x is time in seconds. What does the point (${dec(t)}, 0) mean?`,
+      `The lift takes ${dec(t)} seconds to reach the lobby.`, [`The lift stops at a height of ${dec(t)} feet.`, `The lift moves down at ${dec(t)} feet per second.`, `The lift moves ${dec(t)} feet from the lobby.`],
+      `y = 0 means the lift is at the lobby (height 0), and x = ${dec(t)} is the time. So it gets there after ${dec(t)} seconds.`)
+  }),
+  // 13. Signs of coefficients from which quadrants a line crosses.
+  form(T6_NOCALC[3], function quadrantSigns() {
+    const opts = { 'I, II and III, but not IV': ['a < 0 and b > 0'], 'I, II and IV, but not III': ['a > 0 and b > 0'], 'II, III and IV, but not I': ['a < 0 and b < 0'], 'I, III and IV, but not II': ['a > 0 and b < 0'] }
+    const key = pick(Object.keys(opts)), right = opts[key][0]
+    return ask(`The graph of ax + by = 5 passes through Quadrants ${key}. Which of the following must be true?`, right, ['a > 0 and b > 0', 'a > 0 and b < 0', 'a < 0 and b > 0', 'a < 0 and b < 0'].filter((x) => x !== right),
+      `Write y = (${M}a/b)x + 5/b. The quadrants crossed fix the sign of the slope and of the y-intercept 5/b, which give the signs of b and then a: ${right}.`)
+  }),
+  // 14. Height of a double cone from its volume.
+  form(CALC[34], function doubleCone() {
+    const rr = r(2, 6), h = 3 * r(2, 10), V = (rr * rr * h) / 3
+    return ask(`A tank is two cones joined at their bases, each with radius ${rr} feet. If the tank's volume is ${dec(V)}π cubic feet, what is its total height h, from tip to tip, in feet?`, h, [h / 2, h * 2, Math.round(V / (rr * rr))].filter((x) => x !== h),
+      `Two cones of height h/2 hold 2 × (1/3)π(${rr * rr})(h/2) = (${rr * rr}/3)πh. Set equal to ${dec(V)}π: h = ${h}.`, [h + 3])
+  }),
+  // 15. Isosceles triangle under a parabola.
+  form(T3_NOCALC[5], function parabolaIsosceles() {
+    const c = r(2, 6), k = r(1, 3), top = k * c * c
+    return ask(`f(x) = ${M}${k === 1 ? '' : k}x² + ${2 * k * c}x. Triangle OPQ has O at the origin, Q where the graph meets the positive x-axis, and P at the graph's highest point. What is the area of triangle OPQ?`, top * c, [top * 2 * c, top, (top * c) / 2].filter((x) => x !== top * c),
+      `${M}${k === 1 ? '' : k}x(x ${M} ${2 * c}) = 0 gives Q = (${2 * c}, 0). The top is at x = ${c}: P = (${c}, ${top}). Area = (1/2)(${2 * c})(${top}) = ${top * c}.`)
+  }),
+  // 16. Part of a job left after working together.
+  form(CALC[30], function jobLeft() {
+    const a = pick([4, 6, 8, 10, 12]), b = pick([3, 4, 6, 8, 12].filter((x) => x !== a)), t = r(1, 3), done = t * (1 / a + 1 / b)
+    if (done >= 1) return jobLeft()
+    const lcm = (a * b) / gcd(a, b), left = frac(lcm - t * (lcm / a + lcm / b), lcm)
+    return ask(`Cathy can do a job in ${a} hours and Danny in ${b} hours. If they work together for ${t} hour${t > 1 ? 's' : ''}, what fraction of the job is left?`, left, [frac(t * (lcm / a + lcm / b), lcm), frac(1, a + b), frac(t, a + b)].filter((x) => x !== left),
+      `Together they do 1/${a} + 1/${b} = ${frac(lcm / a + lcm / b, lcm)} of the job each hour. In ${t} hour${t > 1 ? 's' : ''}: ${frac(t * (lcm / a + lcm / b), lcm)}. Left: ${left}.`)
+  }),
+  // 17. Which distance is impossible.
+  function distanceRange() {
+    const D = r(8, 20), p = r(1, 5), q = r(1, 5), lo = Math.max(0, D - p - q), hi = D + p + q
+    const ok = [lo, Math.round((lo + hi) / 2), hi]
+    return ask(`Points X and Y are ${D} apart. Point P is ${p} from X and point Q is ${q} from Y. Which of the following CANNOT be the distance PQ?`, String(lo > 1 ? lo - 1 : hi + 1), ok.map(String),
+      `PQ is shortest when P and Q are on segment XY facing each other: ${D} ${M} ${p} ${M} ${q} = ${lo}. It is longest when they point away: ${D} + ${p} + ${q} = ${hi}. Any distance from ${lo} to ${hi} is possible, so ${lo > 1 ? lo - 1 : hi + 1} is not.`)
+  },
+  // 18. A price pattern that grows by the same step.
+  form(T6_NOCALC[1], function pricePattern() {
+    const step = r(2, 3), first = 10 * r(3, 8), add = 5 * r(4, 8), n = step * r(30, 120)
+    const cost = first + add * (n / step - 1)
+    return ask(`Desks are priced as follows: ${step} desks cost $${first}, ${2 * step} cost $${first + add}, ${3 * step} cost $${first + 2 * add}, and so on. What do ${n} desks cost, in dollars?`, cost, [(first * n) / step, cost + add, add * (n / step)].filter((x) => x !== cost),
+      `Each extra ${step} desks adds $${add}. ${n} desks is ${n / step} groups, so the cost is ${first} + ${n / step - 1} × ${add} = ${cost}.`, [cost - add])
+  }),
+  // 19 and 20. A river's cross-section from a parabola.
+  form(CALC[26], function riverParabola() {
+    const a = 5 * r(1, 4), b = a + 10 * r(2, 6), w = (b - a) / 2, depth = pick([w * w / 2, w * w / 4, w * w / 8, w * w]), k = depth / (w * w), askK = pick([true, false])
+    if (!Number.isInteger(depth)) return riverParabola()
+    return askK
+      ? ask(`A river's cross-section is D(x) = k(x ${M} ${a})(x ${M} ${b}), where D is depth in metres and x is distance across. The deepest point is ${depth} metres below the surface (D = ${M}${depth}). What is k?`, frac(depth, w * w), [frac(w * w, depth), String(depth), frac(depth, w)].filter((x) => x !== frac(depth, w * w)),
+        `The deepest point is halfway, at x = ${(a + b) / 2}: D = k(${w})(${M}${w}) = ${M}${w * w}k = ${M}${depth}, so k = ${frac(depth, w * w)}.`)
+      : ask(`A river's cross-section is D(x) = k(x ${M} ${a})(x ${M} ${b}), where D is depth in metres, x is distance across, and k > 0. How wide is the river at the surface, in metres?`, b - a, [b, a, w].filter((x) => x !== b - a),
+        `The surface is where D = 0: x = ${a} and x = ${b}. Width = ${b} ${M} ${a} = ${b - a}.`, [b - a + 5])
+  }),
+  // 21. Segment of the hypotenuse from a sine.
+  form(T4_NOCALC[15], function hypotenuseSegment() {
+    const s = pick([0.2, 0.25, 0.3, 0.35, 0.4, 0.5, 0.6]), BC = 10 * r(1, 4)
+    return ask(`Triangle ABC has a right angle at C, and CD goes straight down from C to AB. Angle A is a° with sin(a°) = ${s}. If BC = ${BC}, how long is BD?`, dec(BC * s), [dec(BC / s), dec(BC * (1 - s)), String(BC)],
+      `Angle B = 90 ${M} a, so cos B = sin a = ${s}. In right triangle BDC, BD = BC × cos B = ${BC} × ${s} = ${dec(BC * s)}.`)
+  }),
+  // 22. Which polynomial has a given factor.
+  form(CALC[22], function whichHasFactor() {
+    const c = pick([1, 2, -1]), make = (good) => { let cs; do { cs = [r(1, 3), r(-3, 3), r(-3, 3)]; const v = cs[0] * c ** 3 + cs[1] * c ** 2 + cs[2] * c; cs.push(good ? -v : -v + r(1, 3) * pick([1, -1])) } while (cs[3] === 0); return cs }
+    const P = (cs) => `${poly(cs)}`
+    const right = P(make(true)), wrong = [P(make(false)), P(make(false)), P(make(false))]
+    if (new Set([right, ...wrong]).size < 4) return whichHasFactor()
+    return ask(`Which of the following polynomials has (x ${c > 0 ? M : '+'} ${Math.abs(c)}) as a factor?`, right, wrong, `(x ${c > 0 ? M : '+'} ${Math.abs(c)}) is a factor exactly when the polynomial is 0 at x = ${num(c)}. Only ${right} gives 0 there.`)
+  }),
+  // 23. Cost with a flat start, then a steady rate.
+  form(T8_NOCALC[6], function flatThenRate() {
+    const base = 50 * r(3, 8), h0 = r(1, 3), h1 = h0 + r(4, 8), top = base + 50 * r(2, 6), slope = frac(top - base, h1 - h0)
+    return ask(`A consultant charges $${base} for up to ${h0} hours. After that the cost rises steadily, reaching $${top} at ${h1} hours. Which gives the cost C(x) for x hours, with x > ${h0}?`, `C(x) = ${base} + (${slope})(x ${M} ${h0})`, [`C(x) = ${base} + (${slope})x`, `C(x) = ${base} + ${top - base}x`, `C(x) = ${base}`],
+      `The rise is (${top} ${M} ${base})/(${h1} ${M} ${h0}) = ${slope} dollars an hour, counted only after ${h0} hours: C(x) = ${base} + (${slope})(x ${M} ${h0}).`)
+  }),
+  // 24. When |x| = k has a solution.
+  form(CALC[4], function absSolutionStatements() {
+    const right = 'I only'
+    return ask('|x| = k. If this equation has a real solution, which of these must be true? I. k ≥ 0 II. k < 0 III. x > 0', right, ['II only', 'I and III only', 'II and III only'],
+      '|x| is never negative, so k ≥ 0. k < 0 gives no solution. x can be negative (x = −k), so x > 0 is not required.')
+  }),
+  // 25. Area of a sector from its arc.
+  form(CALC[29], function sectorAreaFromArc() {
+    const [deg, num2, den] = pick([[270, 3, 4], [180, 1, 2], [90, 1, 4], [240, 2, 3]]), L = r(4, 20)
+    const area = frac(L * L * den, 4 * num2)
+    return ask(`A sector of a circle has a central angle of ${deg}° and its curved edge is ${L} long. What is the area of the sector?`, `${area}/π`.replace(/^(\d+)\/(\d+)\/π$/, '$1/($2π)'), [`${L * L}π`, `${frac(L * L, 4)}π`, `${frac(L * L * den, 2 * num2)}/π`.replace(/^(\d+)\/(\d+)\/π$/, '$1/($2π)')],
+      `Arc = (${deg}/360) × 2πr = ${L}, so r = ${frac(L * den, 2 * num2)}/π. Area = (1/2) × r × arc = ${area}/π.`)
+  }),
+  // 26. Constants that make an equation true for all x.
+  form(NO_CALC[16], function allXConstants() {
+    const k = r(2, 9), p = r(2, 4), C = p * k
+    return ask(`(k ${M} 1)x + ${p}k = ax + ${C} for all real x, where k and a are constants. What is a?`, k - 1, [k, C, k + 1].filter((x) => x !== k - 1),
+      `The numbers must match: ${p}k = ${C}, so k = ${k}. The x terms match: a = k ${M} 1 = ${k - 1}.`)
+  }),
+  // 27. A horizontal line meeting a wavy graph three times.
+  form(T6_NOCALC[13], function threeSolutions() {
+    const s = r(10, 16), m1 = -r(3, 6), M1 = r(5, 9), m2 = -r(8, 12), e = r(13, 18)
+    return ask(`The graph of f, for ${M}5 ≤ x ≤ 15, starts at (${M}5, ${s}), falls to a low point at height ${num(m1)}, rises to a high point at height ${M1}, falls to a low point at height ${num(m2)}, and rises to end at (15, ${e}). If y = f(x) and y = k have exactly three solutions, which could be k?`, num(m1), [String(M1 + 2), String(Math.round((m1 + M1) / 2) || 1), num(m1 - 1)],
+      `y = ${num(m1)} touches the first low point once and crosses the two parts of the graph that go below it once each: 3 points. Heights between ${m1} and ${M1} give 4 points, just above ${M1} gives 2, and just below ${m1} gives 2.`)
+  }),
+  // 28. Squares growing along a line.
+  function squaresAlongLine() {
+    const a = r(2, 5), ratio = pick([2, 1.5, 3]), b = a * ratio, c = b * ratio
+    if (!Number.isInteger(b) || !Number.isInteger(c)) return squaresAlongLine()
+    return ask(`Three squares sit side by side on a line, and one straight line passes through the top-left corner of each. The first two squares have areas ${a * a} and ${b * b}. What is the area of the third square?`, c * c, [(2 * b - a) ** 2, b * b * 2, (a + b) ** 2].filter((x) => x !== c * c),
+      `Each square starts where the last one ends, and the corners lie on one line, so the sides grow by the same factor: ${b}/${a} = ${dec(ratio)}. The third side is ${b} × ${dec(ratio)} = ${c}, area ${c * c}.`, [c * c + 1])
+  },
+  // 29. Averages of pairs give the average of all three.
+  form(T3_CALC[7], function pairAverages() {
+    const a = r(2, 20), b = r(2, 30), c = r(2, 30), s1 = (a + 2 * b) / 2, s2 = (b + 2 * c) / 2, s3 = (c + 2 * a) / 2
+    if (![s1, s2, s3].every(Number.isInteger) || (a + b + c) % 3) return pairAverages()
+    return ask(`The average of a and 2b is ${s1}, the average of b and 2c is ${s2}, and the average of c and 2a is ${s3}. What is the average of a, b and c?`, (a + b + c) / 3, [a + b + c, (s1 + s2 + s3) / 3, (a + b + c) / 3 + 4].map((x) => Math.round(x)).filter((x) => x !== (a + b + c) / 3),
+      `Add the three: a + 2b + b + 2c + c + 2a = 2(${s1} + ${s2} + ${s3}), so 3(a + b + c) = ${2 * (s1 + s2 + s3)} and a + b + c = ${a + b + c}. The average is ${(a + b + c) / 3}.`, [(a + b + c) / 3 + 2])
+  }),
+  // 30. Arc on the outer circle from a sector on the inner one.
+  form(T2_NOCALC[17], function concentricArc() {
+    const d = 5, n = 2, rIn = 5 * r(1, 3), [p, q] = pick([[2, 3], [1, 1], [3, 2], [1, 2]]), rOut = rIn + (rIn * q) / p
+    if (!Number.isInteger(rOut)) return concentricArc()
+    const area = (rIn * rIn * n) / (2 * d), arc = (rOut * n) / d
+    return ask(`Two circles share centre O. Two rays from O cut the small circle at P and Q and the large circle at R and S. Angle POQ is 2π/5 and sector OPQ has area ${dec(area)}π. If OP : PR = ${p} : ${q}, how long is arc RS?`, `${dec(arc)}π`, [`${dec((rIn * n) / d)}π`, `${dec(arc * 2)}π`, `${dec(((rOut - rIn) * n) / d)}π`].filter((x) => x !== `${dec(arc)}π`),
+      `Sector area = (1/2)r²θ: (1/2)r²(2π/5) = ${dec(area)}π gives OP = ${rIn}. PR = ${rIn} × ${q}/${p} = ${dec(rOut - rIn)}, so OR = ${rOut}. Arc RS = ${rOut} × 2π/5 = ${dec(arc)}π.`, [`${dec(arc + 1)}π`])
+  }),
+  // 31. One function from another's value.
+  form(T3_NOCALC[1], function functionFromOther() {
+    const m = r(2, 5), c = r(-6, 6) || 1, v = r(-4, 8), g = m * v + c
+    return ask(`g(x) = ${m}f(x)${tail(c)}. If g(1) = ${num(g)}, what is f(1)?`, num(v), [num(g), num(g - c), num(v + 1)].filter((x) => x !== num(v)),
+      `${num(g)} = ${m}f(1)${tail(c)}, so ${m}f(1) = ${num(g - c)} and f(1) = ${num(v)}.`)
+  }),
+  // 32. A made-up operation.
+  function customOperation() {
+    const c = r(-3, 3), x = r(2, 5), y = r(2, 6), d = r(1, 3), val = x * y - x + c
+    let k = null; for (let t = 1; t < 30; t++) if (t * (t - d) - t + c === val) { k = t; break }
+    if (k == null) return customOperation()
+    return ask(`For all a and b, a ∇ b = ab ${M} a${c ? tail(c) : ''}. If k ∇ (k ${M} ${d}) = ${x} ∇ ${y}, what is the positive value of k?`, k, [x, y, k + 1].filter((v) => v !== k),
+      `${x} ∇ ${y} = ${x * y} ${M} ${x}${tail(c)} = ${val}. k ∇ (k ${M} ${d}) = k(k ${M} ${d}) ${M} k${tail(c)} = k² ${M} ${d + 1}k${tail(c)}. Setting this to ${val} and solving gives the positive k = ${k}.`, [k + 2])
+  },
+  // 33. Percent condition gives a ratio expression.
+  form(CALC[33], function percentRatioExpression() {
+    const [a, b, p, c, q] = pick([[4, 5, 250, 4, 9], [2, 3, 200, 2, 7], [3, 2, 150, 4, 5], [5, 1, 300, 2, 1]])
+    const mn = (p / 100) * c - b, m = mn / a // m/n
+    const val = (m + 1) / (m - 1)
+    if (!Number.isFinite(val) || m === 1) return percentRatioExpression()
+    return ask(`If ${a}m + ${b}n is equal to ${p}% of ${c}n, what is (m + n)/(m ${M} n)?`, dec(val), [dec(m), dec(1 / m), dec((m - 1) / (m + 1))].filter((x) => x !== dec(val)),
+      `${a}m + ${b}n = ${dec((p / 100) * c)}n, so ${a}m = ${dec(mn)}n and m/n = ${dec(m)}. Divide top and bottom by n: (m/n + 1)/(m/n ${M} 1) = ${dec(val)}.`, [dec(val + 1)])
+  }),
+  // 34. Triangle inside a parallelogram.
+  form(T3_NOCALC[18], function parallelogramTriangle() {
+    const [p, q] = pick([[2, 3], [1, 2], [1, 3], [3, 2], [1, 1]]), A = (p) * r(2, 12) * 2 / 2, total = (A * 2 * (p + q)) / p
+    return ask(`ABCD is a parallelogram, and M is on BC with BM : MC = ${p} : ${q}. If triangle ABM has area ${A}, what is the area of triangle AMD?`, dec(total / 2), [dec(total), dec((A * q) / p), dec(total / 2 - A)].filter((x) => x !== dec(total / 2)),
+      `Triangle ABM has base BM = ${p}/${p + q} of BC, so its area is ${p}/${p + q} × half the parallelogram. Half the parallelogram is ${A} × ${p + q}/${p} = ${dec(total / 2)}, and triangle AMD (base AD = BC, same height) is exactly half the parallelogram: ${dec(total / 2)}.`, [dec(total / 2 + 5)])
+  }),
+  // 35. When a steady decline reaches an amount.
+  form(T5_NOCALC[7], function declineAmount() {
+    const rate = 50 * r(2, 10), P0 = 1000 * r(10, 40), drop = rate * r(2, 12)
+    return ask(`A town's population is P(x) = ${P0.toLocaleString('en-US')} ${M} ${rate}x, where x is years since 2000. In how many years will the population have fallen by ${drop.toLocaleString('en-US')}?`, drop / rate, [Math.round(P0 / rate), drop / rate + 2, Math.round(drop / 100)].filter((x) => x !== drop / rate),
+      `It falls by ${rate} a year. ${drop} ÷ ${rate} = ${drop / rate} years.`, [drop / rate + 1])
+  }),
+  // 36. An equilateral triangle cut by parallel lines.
+  function equilateralSplit() {
+    const s = 2 * r(3, 10), [p, q] = pick([[1, 3], [1, 2], [2, 3], [1, 4]]), DC = (s * q) / (p + q)
+    return ask(`Equilateral triangle ABC has sides of ${s}. D is on AC, E is on AB with ED parallel to BC, and F is on BC with DF parallel to AB. If DE : DF = ${p} : ${q}, what is the perimeter of triangle CDF?`, dec(3 * DC), [dec(3 * (s - DC)), dec(DC), dec(s * 3 / 2)].filter((x) => x !== dec(3 * DC)),
+      `Triangles ADE and DCF are equilateral (their sides are parallel to ABC's), so DE = AD and DF = DC. AD : DC = ${p} : ${q} and AD + DC = ${s}, so DC = ${dec(DC)}. The perimeter of CDF is 3 × ${dec(DC)} = ${dec(3 * DC)}.`, [dec(3 * DC + 3)])
+  },
+  // 37. Sum of reciprocals of the roots.
+  form(T6_NOCALC[11], function reciprocalRoots() {
+    // Two real solutions need B² > 4aC.
+    let a, B, C; do { a = r(2, 5); B = r(3, 12); C = r(1, 9) } while (B * B <= 4 * a * C)
+    return ask(`If a and b are the two solutions of ${a}x² ${M} ${B}x + ${C} = 0, what is 1/a + 1/b?`, frac(B, C), [frac(C, B), frac(B, a), frac(C, a)].filter((x) => x !== frac(B, C)),
+      `1/a + 1/b = (a + b)/(ab). For ${a}x² ${M} ${B}x + ${C}: a + b = ${frac(B, a)} and ab = ${frac(C, a)}. So (${frac(B, a)})/(${frac(C, a)}) = ${frac(B, C)}.`, [frac(B + 1, C)])
+  }),
+  // 38. Where a line meets a parabola.
+  function lineParabolaIntersection() {
+    const h = 3, k = -4, aN = 4, aD = 9 // y = (4/9)(x − 3)² − 4 through (0, 0) and (6, 0)
+    const c = pick([6, 4, 8]), // line through (0, −c) and (6, 0)
+      m = c / 6
+    // (4/9)(x − 3)² − 4 = m x − c  →  4x² − (24 + 9m)x + 36 − 36 + 9c = 0
+    const A = 4, B = -(24 + 9 * m), C = 9 * c, disc = B * B - 4 * A * C, r1 = (-B - Math.sqrt(disc)) / (2 * A), r2 = (-B + Math.sqrt(disc)) / (2 * A)
+    const rr = Math.abs(r2 - 6) < 1e-9 ? r1 : r2
+    return ask(`A parabola has its vertex at (${h}, ${num(k)}) and passes through the origin. A line passes through (0, ${M}${c}) and (6, 0). The graphs meet at (6, 0) and at another point (r, s). What is r (to 2 decimal places where needed)?`, dec(rr), [String(h), dec(6 - rr), dec(rr + 1)].filter((x) => x !== dec(rr)),
+      `The parabola is y = (${aN}/${aD})(x ${M} ${h})² ${M} ${-k} (through the origin). The line is y = ${dec(m)}x ${M} ${c}. Setting them equal gives ${A}x² ${M} ${-B}x + ${C} = 0, with solutions x = 6 and x = ${dec(rr)}.`)
+  },
+]
+// 6. Percent increase from a chart, a form of question 12. (Added after the list so it can point at it.)
+// It sits at position 6 in the list above; move it to the end as a form of percentChange (position 0).
+T4_CALC.push(form(T4_CALC[0], T4_CALC.splice(6, 1)[0]))
+
+export const MAKERS = [...NO_CALC, ...CALC, ...T5_NOCALC, ...T2_NOCALC, ...T3_NOCALC, ...T4_NOCALC, ...T6_NOCALC, ...T7_NOCALC, ...T8_NOCALC, ...T2_CALC, ...T3_CALC, ...T4_CALC]
 
 // Types: each one is a list of forms. A form made with form(name, ...) joins the type of the maker with that name.
 export const TYPES = (() => {

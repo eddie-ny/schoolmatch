@@ -1,5 +1,5 @@
 // SAT-style math questions (no calculator and calculator sections), made fresh each time the test starts.
-// Each maker below copies the TYPE of one question from the owner's practice tests (section 3 of tests 1 to 8, section 4 of tests 1 to 7), with new numbers and names,
+// Each maker below copies the TYPE of one question from the owner's practice tests (section 3 of tests 1 to 8, section 4 of tests 1 to 8), with new numbers and names,
 // so every attempt is different but tests the same skill. The wording is written for this site, not copied.
 // Grid-in (type the answer) questions in the source are multiple choice here, like the rest of the test.
 // Same file in the web app (src/data/satMath.js) and the phone app (mobile/src/lib/satMath.js): keep them identical.
@@ -3100,7 +3100,289 @@ const T7_CALC = [
   }),
 ]
 
-export const MAKERS = [...NO_CALC, ...CALC, ...T5_NOCALC, ...T2_NOCALC, ...T3_NOCALC, ...T4_NOCALC, ...T6_NOCALC, ...T7_NOCALC, ...T8_NOCALC, ...T2_CALC, ...T3_CALC, ...T4_CALC, ...T5_CALC, ...T6_CALC, ...T7_CALC]
+// Practice test 8, section 4 (calculator). Questions 9 and 24 need their drawn graphs, so they are left out.
+const T8_CALC = [
+  // 1. Factor out x, then double.
+  form(T3_NOCALC[1], function factorThenScale() {
+    const t = r(2, 6), s = r(3, 15), m = pick([2, 3, 5]), N = t * s
+    return ask(`If ax + bx = ${N}, what is the value of ${m}a + ${m}b when x = ${t}?`, m * s, [N, s, m * N].filter((v) => v !== m * s),
+      `ax + bx = (a + b)x. With x = ${t}: ${t}(a + b) = ${N}, so a + b = ${s} and ${m}a + ${m}b = ${m * s}.`, [m * s + m, m * s - m])
+  }),
+  // 2. Angles of a trapezoid.
+  form(CALC[2], function trapezoidAngles() {
+    const d = r(95, 130), bb = r(45, 85), x = 180 - bb, y = 180 - d
+    return ask(`ABCD is a four-sided figure with AB parallel to CD. Angle D is ${d}°, angle B is ${bb}°, angle C is x° and angle A is y°. What is the value of x ${M} y?`, d - bb,
+      [x + y, 180 - (d - bb), d + bb - 180].filter((v) => v !== d - bb && v > 0),
+      `With AB ∥ CD, angles on the same leg add to 180°: x = 180 ${M} ${bb} = ${x} and y = 180 ${M} ${d} = ${y}. x ${M} y = ${d - bb}.`, [d - bb + 5, d - bb - 5])
+  }),
+  // 3. y-intercept from a point and a distance.
+  form(CALC[5], function interceptFromDistance() {
+    const [h, q, c] = pick([[3, 4, 5], [4, 3, 5], [6, 8, 10], [8, 6, 10], [12, 5, 13], [5, 12, 13]]), p = r(1, h - 1)
+    const at = (v) => `(0, ${v})`
+    return ask(`Line ℓ passes through B(${p}, ${q}) and through point A on the negative x-axis. If AB = ${c}, what is the y-intercept of the line?`, at(frac(q * (h - p), h)),
+      [at(frac(q * p, h)), at(frac(q * (h + p), h)), at(q)],
+      `B is ${q} above the x-axis and AB = ${c}, so A is √(${c}² ${M} ${q}²) = ${h} to the left of B: A = (${num(p - h)}, 0). The slope is ${frac(q, h)}, so the y-intercept is ${q} ${M} ${frac(q, h)}(${p}) = ${frac(q * (h - p), h)}.`, [at(frac(q * (h - p) + 1, h)), at(frac(q * (h - p) - 1, h))])
+  }),
+  // 4. Line parallel to an axis through a point.
+  form(T6_NOCALC[3], function axisParallelLine() {
+    let u, v; do { u = r(-9, 9); v = r(-9, 9) } while (u === 0 || v === 0 || Math.abs(u) === Math.abs(v))
+    const xAxis = pick([true, false])
+    return ask(`In the xy-plane, line ℓ is parallel to the ${xAxis ? 'x' : 'y'}-axis and passes through the point ${pt(u, v)}. What is the equation of the line?`,
+      xAxis ? `y = ${num(v)}` : `x = ${num(u)}`, xAxis ? [`x = ${num(u)}`, `y = ${num(u)}`, `x = ${num(v)}`] : [`y = ${num(v)}`, `x = ${num(v)}`, `y = ${num(u)}`],
+      `A line parallel to the ${xAxis ? 'x-axis is flat: every point has the same y' : 'y-axis goes straight up: every point has the same x'}, here ${xAxis ? num(v) : num(u)}. So ${xAxis ? `y = ${num(v)}` : `x = ${num(u)}`}.`)
+  }),
+  // 5. Product of two roots as a power.
+  form(NO_CALC[13], function rootsAsPower() {
+    let a, b; do { a = r(2, 5); b = r(2, 5) } while (a === b)
+    const B = pick([10, 2, 5]), sq = pick([true, false]), k = sq ? frac(a + b, 2 * a * b) : frac(a + b, a * b)
+    return ask(`If (${a === 2 ? '' : sup(a)}√${B})(${b === 2 ? '' : sup(b)}√${B}) = ${sq ? B * B : B}ᵏ, what is the value of k?`, k,
+      [sq ? frac(a + b, a * b) : frac(a + b, 2 * a * b), frac(2, a + b), frac(1, a * b)],
+      `${a === 2 ? '' : sup(a)}√${B} = ${B}^(1/${a}) and ${b === 2 ? '' : sup(b)}√${B} = ${B}^(1/${b}). Their product is ${B}^(${frac(a + b, a * b)}).${sq ? ` ${B * B}ᵏ = ${B}^(2k), so 2k = ${frac(a + b, a * b)} and k = ${k}.` : ` So k = ${k}.`}`)
+  }),
+  // 6. When a quick formula matches the exact one.
+  form(T5_NOCALC[11], function approxFormulaMatch() {
+    const half = pick([true, false]), C0 = half ? 10 * r(1, 8) : 5 * r(1, 12), m = half ? 1.5 : 2, c = 32 + (1.8 - m) * C0
+    const cc = Math.round(c)
+    return ask(`F = (9/5)C + 32 changes degrees Celsius C to degrees Fahrenheit F. A student uses the quick formula F = ${m}C + ${cc} instead. For what Celsius temperature does the quick formula give the correct Fahrenheit temperature?`,
+      C0, [cc, C0 + 5, 0].filter((v) => v !== C0),
+      `Set them equal: (9/5)C + 32 = ${m}C + ${cc}. Then ${32 - cc === 0 ? '0' : num(32 - cc)} = ${dec(m - 1.8, 1)}C, so C = ${C0}.`, [C0 + 10, C0 - 5])
+  }),
+  // 7. Other x-intercept from the turning point.
+  form(T2_NOCALC[11], function otherInterceptFromVertex() {
+    const h = r(-3, 8), k = r(2, 12), d = r(1, 6), x1 = h - d, other = h + d
+    return ask(`The graph of the function f in the xy-plane is a parabola with its highest point at ${pt(h, k)}. If one x-intercept is ${pt(x1, 0)}, what is the other x-intercept?`,
+      pt(other, 0), [pt(-x1, 0), pt(2 * h, 0), pt(other + 1, 0)],
+      `A parabola is symmetric about the vertical line through its top, x = ${num(h)}. ${pt(x1, 0)} is ${d} to the left, so the other is ${d} to the right: ${pt(other, 0)}.`, [pt(other - 1, 0), pt(other + 2, 0), pt(other - 2, 0)])
+  }),
+  // 8. A squared equation with a linear one.
+  form(T5_NOCALC[1], function squaredWithLinear() {
+    const n = r(2, 4), c = r(1, 6), askA = pick([true, false]), a = frac(c, 2), b = frac(-c, 2 * n)
+    return ask(`a² = ${n * n}b² and a = ${c} + ${n}b. In the system of equations above, what is the value of ${askA ? 'a' : 'b'}?`,
+      askA ? a : b, askA ? [frac(-c, 2), frac(c, 2 * n), num(c)] : [frac(c, 2 * n), frac(-c, n), frac(c, 2)],
+      `a² = ${n * n}b² means a = ${n}b or a = ${M}${n}b. a = ${n}b would make ${c} = 0, so a = ${M}${n}b: ${M}${n}b = ${c} + ${n}b, b = ${b} and a = ${a}.`)
+  }),
+  // 10. An interval that fits inside an absolute value inequality.
+  form(CALC[4], function subsetInterval() {
+    let p, q, rr, L, U; do { p = pick([1, 2, 3]); q = r(-9, 12); rr = r(4, 15); L = (q - rr) / p; U = (q + rr) / p } while (!Number.isInteger(L) || !Number.isInteger(U) || U - L < 4)
+    const iv = (a, b) => `${num(a)} < x < ${num(b)}`
+    return ask(`|${p === 1 ? '' : p}x ${q < 0 ? '+' : M} ${Math.abs(q)}| < ${rr}. Which of the following intervals is a subset of the values of x that satisfy the inequality above?`,
+      iv(L + 1, U - 1), [iv(L - 2, U + 2), iv(L + 1, U + 1), iv(L - 1, U - 1)],
+      `${M}${rr} < ${p === 1 ? '' : p}x ${q < 0 ? '+' : M} ${Math.abs(q)} < ${rr}, so ${num(q - rr)} < ${p === 1 ? '' : p}x < ${q + rr}${p === 1 ? '' : ` and ${num(L)} < x < ${num(U)}`}. Only ${iv(L + 1, U - 1)} fits inside.`)
+  }),
+  // 11. How many to remove for a given probability.
+  form(T2_NOCALC[18], function removeForProbability() {
+    const k = pick([2, 3, 4]), m = r(2, 10), W = m * (k - 1), n = r(2, 15), B = m + n
+    return ask(`A bag holds ${B} black marbles and ${W} white marbles and nothing else. How many black marbles must be taken out so that the probability of picking a black marble at random is 1/${k}?`,
+      n, [B - W, m, Math.round(B / k)].filter((v) => v !== n && v > 0),
+      `After taking out n black marbles: (${B} ${M} n)/(${B + W} ${M} n) = 1/${k}. So ${k}(${B} ${M} n) = ${B + W} ${M} n, ${k * B} ${M} ${k}n = ${B + W} ${M} n and n = ${n}.`, [n + 2, n - 1, n + 4])
+  }),
+  // 12. Radius from the length around two semicircles.
+  form(T2_NOCALC[17], function twoSemicirclesLength() {
+    const rr = r(2, 9)
+    return ask(`Two semicircles of radius r have their centers O and P on one straight line, one bulging above the line and one below, touching end to end. The figure is the two arcs plus the straight segment joining their far ends. If its total length is ${2 * rr}π + ${4 * rr}, what is r?`,
+      rr, [2 * rr, 4 * rr, rr + 2],
+      `The two arcs together are one full circle: 2πr. The straight segment is two diameters: 4r. So 2πr + 4r = ${2 * rr}π + ${4 * rr} and r = ${rr}.`, [rr - 1])
+  }),
+  // 13. Product from two power equations.
+  form(T3_NOCALC[1], function powerProduct() {
+    const n = r(5, 15), c = pick([2, 4, 5, 10, 20]), N = c * 50 * r(1, 10)
+    return ask(`If x${sup(n)} = ${N} and x${sup(n - 1)}/y = ${c}, what is the value of xy?`, N / c, [N * c, c, N / (c * c)].filter((v) => Number.isInteger(v) && v !== N / c),
+      `Divide: x${sup(n)} ÷ (x${sup(n - 1)}/y) = x${sup(n)} × y/x${sup(n - 1)} = xy. That is ${N}/${c} = ${N / c}.`, [N / c + 10, N / c - 10, N])
+  }),
+  // 14. Median from a count of scores.
+  form(CALC[7], function medianFromCounts() {
+    const scores = [30, 40, 50, 60, 70, 80, 90, 100].sort(() => Math.random() - 0.5).slice(0, 5)
+    const counts = scores.map(() => r(3, 10)), total = counts.reduce((a, b) => a + b)
+    const sorted = scores.map((s, i) => [s, counts[i]]).sort((a, b) => a[0] - b[0]), list = []
+    sorted.forEach(([s, c]) => { for (let i = 0; i < c; i++) list.push(s) })
+    const med = total % 2 ? list[(total - 1) / 2] : (list[total / 2 - 1] + list[total / 2]) / 2
+    const mode = scores[counts.indexOf(Math.max(...counts))]
+    return ask(`A chart shows the test scores of ${total} students: ${scores.map((s, i) => `${counts[i]} scored ${s}`).join(', ')}. What is the median score?`,
+      dec(med, 1), [dec(scores[2], 1), dec(mode, 1), dec(med + 5, 1)],
+      `Put the ${total} scores in order: ${sorted.map(([s, c]) => `${c} × ${s}`).join(', ')}. The middle ${total % 2 ? `one is number ${(total + 1) / 2}` : `two are numbers ${total / 2} and ${total / 2 + 1}`}, which gives ${dec(med, 1)}.`, [dec(med - 5, 1), dec(med + 10, 1)])
+  }),
+  // 15. Fee function from a setup charge and one total.
+  form(CALC[0], function setupFeeFunction() {
+    const S = 25 * r(2, 8), h = r(4, 10), rate = pick([30, 37.5, 40, 47.5, 52.5, 60, 72.5]), T = S + rate * h
+    return ask(`A studio charges a setup fee of $${S} plus an hourly rate. A ${h}-hour session costs $${money(T)} in all. Which function f gives the total fee, in dollars, for t hours?`,
+      `f(t) = ${S} + ${dec(rate, 2)}t`, [`f(t) = ${dec(T, 2)} + ${S}t`, `f(t) = ${S} + ${dec(T / h, 2)}t`, `f(t) = ${S} + ${dec(T - S, 2)}t`],
+      `Without the setup fee, ${h} hours cost ${dec(T, 2)} ${M} ${S} = ${dec(T - S, 2)}, so the hourly rate is ${dec(T - S, 2)}/${h} = ${dec(rate, 2)}. f(t) = ${S} + ${dec(rate, 2)}t.`)
+  }),
+  // 16. Total fee for a longer session.
+  form(CALC[0], function setupFeeTotal() {
+    const S = 25 * r(2, 8), h = r(4, 10), rate = pick([30, 37.5, 40, 47.5, 52.5, 60, 72.5]), T = S + rate * h, H = h + r(1, 5)
+    return ask(`A studio charges a setup fee of $${S} plus an hourly rate. A ${h}-hour session costs $${money(T)} in all. How much, in dollars, does a ${H}-hour session cost?`,
+      dec(S + rate * H, 2), [dec((T / h) * H, 2), dec(S + (T / h) * H, 2), dec(rate * H, 2)],
+      `Hourly rate: (${dec(T, 2)} ${M} ${S})/${h} = ${dec(rate, 2)}. For ${H} hours: ${S} + ${dec(rate, 2)}(${H}) = ${dec(S + rate * H, 2)}.`, [dec(S + rate * H + 10, 2)])
+  }),
+  // 17. Line through the parabola's y-intercept and another meeting point.
+  form(T4_CALC[T4_CALC.length - 2], function lineThroughTwoMeets() {
+    let h, X, m; do { h = r(1, 4); X = r(1, 8); m = X - 2 * h } while (m === 0 || X === 2 * h)
+    const b = h * h, yX = (X - h) ** 2, line = (sl, ic) => `y = ${sl}x${ic ? tail(ic) : ''}`
+    return ask(`f(x) = (x ${M} ${h})². The graph of the line g(x) meets the graph of f on the y-axis and again at ${pt(X, yX)}. Which of the following is the equation of g?`,
+      line(coef(m), b), [line(coef(yX, X), 0), line(coef(m + 1), yX - (m + 1) * X), line(coef(m - 1), yX - (m - 1) * X)],
+      `On the y-axis, f(0) = ${b}, so g passes through (0, ${b}) and ${pt(X, yX)}. Slope = (${yX} ${M} ${b})/${X} = ${num(m)}. g: ${line(coef(m), b)}.`, [line(coef(m), b + 1), line(coef(m), -b), line(coef(-m), b)])
+  }),
+  // 18. Square of a difference of reciprocals.
+  form(T5_NOCALC[2], function reciprocalDifferenceSquare() {
+    const P = r(2, 8), S = 2 * P + r(1, 40), minus = pick([true, false]), top = minus ? S - 2 * P : S + 2 * P
+    return ask(`If x² + y² = ${S} and xy = ${P}, what is the value of (1/x ${minus ? M : '+'} 1/y)²?`, frac(top, P * P),
+      [frac(top, P), frac(minus ? S + 2 * P : S - 2 * P, P * P), frac(S, P * P)],
+      `1/x ${minus ? M : '+'} 1/y = (y ${minus ? M : '+'} x)/(xy). Squared: (x² + y² ${minus ? M : '+'} 2xy)/(xy)² = (${S} ${minus ? M : '+'} ${2 * P})/${P * P} = ${frac(top, P * P)}.`)
+  }),
+  // 19. Split a fraction into two simpler fractions.
+  form(T7_NOCALC[19], function splitFraction() {
+    const n = r(1, 5), c = r(1, 6), askB = pick([true, false])
+    return ask(`${c}/(x(x + ${n})) = a/x ${M} b/(x + ${n}). In the equation above, a and b are constants. If the equation is true for all positive x, what is the value of ${askB ? 'b' : 'a'}?`,
+      frac(c, n), [frac(-c, n), num(c), frac(n, c)],
+      `Combine the right side: (a(x + ${n}) ${M} bx)/(x(x + ${n})). So ${c} = (a ${M} b)x + ${n}a for all x: ${n}a = ${c} and a ${M} b = 0. a = b = ${frac(c, n)}.`, [frac(c + 1, n)])
+  }),
+  // 20. Which point cannot be on a reflected line.
+  function reflectedLinePoint() {
+    let p, q; do { p = r(-4, 4); q = r(-8, 8) } while (p === 0 || q === 0)
+    const yAxis = pick([true, false]), f = (x) => (yAxis ? p * x + q : p * x - q)
+    const xs = [-2, -1, 0, 1, 2, 3, 4].sort(() => Math.random() - 0.5).slice(0, 4), on = xs.slice(0, 3).map((x) => pt(x, f(x)))
+    const off = pt(xs[3], f(xs[3]) + pick([1, 2, 3, -1, -2]))
+    return ask(`The line ${p === 1 ? '' : p === -1 ? M : num(p)}x + y = ${num(q)} in the xy-plane is reflected across the ${yAxis ? 'y' : 'x'}-axis. Which of the following points CANNOT be on the new line?`,
+      off, on,
+      `Reflecting across the ${yAxis ? 'y-axis turns x into −x' : 'x-axis turns y into −y'}: ${yAxis ? `${coef(-p)}x + y = ${num(q)}` : `${coef(p)}x ${M} y = ${num(q)}`}, so y = ${coef(p)}x${tail(yAxis ? q : -q)}. ${off} does not fit; the other three do.`)
+  },
+  // 21. Rectangle under a line through the origin.
+  form(T2_NOCALC[14], function rectangleOnLine() {
+    let n, d; do { n = r(1, 4); d = r(2, 5) } while (gcd(n, d) !== 1 || n === d)
+    const t = r(1, 4), a = d * t, b = n * t, A = a * b, askB = pick([true, false])
+    return ask(`O is the origin and Q(a, b) is on the line y = ${coef(n, d)}x, with a > 0. P is on the y-axis and R is on the x-axis so that OPQR is a rectangle. If the area of OPQR is ${A}, what is the value of ${askB ? 'b' : 'a'}?`,
+      askB ? b : a, askB ? [a, b + n, 2 * b] : [b, a + d, 2 * a],
+      `The rectangle is a wide and b tall, with b = ${coef(n, d)}a. Area: a × ${coef(n, d)}a = ${A}, so a² = ${a * a}, a = ${a} and b = ${b}.`, [askB ? b + 1 : a + 1])
+  }),
+  // 22. Price of one bag from the overall cost per pound.
+  form(T2_NOCALC[6], function costPerPoundBag() {
+    let w, p1, p2, avg, W, p3; do { w = [5 * r(1, 4), 5 * r(3, 6), 5 * r(7, 12)]; avg = r(4, 8); p1 = w[0] * r(avg - 2, avg + 3); p2 = w[1] * r(avg - 2, avg + 3); W = w[0] + w[1] + w[2]; p3 = avg * W - p1 - p2 } while (p3 <= 0 || p3 === avg * w[2])
+    return ask(`${pick(NAMES)} bought a ${w[0]}-pound bag of flour for $${p1}, a ${w[1]}-pound bag for $${p2} and a ${w[2]}-pound bag. If the average cost per pound of all the flour is $${avg}.00, what was the price of the ${w[2]}-pound bag?`,
+      `$${p3}`, [`$${avg * w[2]}`, `$${p3 + 40}`, `$${Math.max(10, p3 - 40)}`],
+      `${W} pounds at $${avg} a pound cost $${avg * W} in all. The last bag: ${avg * W} ${M} ${p1} ${M} ${p2} = $${p3}.`, [`$${p3 + 20}`])
+  }),
+  // 23. Greatest percent increase.
+  form(T4_CALC[0], function greatestPercentIncrease() {
+    const people = ['Ama', 'Kofi', 'Esi', 'Yaw'], cut = (a, b) => (b - a) / a
+    let t1, t2, pc; do { t1 = people.map(() => 10 * r(4, 8)); t2 = t1.map((v) => v + 10 * r(1, 4)); pc = t1.map((v, i) => cut(v, t2[i])) } while (t2.some((v) => v > 100) || [...pc].sort((a, b) => b - a)[0] - [...pc].sort((a, b) => b - a)[1] < 0.03)
+    const best = pc.indexOf(Math.max(...pc))
+    return ask(`Test 1 and test 2 scores: ${people.map((p, i) => `${p} ${t1[i]} then ${t2[i]}`).join('; ')}. Who had the greatest percent increase from test 1 to test 2?`,
+      people[best], people.filter((_, i) => i !== best),
+      `Percent increase = (test 2 ${M} test 1)/test 1: ${people.map((p, i) => `${p} ${Math.round(pc[i] * 100)}%`).join(', ')}. The greatest is ${people[best]}.`)
+  }),
+  // 25. Compare spreads (standard deviation).
+  form(T6_NOCALC[7], function compareSpread() {
+    const mid = r(18, 28), A = [mid - r(1, 3), mid + r(1, 4), mid - r(0, 2), mid + r(0, 3)], kind = pick(['A', 'B', 'same'])
+    const B = kind === 'same' ? A.map((v) => v + 3).sort(() => Math.random() - 0.5) : [mid - r(5, 8), mid + r(6, 10), mid - r(3, 6), mid + r(2, 5)]
+    const [X, Y] = kind === 'A' ? [B, A] : [A, B], say = { A: 'The standard deviation in Amber City is larger than in Buner City.', B: 'The standard deviation in Buner City is larger than in Amber City.', same: 'The standard deviation is the same in both cities.' }
+    return ask(`High temperatures, in °C, for spring, summer, autumn and winter: Amber City ${X.join(', ')}; Buner City ${Y.join(', ')}. Which of the following is true?`,
+      say[kind], [...Object.keys(say).filter((k) => k !== kind).map((k) => say[k]), 'The standard deviations cannot be compared from these data.'],
+      kind === 'same' ? `Buner's values are Amber's values each raised by 3, just in a different order. Adding the same number to every value does not change the spread, so the standard deviations are equal.`
+        : `${kind === 'A' ? 'Amber' : 'Buner'} City's values (${(kind === 'A' ? X : Y).join(', ')}) are much more spread out from their middle than the other city's, so its standard deviation is larger.`)
+  }),
+  // 26. Radius from a tangent and a sine.
+  form(T4_NOCALC[15], function tangentRadius() {
+    const [a, b, c] = pick([[4, 3, 5], [3, 4, 5], [12, 5, 13], [5, 12, 13], [8, 15, 17]]), k = r(1, 4), askR = pick([true, false])
+    return ask(`PR is tangent to the circle with center O at point P, and PR = ${b * k}. If sin∠R = ${frac(a, c)}${a / c === 0.8 || a / c === 0.6 ? ` (${dec(a / c, 1)})` : ''}, what is ${askR ? 'the radius of the circle' : 'the length of OR'}?`,
+      askR ? a * k : c * k, askR ? [b * k, c * k, a * k + b * k] : [a * k, b * k, a * k + b * k],
+      `A radius meets a tangent at a right angle, so OPR is a right triangle with the right angle at P. sin∠R = OP/OR = ${frac(a, c)}, so the sides are in the ratio ${a} : ${b} : ${c} (OP : PR : OR). PR = ${b * k} gives OP = ${a * k} and OR = ${c * k}.`)
+  }),
+  // 27. Two exponential equations make a linear system.
+  form(NO_CALC[13], function exponentSystem() {
+    let m1, m2; do { m1 = r(1, 6); m2 = r(1, 6) } while (m1 === m2)
+    const askX = pick([true, false]), x = frac(2 * m2 - m1, 3), y = frac(2 * m1 - m2, 3)
+    return ask(`2^(x + 2y) = ${2 ** m1} and 3^(2x + y) = ${3 ** m2}. In the system of equations above, what is the value of ${askX ? 'x' : 'y'}?`,
+      askX ? x : y, askX ? [y, num(m1), num(m2)] : [x, num(m2), num(m1)],
+      `${2 ** m1} = 2${sup(m1)} and ${3 ** m2} = 3${sup(m2)}, so x + 2y = ${m1} and 2x + y = ${m2}. Solving: x = ${x}, y = ${y}.`, [frac(m1 + m2, 3), frac(m1 + m2, 2)])
+  }),
+  // 28. Which sum cannot happen.
+  form(NO_CALC[5], function cannotBeSum() {
+    const P = pick([12, 18, 20, 24, 30, 36]), sums = []
+    for (let d = 1; d * d <= P; d++) if (P % d === 0) sums.push(d + P / d)
+    let bad; do { bad = r(Math.min(...sums) - 2, Math.max(...sums) + 3) } while (sums.includes(bad) || bad < 2)
+    return ask(`(x + y)² ${M} (x ${M} y)² = ${4 * P}. In the equation above, x and y are positive integers. Which of the following CANNOT be the value of x + y?`,
+      bad, sums.sort(() => Math.random() - 0.5).slice(0, 3),
+      `Expand: (x + y)² ${M} (x ${M} y)² = 4xy = ${4 * P}, so xy = ${P}. The positive integer pairs give sums ${sums.sort((a, b) => a - b).join(', ')}. ${bad} is not one of them.`)
+  }),
+  // 29. Order of three numbers from the order of their pair averages.
+  form(T2_NOCALC[6], function averagesOrder() {
+    const order = ['a', 'b', 'c'].sort(() => Math.random() - 0.5), val = { [order[0]]: 3, [order[1]]: 2, [order[2]]: 1 }
+    const avgs = [['P', 'a', 'b', 'c'], ['Q', 'b', 'c', 'a'], ['R', 'c', 'a', 'b']].map(([n, u, v, out]) => [n, (val[u] + val[v]) / 2, out]).sort((x, y) => y[1] - x[1])
+    const right = order.join(' > '), wrong = [['a', 'b', 'c'], ['c', 'b', 'a'], ['b', 'a', 'c'], ['a', 'c', 'b'], ['b', 'c', 'a'], ['c', 'a', 'b']].map((o) => o.join(' > ')).filter((s) => s !== right).sort(() => Math.random() - 0.5).slice(0, 2)
+    return ask(`P is the average of a and b, Q is the average of b and c, and R is the average of c and a. If ${avgs.map((x) => x[0]).join(' > ')}, which of the following is true?`,
+      right, [...wrong, 'a = b = c'],
+      `Each average leaves out one number, and the biggest average leaves out the smallest number. ${avgs[0][0]} leaves out ${avgs[0][2]}, so ${avgs[0][2]} is smallest; ${avgs[2][0]} leaves out ${avgs[2][2]}, so ${avgs[2][2]} is largest. ${right}.`)
+  }),
+  // 30. Profit function for a stall.
+  form(T5_NOCALC[11], function stallProfit() {
+    const S = 10 * r(5, 20), c = pick([0.2, 0.25, 0.3, 0.35, 0.4]), s = pick([0.75, 0.8, 1, 1.25, 1.5]), m = (Math.round((s - c) * 100) / 100).toFixed(2), sp = s.toFixed(2)
+    return ask(`${pick(NAMES)} sets up a juice stall. The set-up cost is $${S}, each cup of juice costs $${c.toFixed(2)} to make, and each cup sells for $${sp}. Which function gives the profit P, in dollars, from selling n cups?`,
+      `P(n) = ${m}n ${M} ${S}`, [`P(n) = ${sp}n ${M} ${S}`, `P(n) = ${sp}n + ${S}`, `P(n) = ${m}n + ${S}`],
+      `Each cup earns $${sp} ${M} $${c.toFixed(2)} = $${m}. Subtract the $${S} set-up cost once: P(n) = ${m}n ${M} ${S}.`)
+  }),
+  // 31. Circumference from an expanded circle equation.
+  form(CALC[17], function circumferenceFromEquation() {
+    let h, k; do { h = r(-5, 5); k = r(-5, 5) } while (h === 0 || k === 0)
+    const R2 = h * h + k * k, R = Math.sqrt(R2)
+    return ask(`x² ${tail(-2 * h).trim()}x + y² ${tail(-2 * k).trim()}y = 0. The equation of a circle in the xy-plane is shown above. To the nearest tenth, what is the circumference of the circle?`,
+      dec(2 * Math.PI * R, 1), [dec(Math.PI * R2, 1), dec(Math.PI * R, 1), dec(2 * Math.PI * R2, 1)],
+      `Complete the squares: (x ${h > 0 ? M : '+'} ${Math.abs(h)})² + (y ${k > 0 ? M : '+'} ${Math.abs(k)})² = ${h * h} + ${k * k} = ${R2}. r = √${R2}, so the circumference is 2π√${R2} ≈ ${dec(2 * Math.PI * R, 1)}.`, [dec(2 * Math.PI * R + 1, 1)])
+  }),
+  // 32. Cost per extra unit from a model with a fraction.
+  form(T2_CALC[3], function perUnitFromFraction() {
+    const d = pick([4, 8, 10, 16, 20]), per = r(30, 250) / 10, m = Math.round(per * d * 10) / 10, b = r(300, 1500)
+    return ask(`C = (${m}x + ${b})/${d}. The cost C, in dollars, of making x units is modeled above. According to the model, by how many dollars does the cost go up for each extra unit?`,
+      dec(m / d, 2), [dec(m, 2), dec(b / d, 2), dec((m + b) / d, 2)],
+      `C = (${m}/${d})x + ${b}/${d}. Each extra unit adds ${m}/${d} = ${dec(m / d, 2)} dollars.`)
+  }),
+  // 33. Difference of values of a linear function.
+  form(CALC[18], function linearDifference() {
+    const s = pick([1, 2, 3, 4, 0.5, 1.5]), x1 = r(1, 6), x2 = x1 + 2 * r(1, 4), x3 = r(2, 9), x4 = x3 + 2 * r(2, 7), D = s * (x2 - x1)
+    return ask(`If f is a linear function for which f(${x2}) ${M} f(${x1}) = ${dec(D, 1)}, what is the value of f(${x4}) ${M} f(${x3})?`, dec(s * (x4 - x3), 1),
+      [dec(D, 1), dec(D * (x4 - x3), 1), dec(s, 1)],
+      `The slope is ${dec(D, 1)}/(${x2} ${M} ${x1}) = ${dec(s, 1)}. Over ${x4 - x3} units, f changes by ${dec(s, 1)} × ${x4 - x3} = ${dec(s * (x4 - x3), 1)}.`, [dec(s * (x4 - x3) + 2, 1)])
+  }),
+  // 34. Square under a parabola.
+  form(T3_NOCALC[5], function squareUnderParabola() {
+    const s = 2 * r(2, 12), c = r(1, s - 1)
+    const a = frac(4 * (s - c), s * s)
+    return ask(`The graph of y = ax² + ${c} is drawn in the xy-plane. A and D are on the x-axis, B and C are on the graph, and ABCD is a square of area ${s * s} that is centered on the y-axis. What is the value of a?`,
+      a, [frac(s - c, s * s), frac(4 * s, s * s), frac(2 * (s - c), s * s)],
+      `The side is ${s}, so C = (${s / 2}, ${s}). Then a(${s / 2})² + ${c} = ${s}, ${(s * s) / 4}a = ${s - c} and a = ${a}.`, [frac(4 * (s - c) + 1, s * s)])
+  }),
+  // 35. Angle inside a triangle made by splitting two corners.
+  form(CALC[27], function splitCornersAngle() {
+    let q, beta; do { q = pick([1, 2, 3]); beta = 10 * r(2, 12) } while ((180 - beta) % (q + 1))
+    const s = (180 - beta) / (q + 1), k = 180 - q * s
+    return ask(`In triangle ABC, angle B is ${beta}°. Point D is inside the triangle. AD splits angle A into x° (next to AB) and ${q === 1 ? '' : q}x° (next to AC), and CD splits angle C into y° (next to CB) and ${q === 1 ? '' : q}y° (next to CA). If angle ADC is k°, what is the value of k?`,
+      k, [beta, 180 - beta, 180 - s].filter((v) => v !== k),
+      `Triangle ABC: ${beta} + ${q + 1}x + ${q + 1}y = 180, so x + y = ${s}. Triangle ADC: k + ${q === 1 ? '' : q}x + ${q === 1 ? '' : q}y = 180, so k = 180 ${M} ${q * s} = ${k}.`, [k + 10, k - 10])
+  }),
+  // 36. Four rectangles around a square.
+  form(T3_CALC[25], function rectanglesAroundSquare() {
+    const a = r(1, 8), b = a + r(2, 8), byPerim = pick([true, false])
+    return ask(`Four rectangles, each a by b with a < b, are placed around a smaller square to make a larger square. The smaller square has area ${(b - a) ** 2}, and ${byPerim ? `each rectangle has perimeter ${2 * (a + b)}` : `the larger square has area ${(a + b) ** 2}`}. What is the value of b?`,
+      b, [a, a + b, b - a].filter((v) => v !== b),
+      `The small square's side is b ${M} a = ${b - a}. ${byPerim ? `2(a + b) = ${2 * (a + b)}` : `The big square's side is a + b`}, so a + b = ${a + b}. Adding: 2b = ${2 * b}, b = ${b}.`, [b + 1, b - 1])
+  }),
+  // 37. Circles in a row inside a bigger circle.
+  form(T3_NOCALC[9], function circlesInCircle() {
+    const n = pick([2, 3]), A = r(3, 20)
+    return ask(`${n === 2 ? 'Two' : 'Three'} equal circles sit in a row along a diameter of a larger circle, touching each other, with the ones at the ends touching the larger circle. If each small circle has area ${A}, what is the area of the part of the larger circle outside the small circles?`,
+      n * n * A - n * A, [n * n * A, n * A, (n * n - 1) * A].filter((v) => v !== n * n * A - n * A),
+      `The big diameter is ${n} small diameters, so its radius is ${n} times as long and its area is ${n * n} times as big: ${n * n * A}. Take away the ${n} small circles: ${n * n * A} ${M} ${n * A} = ${n * n * A - n * A}.`, [n * n * A - n * A + A])
+  }),
+  // 38. Largest constant below a parabola.
+  form(CALC[26], function maxBelowParabola() {
+    const h = r(-5, 5), m = r(-6, 8), b = -2 * h, c = m + h * h
+    return ask(`f(x) = ${poly([1, b, c])} and g(x) = k. If f(x) ≥ g(x) for all real numbers x, and k is a constant, what is the greatest possible value of k?`,
+      m, [c, h, c + h * h].filter((v) => v !== m),
+      `f(x) = (x ${h >= 0 ? M : '+'} ${Math.abs(h)})²${tail(m)}, so its smallest value is ${num(m)}. k can be at most ${num(m)}.`, [m + 1, m - 1])
+  }),
+]
+
+export const MAKERS = [...NO_CALC, ...CALC, ...T5_NOCALC, ...T2_NOCALC, ...T3_NOCALC, ...T4_NOCALC, ...T6_NOCALC, ...T7_NOCALC, ...T8_NOCALC, ...T2_CALC, ...T3_CALC, ...T4_CALC, ...T5_CALC, ...T6_CALC, ...T7_CALC, ...T8_CALC]
 
 // Types: each one is a list of forms. A form made with form(name, ...) joins the type of the maker with that name.
 export const TYPES = (() => {

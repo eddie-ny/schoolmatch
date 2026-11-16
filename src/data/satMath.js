@@ -1,5 +1,5 @@
 // SAT-style math questions (no calculator and calculator sections), made fresh each time the test starts.
-// Each maker below copies the TYPE of one question from the owner's practice tests (test 1 sections 3 and 4, tests 2, 3 and 5 section 3), with new numbers and names,
+// Each maker below copies the TYPE of one question from the owner's practice tests (test 1 sections 3 and 4, tests 2 to 5 section 3), with new numbers and names,
 // so every attempt is different but tests the same skill. The wording is written for this site, not copied.
 // Grid-in (type the answer) questions in the source are multiple choice here, like the rest of the test.
 // Same file in the web app (src/data/satMath.js) and the phone app (mobile/src/lib/satMath.js): keep them identical.
@@ -995,7 +995,143 @@ T3_NOCALC.push(form(CALC[26], function vertexFromFactors() {
     num((p - q) / 2), [num((p + q) / 2), num((q - p) / 2), num(p - q)].filter((v) => v !== num((p - q) / 2)), `The graph crosses the x-axis at x = ${p} and x = ${M}${q}. The vertex is halfway: a = (${p} + (${M}${q}))/2 = ${num((p - q) / 2)}.`, [num((p - q) / 2 + 1)])
 }))
 
-export const MAKERS = [...NO_CALC, ...CALC, ...T5_NOCALC, ...T2_NOCALC, ...T3_NOCALC]
+// A polynomial in x, written the usual way: poly([1, -3, 2]) -> "x² − 3x + 2"
+const poly = (cs) => {
+  const pw = ['', 'x', 'x²', 'x³'], deg = cs.length - 1
+  let s = ''
+  cs.forEach((c, i) => {
+    const p = deg - i
+    if (c === 0) return
+    const mag = Math.abs(c) === 1 && p > 0 ? '' : String(Math.abs(c))
+    s += s ? ` ${c < 0 ? M : '+'} ${mag}${pw[p]}` : `${c < 0 ? M : ''}${mag}${pw[p]}`
+  })
+  return s || '0'
+}
+
+// Practice test 4, section 3 (no calculator), questions 1 to 18 (the PDF stops at 18).
+const T4_NOCALC = [
+  // 1. Which expression can never be 0.
+  function neverZero() {
+    const c = r(1, 9), h = r(1, 5), a = r(2, 9), b = r(2, 9)
+    const right = pick([`x² + ${c}`, `(x ${M} ${h})² + ${c}`, `|x| + ${c}`])
+    return ask('Which of the following expressions can never be equal to 0, whatever the value of x?', right, [`x² ${M} ${a}`, `${b} ${M} x²`, `(x + ${h})² ${M} ${c}`],
+      `${right.split(' + ')[0]} is never negative, so adding ${c} keeps the whole expression at ${c} or more. Each of the others is 0 for some x (a square or |x| can equal any number that is 0 or more).`)
+  },
+  // 2. Rate of change of a linear function from two values.
+  form(CALC[18], function rateFromValues() {
+    let p, q, d, v, m; do { p = r(3, 9); q = r(0, p - 1); d = r(2, 6); v = r(1, 6); m = (v * d) / (p - q) } while (!Number.isInteger(m))
+    return ask(`f(x) = mx + b, where m and b are constants. If (f(${p}) ${M} f(${q}))/${d} = ${v}, what is m?`, m, [v, v * d, p - q].filter((x) => x !== m),
+      `f(${p}) ${M} f(${q}) = ${p - q}m. So ${p - q}m/${d} = ${v} and m = ${m}.`, [m + 1, m + 2])
+  }),
+  // 3. A line through two points parallel to a given line.
+  form(CALC[5], function parallelThroughPoints() {
+    let n, d, y1, y2, ab; do { n = r(1, 3); d = r(2, 4); y1 = r(-3, 6); y2 = r(-6, 3); ab = ((y1 - y2) * d) / n } while (y1 === y2 || !Number.isInteger(ab) || gcd(n, d) !== 1)
+    return ask(`The line through (a, ${num(y1)}) and (b, ${num(y2)}) is parallel to y = (${n}/${d})x ${M} 10. What is a ${M} b?`, num(ab), [num(-ab), num(y1 - y2), num((y1 - y2) * n)].filter((x) => x !== num(ab)),
+      `Parallel lines have equal slopes: (${num(y1)} ${M} (${num(y2)}))/(a ${M} b) = ${n}/${d}. So a ${M} b = ${y1 - y2} × ${d}/${n} = ${num(ab)}.`, [num(ab + 1), num(ab - 1)])
+  }),
+  // 4. No solution: equal slopes.
+  form(NO_CALC[8], function noSolutionSlope() {
+    let p, q; do { p = r(1, 6); q = r(2, 6) } while (gcd(p, q) !== 1)
+    const C = r(1, 9), c1 = frac(C + 1, q + 1)
+    return ask(`y = mx ${M} ${c1} and ${coef(p)}x + ${q}y = ${C}. In this system, m is a constant. If the system has no solution, what is m?`, frac(-p, q), [frac(-q, p), frac(p, q), frac(q, p)],
+      `${coef(p)}x + ${q}y = ${C} is y = ${coef(-p, q)}x + ${frac(C, q)}. No solution means parallel but different lines: same slope, so m = ${frac(-p, q)}.`)
+  }),
+  // 5. Put an expression into a function.
+  function shiftedInput() {
+    const p = r(1, 4), q = pick([-3, -2, -1, 1, 2, 3]), c = r(1, 6)
+    const fx = `(x ${M} ${p})² ${q < 0 ? M : '+'} ${Math.abs(q) === 1 ? '' : Math.abs(q)}(x ${M} ${p}) ${M} ${c}`
+    return ask(`If f(x) = ${fx}, which of the following is equal to f(${p} ${M} x)?`, poly([1, -q, -c]), [poly([1, q, -c]), poly([1, -q, c]), poly([1, q, c])],
+      `Put ${p} ${M} x in place of x: each (x ${M} ${p}) becomes (${p} ${M} x ${M} ${p}) = ${M}x. So f = (${M}x)² ${q < 0 ? M : '+'} ${Math.abs(q) === 1 ? '' : Math.abs(q)}(${M}x) ${M} ${c} = ${poly([1, -q, -c])}.`)
+  },
+  // 6. Triangle inside a parabola.
+  form(T3_NOCALC[5], function parabolaTriangle() {
+    const c = r(2, 6)
+    return ask(`f(x) = ${M}x² + ${c * c}. A and C are where the graph crosses the x-axis, and B is its highest point. What is the area of triangle ABC?`, c ** 3, [2 * c ** 3, (c ** 3) / 2, c * c].filter((x) => Number.isInteger(x)),
+      `The graph crosses the x-axis at x = ±${c}, so AC = ${2 * c}. B = (0, ${c * c}), so the height is ${c * c}. Area = (1/2)(${2 * c})(${c * c}) = ${c ** 3}.`, [c ** 3 + c, c ** 3 - c])
+  }),
+  // 7. A ratio after a shift.
+  form(NO_CALC[7], function ratioShift() {
+    const k = r(1, 4), n = r(1, 5), d = r(2, 6), ans = frac(n + k * d, d)
+    return ask(`If (a ${M} ${k === 1 ? '' : k}b)/b = ${frac(n, d)}, what is a/b?`, ans, [frac(n, d), frac(n + d, d), frac(n * k, d)].filter((x) => x !== ans),
+      `(a ${M} ${k === 1 ? '' : k}b)/b = a/b ${M} ${k}. So a/b = ${frac(n, d)} + ${k} = ${ans}.`, [frac(n + k * d + 1, d), frac(n + k * d - 1, d)])
+  }),
+  // 8. Constants from a point that solves a system.
+  function constantsFromPoint() {
+    const s = r(2, 5), m = r(2, 6), v = m * s, k = m * s * s - v, askK = pick([true, false])
+    return ask(`y = m√x and y = mx ${M} k, where m and k are constants. If (${s * s}, ${v}) is a solution of this system, what is the value of ${askK ? 'k' : 'm'}?`,
+      askK ? k : m, askK ? [m, v, m * s * s] : [k, v, s], `From y = m√x: ${v} = m × ${s}, so m = ${m}. From y = mx ${M} k: ${v} = ${m * s * s} ${M} k, so k = ${k}.`, [(askK ? k : m) + 1, (askK ? k : m) + 2])
+  },
+  // 9. A level line across a shifted parabola.
+  form(T3_NOCALC[5], function parabolaChordShifted() {
+    const h = r(3, 12), s = r(2, 6)
+    return ask(`f(x) = (x ${M} ${h})². Rectangle MATH has M and H on the x-axis and A and T on the graph of f. If MA = ${s * s}, how long is AT?`, 2 * s, [s, s * s, h].filter((x) => x !== 2 * s),
+      `(x ${M} ${h})² = ${s * s} gives x ${M} ${h} = ±${s}, so x = ${h - s} or ${h + s}. AT = ${2 * s}.`, [2 * s + 2, 2 * s - 1])
+  }),
+  // 10. Which equation has no solution (or infinitely many).
+  function whichNoSolution() {
+    const wantNone = pick([true, false])
+    const eq = (a, b, c, d, e) => `${a}x${tail(b)} = ${c}x + ${d}x${tail(e)}`
+    const a = r(6, 12), c = r(1, a - 2), d = a - c, b = r(-9, 9) || 3
+    const none = eq(a, b, c, d, b + r(1, 9)), many = eq(a, b, c, d, b), one1 = eq(a, b, c, d + 1, b + 2), one2 = eq(a + 1, b, c, d - 1, b - 3)
+    return ask(`Which of the following equations has ${wantNone ? 'no solution' : 'infinitely many solutions'}?`, wantNone ? none : many, [wantNone ? many : none, one1, one2],
+      `Collect x on each side. When both sides have the same amount of x, the x terms cancel: if the numbers left are different there is no solution, and if they match every x works. In ${wantNone ? none : many} both sides have ${a}x and the numbers ${wantNone ? 'differ' : 'match'}.`)
+  },
+  // 11. A vertex value fixes the constant in front.
+  form(CALC[26], function vertexValueK() {
+    let p, q, w; do { p = r(1, 8); q = r(1, 12) } while ((p + q) % 2); w = (p + q) / 2
+    const kn = pick([1, 2]), kd = pick([1, w]), k = frac(kn, kd), b = -(kn * w * w) / kd
+    return ask(`f(x) = k(x + ${p})(x ${M} ${q}), where k is a constant. The graph is a parabola with vertex (a, b). If b = ${num(b)}, what is k?`, k, [frac(kd, kn), frac(kn, kd * w), String(w)].filter((x) => x !== k),
+      `The vertex is halfway between ${M}${p} and ${q}: a = ${num((q - p) / 2)}. Then b = k(${w})(${M}${w}) = ${M}${w * w}k. So ${M}${w * w}k = ${num(b)} and k = ${k}.`, [frac(kn + 1, kd)])
+  }),
+  // 12. Exterior angle of a triangle between parallel lines.
+  form(CALC[2], function exteriorAngle() {
+    const b = r(30, 90), e = r(25, 150 - b)
+    return ask(`Two straight lines cross at a point between parallel lines ℓ and m, and both continue down to m, making a triangle with m. The angle at the crossing point, inside the triangle, is ${b}°. The inside angle at the left corner on m is ${e}°. What is c, the angle outside the triangle at the right corner on m?`,
+      b + e, [180 - b - e, 180 - b, 180 - e].filter((x) => x !== b + e), `The inside angle at the right corner is 180 ${M} ${b} ${M} ${e} = ${180 - b - e}. The outside angle is 180 ${M} ${180 - b - e} = ${b + e}: an outside angle of a triangle equals the two far inside angles added.`)
+  }),
+  // 13. Match terms after dividing.
+  form(NO_CALC[12], function divisionMatch() {
+    const A = r(2, 7), s = r(1, 4), R = r(2, 9), C = R - s, k = s - A
+    return ask(`(${A}x² + kx${tail(C)})/(x ${M} 1) = ax + ${s} + ${R}/(x ${M} 1) for all x except 1, where k and a are constants. What is k?`, num(k), [num(-k), num(A + s), num(s)].filter((x) => x !== num(k)),
+      `Multiply by (x ${M} 1): ${A}x² + kx${tail(C)} = (ax + ${s})(x ${M} 1) + ${R} = ax² + (${s} ${M} a)x + ${C}. So a = ${A} and k = ${s} ${M} ${A} = ${num(k)}.`, [num(k + 1), num(k - 1)])
+  }),
+  // 14. Solve a squared equation.
+  form(T3_NOCALC[12], function squaredEquation() {
+    let p, N, h, q; do { p = pick([2, 3, 4]); N = r(1, 9); h = r(1, 5); q = r(1, 6) } while (Number.isInteger(Math.sqrt(N * p)) || N % p === 0)
+    const rhs = N - q
+    const sol = (t) => `x = ${h} ± ${t}`
+    return ask(`What are the solutions to ${p}(x ${M} ${h})² ${M} ${q} = ${num(rhs)}?`, sol(`√${N * p}/${p}`), [sol(`√${N * p}/${2 * p}`), sol(`√${N * p}`), `x = ${M}${h} ± √${N * p}/${p}`],
+      `Add ${q}: ${p}(x ${M} ${h})² = ${N}. Divide: (x ${M} ${h})² = ${N}/${p}. So x ${M} ${h} = ±√(${N}/${p}) = ±√${N * p}/${p}.`)
+  }),
+  // 15. Complete a survey table.
+  form(T2_NOCALC[18], function surveyTable() {
+    let p, F, J, T; do { p = pick([20, 25, 40, 50, 60, 75]); F = 10 * r(3, 12); J = F / (1 - p / 100); T = 10 * r(Math.ceil(J / 10) + 3, Math.ceil(J / 10) + 25) } while (!Number.isInteger(J))
+    const S = T - J
+    return ask(`A school asked students whether they were for or against a new canteen. ${F} juniors were for it, ${p}% of juniors were against it, and ${T} students answered in total (juniors and seniors). How many seniors answered?`,
+      S, [J, T - F, Math.round((T * p) / 100)].filter((x) => x !== S), `${100 - p}% of juniors were for it: ${F} = ${(100 - p) / 100} × juniors, so there are ${J} juniors. Seniors = ${T} ${M} ${J} = ${S}.`, [S + 10, S - 10])
+  }),
+  // 16. Altitude in a right triangle from a cosine.
+  function altitudeTrig() {
+    const [a, b, c] = pick([[3, 4, 5], [5, 12, 13], [8, 15, 17], [7, 24, 25]]), t = pick([1, 2, 3, 4])
+    const AC = c * t, BC = b * t, AB = a * t, BD = (a * b * t) / c
+    return ask(`Triangle ABC has a right angle at B, and BD is drawn from B straight down to AC, meeting it at a right angle. Angle C is x° with cos x° = ${b}/${c}${t === 1 && c === 5 ? ' (0.8)' : ''}. If AC = ${AC}, what is BD (to 2 decimal places where needed)?`,
+      dec(BD), [String(BC), String(AB), dec((AB * AB) / AC)].filter((x) => x !== dec(BD)), `cos C = BC/AC, so BC = ${b}/${c} × ${AC} = ${BC}. In triangle BDC, sin C = BD/BC and sin C = ${a}/${c}, so BD = ${a}/${c} × ${BC} = ${dec(BD)}.`, [dec(BD + 1)])
+  },
+  // 17. Factor a cubic by grouping.
+  function groupingCubic() {
+    const a = r(1, 4), b = r(1, 9), rr = r(1, 9)
+    return ask(`For what real value of x is ${poly([a, -a * rr, b, -b * rr])} = 0?`, rr, [-rr, b, frac(b, a)].filter((x) => show(x) !== show(rr)),
+      `Group: ${coef(a)}x²(x ${M} ${rr}) + ${b}(x ${M} ${rr}) = (${coef(a)}x² + ${b})(x ${M} ${rr}). ${coef(a)}x² + ${b} is never 0, so x = ${rr}.`, [rr + 1, rr + 2])
+  },
+  // 18. Crossed lines between two upright posts.
+  function crossedLines() {
+    const A = r(3, 12), C = r(2, 9), W = r(8, 20), h = (A * C) / (A + C)
+    return ask(`Two upright posts stand ${W} apart: AB is ${A} tall and CD is ${C} tall, with A and C on the ground. A line from B to C and a line from A to D cross at P. PQ goes straight down from P to the ground. How long is PQ (to 2 decimal places where needed)?`,
+      dec(h), [dec((A + C) / 2), dec((A * C) / W), dec(Math.abs(A - C))].filter((x) => x !== dec(h)), `Similar triangles give 1/PQ = 1/AB + 1/CD, so PQ = (${A} × ${C})/(${A} + ${C}) = ${dec(h)}. The distance between the posts does not matter.`, [dec(h + 1), dec(h + 0.5)])
+  },
+]
+
+export const MAKERS = [...NO_CALC, ...CALC, ...T5_NOCALC, ...T2_NOCALC, ...T3_NOCALC, ...T4_NOCALC]
 
 // Types: each one is a list of forms. A form made with form(name, ...) joins the type of the maker with that name.
 export const TYPES = (() => {

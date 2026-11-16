@@ -1,5 +1,5 @@
 // SAT-style math questions (no calculator and calculator sections), made fresh each time the test starts.
-// Each maker below copies the TYPE of one question from the owner's practice tests (section 3 of tests 1 to 8, section 4 of tests 1 to 4), with new numbers and names,
+// Each maker below copies the TYPE of one question from the owner's practice tests (section 3 of tests 1 to 8, section 4 of tests 1 to 5), with new numbers and names,
 // so every attempt is different but tests the same skill. The wording is written for this site, not copied.
 // Grid-in (type the answer) questions in the source are multiple choice here, like the rest of the test.
 // Same file in the web app (src/data/satMath.js) and the phone app (mobile/src/lib/satMath.js): keep them identical.
@@ -2273,7 +2273,253 @@ const T4_CALC = [
 // It sits at position 6 in the list above; move it to the end as a form of percentChange (position 0).
 T4_CALC.push(form(T4_CALC[0], T4_CALC.splice(6, 1)[0]))
 
-export const MAKERS = [...NO_CALC, ...CALC, ...T5_NOCALC, ...T2_NOCALC, ...T3_NOCALC, ...T4_NOCALC, ...T6_NOCALC, ...T7_NOCALC, ...T8_NOCALC, ...T2_CALC, ...T3_CALC, ...T4_CALC]
+// Practice test 5, section 4 (calculator), questions 1 to 38.
+const T5_CALC = [
+  // 1. Flat price for a bundle, then a rate per extra item.
+  form(T8_NOCALC[6], function bundleThenRate() {
+    const base = 5 * r(4, 10), N = 100 * r(2, 6), rate = pick([0.05, 0.08, 0.1, 0.12, 0.15])
+    return ask(`A phone company charges $${base} for the first ${N} texts and $${rate.toFixed(2)} for each text after that. Which expression gives the total cost, in dollars, for n texts, with n > ${N}?`,
+      `${rate}(n ${M} ${N}) + ${base}`, [`${rate}n + ${base}`, `${rate}n + ${base}(${N})`, `${rate}(n ${M} ${N}) + ${base}(${N})`],
+      `Only the texts over ${N} cost extra: n ${M} ${N} of them at $${rate.toFixed(2)} each. Add the $${base}: ${rate}(n ${M} ${N}) + ${base}.`)
+  }),
+  // 2. Time to earn an amount at a steady rate.
+  form(NO_CALC[6], function earnTime() {
+    const d = r(2, 9)
+    return ask(`${pick(NAMES)} earns P dollars in ${d} days. At this rate, how many days will it take to earn S dollars?`, `${d}S/P`, [`${d}S`, `${d}P/S`, `S/(${d}P)`],
+      `Each day brings P/${d} dollars. S dollars takes S ÷ (P/${d}) = ${d}S/P days.`)
+  }),
+  // 3. A value from a shifted rule.
+  form(T4_NOCALC[4], function shiftedValue() {
+    const s = r(2, 7), a = r(2, 6), c = r(-20, 5), t = r(-3, 6), x = t + s
+    return ask(`If f(x ${M} ${s}) = ${a}x${tail(c)}, what is f(${num(t)})?`, num(a * x + c), [num(a * t + c), num(a * (t - s) + c), num(-(a * x + c))].filter((v) => v !== num(a * x + c)),
+      `x ${M} ${s} = ${num(t)} when x = ${x}. f(${num(t)}) = ${a}(${x})${tail(c)} = ${num(a * x + c)}.`, [num(a * x + c + 2)])
+  }),
+  // 4. Total of a two-way table.
+  form(T2_NOCALC[18], function tableTotal() {
+    const BS = r(8, 20), BT = BS + r(4, 12), GJ = r(10, 30), ST = BS + r(10, 35), BJ = BT - BS, GS = ST - BS, T = BT + GS + GJ
+    return ask(`A reading group has only seniors and juniors. ${BS} boys are seniors, there are ${BT} boys in all, ${GJ} girls are juniors, and ${ST} students are seniors. How many students are in the group?`, T, [BT + GJ + BS, ST + GJ, T - BJ].filter((x) => x !== T),
+      `Senior girls: ${ST} ${M} ${BS} = ${GS}. Girls: ${GS} + ${GJ} = ${GS + GJ}. Total: ${BT} + ${GS + GJ} = ${T}.`, [T + 5])
+  }),
+  // 5 and 6. Direct variation.
+  form(T3_NOCALC[9], function directVariation() {
+    const W1 = pick([4, 5, 8, 10, 20]), k = pick([1.5, 2, 2.5, 3, 4]), L1 = k * W1, L2 = k * r(3, 30) / pick([1, 2]), askW = pick([true, false])
+    return askW
+      ? ask(`A spring's stretch L (cm) varies directly with the weight W (grams) hung on it. ${W1} grams stretch it ${dec(L1)} cm. How many grams stretch it ${dec(L2)} cm?`, dec(L2 / k), [dec(L2 * k), dec(L2 - L1 + W1), dec((L2 * W1) / (L1 + 1))].filter((x) => x !== dec(L2 / k)),
+        `L = kW with k = ${dec(L1)}/${W1} = ${dec(k)}. W = ${dec(L2)}/${dec(k)} = ${dec(L2 / k)}.`, [dec(L2 / k + 1)])
+      : ask(`A spring's stretch L (cm) varies directly with the weight W (grams) hung on it. ${W1} grams stretch it ${dec(L1)} cm. Which equation relates W and L?`, `L = ${dec(k)}W`, [`L = ${dec(1 / k, 2)}W`, `L = ${dec(L1 - W1)}W`, `L = ${dec(k)}W + ${dec(L1)}`].filter((x) => x !== `L = ${dec(k)}W`),
+        `Direct variation means L = kW with no added number. k = ${dec(L1)}/${W1} = ${dec(k)}.`, [`L = ${dec(k + 1)}W`])
+  }),
+  // 7. Fewest extra items to reach a target.
+  form(T2_CALC[6], function moreToReach() {
+    const p = 5 * r(2, 6), n = r(20, 60), k = 10 * r(5, 30), now = p * n - k, target = now + 10 * r(5, 25), need = Math.ceil((target + k) / p) - n
+    return ask(`A car wash's profit is p(x) = ${p}x ${M} k dollars for x cars, where k is a constant. Today ${n} cars were washed for a profit of $${now}. To make a profit of at least $${target}, how many more cars must be washed?`, need, [need + 1, need - 1, Math.round((target - now) / p) + 3].filter((x) => x !== need && x > 0),
+      `${now} = ${p}(${n}) ${M} k, so k = ${k}. Need ${p}x ${M} ${k} ≥ ${target}, x ≥ ${dec((target + k) / p)}, so x = ${n + need}: ${need} more cars.`, [need + 2])
+  }),
+  // 8. Two exponent equations give a difference of squares.
+  form(NO_CALC[13], function exponentSquares() {
+    const s = pick([0.5, 1, 1.5, 2]), d = r(1, 4)
+    const [b1, sumExp] = s === 1 ? [4, 2] : s === 2 ? [4, 4] : s === 0.5 ? [4, 1] : [4, 3], val1 = 2 ** sumExp
+    return ask(`If ${b1}^(a + b) = ${val1} and 9^(a ${M} b) = ${9 ** d}, what is a² ${M} b²?`, dec(s * d), [dec(s + d), dec(d), dec(s * d * 2)].filter((x) => x !== dec(s * d)),
+      `${b1}^(a + b) = 2^(2(a + b)) = 2^${sumExp}, so a + b = ${dec(s)}. 9^(a ${M} b) = 9^${d}, so a ${M} b = ${d}. a² ${M} b² = (a + b)(a ${M} b) = ${dec(s * d)}.`, [dec(s * d + 1)])
+  }),
+  // 9. Undo a shift to find f(x).
+  form(T4_NOCALC[4], function undoShift() {
+    const s = r(1, 6), a = r(2, 5); let c; do { c = r(-9, 9) } while (c === 0 || c === -a * s || c === a * s || c === -s)
+    return ask(`If f(x ${M} ${s}) = ${a}x${tail(c)} for all x, which of the following is f(x)?`, `f(x) = ${a}x${tail(c + a * s)}`, [`f(x) = ${a}x${tail(c - a * s)}`, `f(x) = ${a}x${tail(c + s)}`, `f(x) = ${a}x${tail(c)}`],
+      `Write u = x ${M} ${s}, so x = u + ${s}. Then f(u) = ${a}(u + ${s})${tail(c)} = ${a}u${tail(c + a * s)}.`)
+  }),
+  // 10. Which point lies on the perpendicular line.
+  form(NO_CALC[14], function pointOnPerpendicular() {
+    const p = r(2, 5), q = r(2, 5), t = r(1, 4) * q
+    return ask(`Line m passes through (0, ${q}) and (${p}, 0). Line ℓ passes through the origin and is perpendicular to m. Which point lies on line ℓ?`, pt(t, (t * p) / q), [pt(t, t + 1), pt(t + 1, (t * p) / q), pt((t * p) / q, t)].filter((x) => x !== pt(t, (t * p) / q)),
+      `m has slope ${M}${q}/${p}, so ℓ has slope ${frac(p, q)}: y = ${coef(p, q)}x. At x = ${t}, y = ${dec((t * p) / q)}.`, [pt(t, -(t * p) / q), pt(-t, (t * p) / q)])
+  }),
+  // 11. Equal complex numbers give a ratio.
+  form(NO_CALC[1], function complexRatio() {
+    let p, q, s; do { p = r(2, 7); q = r(1, 4); s = r(1, 4) } while (p === 1)
+    const ratio = frac(-(q + s), p - 1) // pa + qb = a − sb  →  (p − 1)a = −(q + s)b
+    return ask(`${p}a + ${q === 1 ? '' : q}b + ${r(2, 9)}i = (a ${M} ${s === 1 ? '' : s}b) + ki, where a, b and k are real constants and i = √${M}1. What is a/b?`, ratio, [frac(q + s, p - 1), frac(p - 1, -(q + s)), frac(p - 1, q + s)].filter((x) => x !== ratio),
+      `The real parts match: ${p}a + ${q}b = a ${M} ${s}b, so ${p - 1}a = ${M}${q + s}b and a/b = ${ratio}.`)
+  }),
+  // 12. Meaning of a rate in a velocity model.
+  form(T2_CALC[3], function velocityMeaning() {
+    const v0 = 10 * r(20, 60), g = pick([9.8, 32, 4.9])
+    return ask(`A ball is shot straight up. Its velocity after t seconds is v(t) = ${v0} ${M} ${g}t. What does ${g} mean?`, `For every 1 second that passes, the velocity goes down by ${g}.`,
+      [`For every 1 second that passes, the velocity goes up by ${g}.`, `For every 1 second less, the velocity goes down by ${g}.`, `For every ${g} seconds, the velocity goes up by ${v0}.`],
+      `${g} multiplies t, so each extra second changes v by ${M}${g}: the velocity falls by ${g} each second. ${v0} is the starting velocity.`)
+  }),
+  // 13. Slope sign when the coefficients cancel.
+  form(T6_NOCALC[3], function slopeFromSum() {
+    const pos = pick([true, false])
+    return ask(`ax + by = 5, where a and b are non-zero constants. If a ${pos ? '+' : M} b = 0, which of the following must be true about the graph?`, `The slope is ${pos ? 'positive' : 'negative'}.`, [`The slope is ${pos ? 'negative' : 'positive'}.`, 'The slope is zero.', 'The line is vertical.'],
+      `The slope is ${M}a/b. ${pos ? 'a + b = 0 means a = −b, so −a/b = 1' : 'a − b = 0 means a = b, so −a/b = −1'}: ${pos ? 'positive' : 'negative'}.`)
+  }),
+  // 14. Walk part of the way, run the rest.
+  form(CALC[19], function walkThenRun() {
+    const [f, rest] = pick([[1, 3], [1, 2], [1, 4], [2, 5]]), k = pick([2, 3, 4]), t = r(2, 9) * k * (rest - f) / f
+    if (!Number.isInteger(t)) return walkThenRun()
+    const runTime = (t * (rest - f)) / (f * k)
+    return ask(`${pick(NAMES)} walked ${f}/${rest} of the way to a friend's house, then ran the rest ${k} times as fast. Walking took ${t} minutes. How many minutes did the whole trip take?`, t + runTime, [t * (rest / f), t + t / k, t * 2].filter((x) => x !== t + runTime),
+      `The rest is ${rest - f}/${rest} of the way, ${(rest - f) / f} times the walked part. At ${k} times the speed it takes ${t} × ${(rest - f) / f} ÷ ${k} = ${dec(runTime)} minutes. Total: ${dec(t + runTime)}.`, [t + runTime + 2])
+  }),
+  // 15. A system with fractions.
+  form(T3_CALC[7], function fractionSystem() {
+    const x = r(4, 20), y = r(1, 9), p = pick([2, 4, 8]), q = pick([4, 10])
+    const c1 = x / p - (2 * y) / p, c2 = x / q + (2 * y) / q
+    if (!Number.isInteger(c1) || !Number.isInteger(c2)) return fractionSystem()
+    return ask(`(1/${p})x ${M} (1/${p / 2 === 1 ? 1 : p / 2})y = ${num(c1)} and (1/${q})x + (1/${q / 2})y = ${c2}. If (a, b) is the solution, what is a + b?`, x + y, [x - y, x, c1 + c2].filter((v) => v !== x + y),
+      `Multiply the first by ${p}: x ${M} 2y = ${p * c1}. Multiply the second by ${q}: x + 2y = ${q * c2}. Adding gives x = ${x}, then y = ${y}. a + b = ${x + y}.`, [x + y + 1])
+  }),
+  // 16. Where a line through the origin meets a parabola.
+  form(T4_CALC[T4_CALC.length - 2], function parabolaLineOrigin() {
+    const h = r(3, 6), k = 2 * h, a = -k / (h * h), m = pick([1, 2]), // y = a(x − h)² + k through the origin; line y = mx
+      // a(x − h)² + k = mx → a x² − (2ah + m)x = 0 → x = (2ah + m)/a
+      rr = (2 * a * h + m) / a
+    if (!(rr > 0)) return parabolaLineOrigin()
+    return ask(`The parabola y = a(x ${M} ${h})² + ${k} passes through the origin. The line through the origin and (${h}, ${m * h}) meets the parabola again at (r, s). What is r (to 2 decimal places where needed)?`, dec(rr), [String(h), dec(2 * h), dec(rr + 1)].filter((x) => x !== dec(rr)),
+      `Through the origin: ${h * h}a + ${k} = 0, so a = ${frac(-k, h * h)}. The line is y = ${m === 1 ? '' : m}x. Setting a(x ${M} ${h})² + ${k} = ${m === 1 ? '' : m}x and cancelling x = 0 leaves x = ${dec(rr)}.`)
+  }),
+  // 17. Pick the system for a shaded region.
+  form(T2_CALC[7], function regionSystem() {
+    const a = r(2, 5), b = r(2, 6), c = r(5, 12), p = r(4, 8), q = r(3, 9)
+    const par = `x² ${M} ${p}x + ${q}`
+    return ask(`A shaded region lies on or above the parabola y = ${par} (solid curve) and strictly below the line ${a}x ${M} ${b}y = ${c} (dashed line). Which system describes it?`,
+      `${a}x ${M} ${b}y ${M} ${c} > 0 and y ≥ ${par}`, [`${a}x ${M} ${b}y ${M} ${c} ≥ 0 and y ≥ ${par}`, `${a}x + ${b}y ${M} ${c} > 0 and y ≥ ${par}`, `${a}x ${M} ${b}y ${M} ${c} > 0 and y ≥ x² + ${p}x + ${q}`],
+      `Below the line ${a}x ${M} ${b}y = ${c} means y < (${a}x ${M} ${c})/${b}, which is ${a}x ${M} ${b}y ${M} ${c} > 0. A dashed line means strict (>), a solid curve means ≥.`)
+  }),
+  // 18. No solution for a linear equation with a constant.
+  form(T4_NOCALC[9], function noSolutionConstant() {
+    const d = r(2, 6), c = r(1, 9), e = r(1, 9)
+    return ask(`(x ${M} ${c})/${d} = kx + ${e}, where k is a constant. If this equation has no solution, what is k?`, `1/${d}`, [`${d}`, `1/${d + 1}`, `${M}1/${d}`],
+      `(x ${M} ${c})/${d} = (1/${d})x ${M} ${frac(c, d)}. No solution means the x terms match but the numbers do not: k = 1/${d} (and ${M}${frac(c, d)} ≠ ${e}).`)
+  }),
+  // 19. A circle between two squares.
+  function circleSquares() {
+    return ask('A circle fits exactly inside square PQRS (touching all four sides), and a smaller square fits exactly inside the circle (its corners on the circle). If PS = a, what is the area of the region inside the circle but outside the small square?', 'a²(π − 2)/4',
+      ['a²(π − 4)/4', 'πa²/4 − 4', 'πa² − 8'], 'The circle has radius a/2 and area πa²/4. The small square’s diagonal is the diameter a, so its area is a²/2. The difference is πa²/4 − a²/2 = a²(π − 2)/4.')
+  },
+  // 20. Signs from slope and intercept.
+  form(T6_NOCALC[3], function signsFromLine() {
+    const negSlope = pick([true, false]), negInt = pick([true, false])
+    const aSign = negSlope === negInt ? 'a < 0' : 'a > 0'
+    return ask(`ax + by ${M} 2 = 0, where a and b are constants. If the graph has a ${negSlope ? 'negative' : 'positive'} slope and a ${negInt ? 'negative' : 'positive'} y-intercept, which must be true?`, aSign, [aSign === 'a < 0' ? 'a > 0' : 'a < 0', 'a = 0', 'a ≥ 0'].filter((x) => x !== aSign).concat(aSign === 'a > 0' ? ['a ≤ 0'] : []).slice(0, 3),
+      `y = (${M}a/b)x + 2/b. The y-intercept 2/b is ${negInt ? 'negative, so b < 0' : 'positive, so b > 0'}. The slope ${M}a/b is ${negSlope ? 'negative, so a/b > 0' : 'positive, so a/b < 0'}, which gives ${aSign}.`)
+  }),
+  // 21. Average rate of change from two values.
+  form(CALC[18], function rateTwoValues() {
+    const a = r(-3, 4), b = a + r(2, 6), fa = r(-6, 9), fb = r(-9, 9)
+    return ask(`The average rate of change of f from a to b is (f(b) ${M} f(a))/(b ${M} a). If f(${num(a)}) = ${num(fa)} and f(${num(b)}) = ${num(fb)}, what is it?`, frac(fb - fa, b - a), [frac(b - a, fb - fa || 1), frac(fa - fb, b - a), frac(fb + fa, b - a)].filter((x) => x !== frac(fb - fa, b - a)),
+      `(${num(fb)} ${M} ${num(fa)})/(${num(b)} ${M} ${num(a)}) = ${num(fb - fa)}/${b - a} = ${frac(fb - fa, b - a)}.`, [frac(fb - fa + 1, b - a)])
+  }),
+  // 22. The other diagonal of a rhombus.
+  form(NO_CALC[14], function rhombusDiagonal() {
+    const x1 = r(0, 3), y1 = r(0, 3), dx = 2 * r(1, 4), dy = 2 * r(1, 5), mx = x1 + dx / 2, my = y1 + dy / 2, s = frac(-dx, dy), b = my + (dx * mx) / dy
+    return ask(`Rhombus MATH has opposite corners M(${x1}, ${y1}) and T(${x1 + dx}, ${y1 + dy}). Line ℓ passes through the other two corners, A and H. Which is the equation of ℓ?`, `y = ${coef(-dx, dy)}x + ${frac(Math.round(b * dy), dy)}`,
+      [`y = ${coef(-dy, dx)}x + ${frac(Math.round(b * dy), dy)}`, `y = ${coef(dy, dx)}x + ${frac(Math.round(b * dy), dy)}`, `y = ${coef(-dx, dy)}x + ${my}`].filter((x) => x !== `y = ${coef(-dx, dy)}x + ${frac(Math.round(b * dy), dy)}`),
+      `The diagonals of a rhombus cross at right angles at their midpoints. MT has slope ${frac(dy, dx)} and midpoint (${mx}, ${my}). ℓ has slope ${s} through (${mx}, ${my}): y = ${coef(-dx, dy)}x + ${frac(Math.round(b * dy), dy)}.`, [`y = ${coef(-dx, dy)}x + ${frac(Math.round(b * dy) + dy, dy)}`])
+  }),
+  // 23. A horizontal line meeting a circle twice.
+  form(T6_NOCALC[13], function circleLineTwice() {
+    const h = r(-3, 3), k = r(-3, 3), R = r(2, 6), c = R * R - h * h - k * k
+    const xs = h ? ` ${h > 0 ? M : '+'} ${Math.abs(2 * h)}x` : '', ys = k ? ` ${k > 0 ? M : '+'} ${Math.abs(2 * k)}y` : ''
+    const good = k + r(-(R - 1), R - 1)
+    return ask(`x² + y²${xs}${ys} = ${num(c)} and y = c. For which value of c does the system have exactly two real solutions?`, `c = ${num(good)}`, [`c = ${num(k + R)}`, `c = ${num(k + R + 1)}`, `c = ${num(k - R - 2)}`],
+      `Complete the squares: (x ${M} ${num(h)})² + (y ${M} ${num(k)})² = ${R * R}, a circle of radius ${R} centred at (${num(h)}, ${num(k)}). It spans y from ${num(k - R)} to ${num(k + R)}. A flat line crosses it twice only strictly between those: c = ${num(good)}. At ${num(k + R)} it only touches once.`)
+  }),
+  // 24. A segment of the hypotenuse from a sine.
+  form(T4_NOCALC[15], function hypotenusePieceSine() {
+    const s = pick([0.2, 0.3, 0.4, 0.5, 0.6]), AC = 5 * r(1, 6), BC = AC * s
+    return ask(`Triangle ABC has a right angle at B, and BD goes straight from B to AC. If AC = ${AC} and sin A = ${s}, how long is DC?`, dec(BC * s), [dec(BC), dec(AC * s * s * 2), dec(AC - BC)].filter((x) => x !== dec(BC * s)),
+      `sin A = BC/AC, so BC = ${dec(BC)}. Angle DBC equals angle A, so DC = BC × sin A = ${dec(BC * s)}.`, [dec(BC * s + 1)])
+  }),
+  // 25. Where a circle crosses the x-axis.
+  form(CALC[17], function circleXIntercept() {
+    const [a, b, R] = pick([[8, 15, 17], [3, 4, 5], [5, 12, 13], [6, 8, 10], [9, 12, 15]]), h = r(-4, 5)
+    return ask(`A circle centred at (${num(h)}, 0) passes through (${num(h + a)}, ${b}). Point R is where it crosses the negative side of the x-axis. What are the coordinates of R?`, pt(h - R, 0), [pt(h - a, 0), pt(-R, 0), pt(h - b, 0)].filter((x) => x !== pt(h - R, 0)),
+      `The radius is √(${a}² + ${b}²) = ${R}. Going ${R} left from (${num(h)}, 0) gives R = ${pt(h - R, 0)}.`, [pt(h - R - 1, 0)])
+  }),
+  // 26. Matching coefficients with three unknowns.
+  form(NO_CALC[12], function matchThree() {
+    // The constant on the right is k itself, so k = a + b + 1 keeps everything consistent.
+    let a, b, k; do { a = r(1, 6); b = r(-3, 4); k = a + b + 1 } while (b === 0 || k < 1)
+    const D = a - 2 * b
+    return ask(`(a + b)x² + (a ${M} 2b)x + k = (k ${M} 1)x² + ${num(D)}x + ${k} for all x, where a, b and k are constants. What is a?`, num(a), [num(b), num(k), num(D)].filter((x) => x !== num(a)),
+      `Numbers: k = ${k}. Then a + b = k ${M} 1 = ${a + b}, and a ${M} 2b = ${num(D)}. Subtract: 3b = ${num(a + b - D)}, so b = ${num(b)} and a = ${a + b} ${M} (${num(b)}) = ${num(a)}.`, [num(a + 1)])
+  }),
+  // 27. A quarter circle minus a rectangle.
+  form(T8_NOCALC[1], function quarterMinusRectangle() {
+    const d = 2 * r(3, 8), ang = pick([30, 60, 45])
+    const w = d * Math.cos((ang * Math.PI) / 180), h = d * Math.sin((ang * Math.PI) / 180), area = (Math.PI * d * d) / 4 - w * h
+    return ask(`Rectangle ABCO has corner O at the centre of a quarter circle, and corner B on the arc. Diagonal AC is ${d} long and angle ACO is ${ang}°. To the nearest whole number, what is the area inside the quarter circle but outside the rectangle?`, String(Math.round(area)), [String(Math.round((Math.PI * d * d) / 4)), String(Math.round(w * h)), String(Math.round(area) + 5)],
+      `The rectangle's diagonals are equal, so OB = AC = ${d}, the radius. OC = ${d}cos ${ang}° ≈ ${dec(w)} and OA = ${d}sin ${ang}° ≈ ${dec(h)}. Quarter circle: π(${d})²/4 ≈ ${dec((Math.PI * d * d) / 4)}. Minus the rectangle ${dec(w * h)}: about ${Math.round(area)}.`)
+  }),
+  // 28 and 29. A launched object's peak time and height.
+  form(CALC[8], function rocketPeak() {
+    const g = 9.8, t = 5 * r(2, 6), v0 = g * t, h0 = 10 * r(1, 10), hmax = v0 * t - 0.5 * g * t * t + h0, askT = pick([true, false])
+    return ask(`A rocket is launched from ${h0} metres up at ${dec(v0)} metres per second. Its height is h = ${dec(v0)}t ${M} 4.9t² + ${h0}. ${askT ? 'How many seconds does it take to reach its highest point?' : 'What is its greatest height, in metres?'}`,
+      askT ? t : dec(hmax), askT ? [t * 2, t / 2, t + 5] : [dec(hmax - h0), dec(v0 * t), dec(hmax * 2)],
+      `The top is at t = ${dec(v0)}/(2 × 4.9) = ${t}. h(${t}) = ${dec(v0 * t)} ${M} ${dec(4.9 * t * t)} + ${h0} = ${dec(hmax)}.`)
+  }),
+  // 30. A triangle on a base along the x-axis.
+  form(CALC[16], function triangleOnAxis() {
+    let k, p; do { k = r(3, 9); p = r(1, k - 1) } while (((k - p) * k) % 2)
+    const A = ((k - p) * k) / 2, x = r(k + 1, k + 6)
+    return ask(`Triangle PRS has P(${p}, 0), S(k, 0) and R(${x}, k), with k > ${p}. Its area is ${A}. What is k?`, k, [k + 1, k - 1, x].filter((v) => v !== k),
+      `The base PS is k ${M} ${p} and the height is k (R's height). (1/2)(k ${M} ${p})k = ${A}, so k² ${M} ${p}k ${M} ${2 * A} = 0 and k = ${k}.`, [k + 2])
+  }),
+  // 31. Isosceles triangle hanging from a parabola chord.
+  form(T3_NOCALC[5], function chordTriangle() {
+    const c = r(3, 6), w = 2 * r(1, c - 1), half = w / 2, y = (c + half) * (c - half)
+    return ask(`y = x(${2 * c} ${M} x). Points A and B are on the graph with AB = ${w} and AB parallel to the x-axis. C is on the x-axis, directly below the midpoint of AB. What is the area of triangle ABC?`, (w * y) / 2, [w * y, y, (w * c * c) / 2].filter((x) => x !== (w * y) / 2),
+      `The graph is symmetric about x = ${c}, so A and B are at x = ${c - half} and ${c + half}, both at height ${c - half} × ${c + half} = ${y}. Area = (1/2)(${w})(${y}) = ${(w * y) / 2}.`)
+  }),
+  // 32. Size of a complex number.
+  form(NO_CALC[1], function complexModulus() {
+    const [a, b, c] = pick([[3, 4, 5], [5, 12, 13], [8, 15, 17], [6, 8, 10]]), s1 = pick([1, -1]), s2 = pick([1, -1])
+    return ask(`The size (magnitude) of a complex number is its distance from the origin. What is the magnitude of ${num(s1 * a)} ${s2 < 0 ? M : '+'} ${b}i?`, c, [a + b, c * c, Math.abs(a - b)].filter((x) => x !== c),
+      `Magnitude = √(${a}² + ${b}²) = √${a * a + b * b} = ${c}.`)
+  }),
+  // 33. Count whole-number points under a line.
+  function latticeCount() {
+    const a = r(2, 6), b = r(2, 6), c = r(10, 30)
+    let n = 0; for (let x = 1; x < 30; x++) for (let y = 1; y < 30; y++) if (a * x + b * y < c) n++
+    return ask(`For how many pairs of positive integers (x, y) is ${a}x + ${b}y < ${c}?`, n, [n + 1, n - 1, n + 3].filter((x) => x >= 0),
+      `Go through y = 1, 2, …: for each, count the positive x with ${a}x < ${c} ${M} ${b}y. The counts add to ${n}.`, [n + 2])
+  },
+  // 34. A strip between parallel lines in a triangle.
+  form(T5_NOCALC[19], function triangleStripThirds() {
+    const n = 3, base = r(2, 10) * 5, total = (base * 9) / 5, strip = (total * 3) / 9
+    return ask(`In triangle ABC, lines DE, FG and AC are parallel, with D and F on side AB so that AF = FD = DB. If the four-sided region AFGC has area ${base}, what is the area of DEGF?`, dec(strip), [dec(base), dec(total / 9), dec(base / 2)].filter((x) => x !== dec(strip)),
+      `Triangles DBE, FBG and ABC are similar with sides 1 : 2 : ${n}, so areas 1 : 4 : 9 (in ninths of ABC). AFGC is 9 ${M} 4 = 5 ninths = ${base}, so ABC = ${dec(total)}. DEGF is 4 ${M} 1 = 3 ninths = ${dec(strip)}.`, [dec(strip + 2)])
+  }),
+  // 35. Rectangle between y = x² and y = −x².
+  form(T3_NOCALC[5], function rectangleTwoParabolas() {
+    const x = r(2, 6), area = 4 * x ** 3
+    return ask(`Rectangle ABCD has B and C on y = x² and A and D on y = ${M}x², with its sides parallel to the axes. If its area is ${area}, how long is BC?`, 2 * x, [x, x * x, 2 * x * x].filter((v) => v !== 2 * x),
+      `With corners at x = ±t, BC = 2t and the height is t² ${M} (${M}t²) = 2t². Area = 4t³ = ${area}, so t = ${x} and BC = ${2 * x}.`)
+  }),
+  // 36. Infinitely many solutions with a constant on one side.
+  form(T5_NOCALC[18], function infinitelyManyConstant() {
+    const p = r(2, 6), q = r(2, 5), k = pick([-2, 2, -3, 3, 1.5, -1.5]), C2 = r(1, 6), a = 1 - (C2 / k)
+    if (!Number.isInteger(a * 2)) return infinitelyManyConstant()
+    return ask(`${p}s ${M} ${q}t ${M} 1 = ${M}a and ${dec(p * k)}s + bt ${M} ${C2} = 0. If this system has infinitely many solutions, what is a?`, dec(a), [dec(-a), dec(1 + C2 / k), dec(C2)].filter((x) => x !== dec(a)),
+      `Write them as ${p}s ${M} ${q}t = 1 ${M} a and ${dec(p * k)}s + bt = ${C2}. The second must be ${dec(k)} times the first: ${C2} = ${dec(k)}(1 ${M} a), so a = ${dec(a)}.`)
+  }),
+  // 37. Circumference of the circle inside a right triangle.
+  form(T2_CALC[32], function incircleCircumference() {
+    const [a, b, c] = pick([[3, 4, 5], [5, 12, 13], [8, 15, 17], [6, 8, 10]]), rr = (a + b - c) / 2
+    return ask(`A circle touches all three sides of right triangle ABC, which has its right angle at C. If AB = ${c} and BC = ${a}, what is the circle's circumference, to the nearest tenth?`, dec(2 * Math.PI * rr, 1), [dec(Math.PI * rr * rr, 1), dec(Math.PI * rr, 1), dec(2 * Math.PI * (rr + 1), 1)],
+      `AC = √(${c}² ${M} ${a}²) = ${b}. The radius is (${a} + ${b} ${M} ${c})/2 = ${rr}. Circumference = 2π(${rr}) ≈ ${dec(2 * Math.PI * rr, 1)}.`)
+  }),
+  // 38. Constant from a known factor.
+  form(CALC[22], function factorConstant() {
+    const c = pick([1, 2, 3, -1]), cs = [r(1, 4), r(-9, 4), r(-6, 9)], v = cs[0] * c * c + cs[1] * c + cs[2]
+    return ask(`f(x) = ${poly(cs)} ${M} k, where k is a constant. If (x ${c > 0 ? M : '+'} ${Math.abs(c)}) is a factor of f(x), what is k?`, num(v), [num(-v), num(v + cs[0]), num(cs[2])].filter((x) => x !== num(v)),
+      `A factor (x ${c > 0 ? M : '+'} ${Math.abs(c)}) means f(${num(c)}) = 0: ${num(v)} ${M} k = 0, so k = ${num(v)}.`, [num(v + 1)])
+  }),
+]
+
+export const MAKERS = [...NO_CALC, ...CALC, ...T5_NOCALC, ...T2_NOCALC, ...T3_NOCALC, ...T4_NOCALC, ...T6_NOCALC, ...T7_NOCALC, ...T8_NOCALC, ...T2_CALC, ...T3_CALC, ...T4_CALC, ...T5_CALC]
 
 // Types: each one is a list of forms. A form made with form(name, ...) joins the type of the maker with that name.
 export const TYPES = (() => {

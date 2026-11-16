@@ -1,5 +1,5 @@
 // SAT-style math questions (no calculator and calculator sections), made fresh each time the test starts.
-// Each maker below copies the TYPE of one question from the owner's practice tests (section 3 of tests 1 to 8, section 4 of tests 1 and 2), with new numbers and names,
+// Each maker below copies the TYPE of one question from the owner's practice tests (section 3 of tests 1 to 8, section 4 of tests 1 to 3), with new numbers and names,
 // so every attempt is different but tests the same skill. The wording is written for this site, not copied.
 // Grid-in (type the answer) questions in the source are multiple choice here, like the rest of the test.
 // Same file in the web app (src/data/satMath.js) and the phone app (mobile/src/lib/satMath.js): keep them identical.
@@ -42,6 +42,12 @@ function choices(right, wrong, spare = []) {
   const n = Number(right.replace(M, '-'))
   for (let k = 1; out.length < 4 && Number.isFinite(n); k++) {
     for (const w of [num(n + k), num(n - k)]) if (out.length < 4 && !seen.has(w)) { seen.add(w); out.push(w) }
+  }
+  // Fractions like 3/11: fill with nearby fractions over the same bottom number.
+  const fm = right.match(/^(−?)(\d+)\/(\d+)$/)
+  for (let k = 1; out.length < 4 && fm && k < 20; k++) {
+    const top = (fm[1] ? -1 : 1) * Number(fm[2]), bot = Number(fm[3])
+    for (const w of [frac(top + k, bot), frac(top - k, bot)]) if (out.length < 4 && !seen.has(w) && w !== '0') { seen.add(w); out.push(w) }
   }
   if (out.length < 4) throw new Error(`Not enough answer choices for ${right}`)
   const order = [0, 1, 2, 3].sort(() => Math.random() - 0.5)
@@ -1761,7 +1767,250 @@ const T2_CALC = [
   }),
 ]
 
-export const MAKERS = [...NO_CALC, ...CALC, ...T5_NOCALC, ...T2_NOCALC, ...T3_NOCALC, ...T4_NOCALC, ...T6_NOCALC, ...T7_NOCALC, ...T8_NOCALC, ...T2_CALC]
+// Practice test 3, section 4 (calculator). Question 33 is left out: it cannot be stated clearly without its drawing.
+const T3_CALC = [
+  // 1. Reading a distance-time graph.
+  function tripGraph() {
+    const go = 20 * r(1, 3), stay = 10 * r(2, 5), back = 10 * r(1, 3), shop = 10 * r(1, 2), home = 10 * r(1, 3), D = r(3, 8), mid = r(1, D - 1)
+    const t = [0, go, go + stay, go + stay + back, go + stay + back + shop, go + stay + back + shop + home], d = [0, D, D, mid, mid, 0]
+    const clock = (m) => `${1 + Math.floor(m / 60)}:${String(m % 60).padStart(2, '0')}`
+    return ask(`A cyclist leaves home at 1:00 to ride to the library, then rides to a shop, then rides home. A graph of distance from home shows these points, joined by straight lines: ${t.map((m, i) => `${clock(m)} → ${d[i]} miles`).join(', ')}. How many minutes did the cyclist stay at the library?`,
+      stay, [shop, go, stay + 10].filter((x) => x !== stay), `The library is the farthest point, ${D} miles. The distance stays at ${D} from ${clock(go)} to ${clock(go + stay)}: ${stay} minutes.`, [stay - 10, stay + 20])
+  },
+  // 2. Find one letter from a linked equation.
+  form(T3_NOCALC[1], function linkedEquation() {
+    const p = r(1, 5), q = r(3, 12), k = r(2, 9) * 5, h = k - p
+    return ask(`If ${p}/k = ${q} and ${q}k + h = ${k}, what is h?`, h, [k + p, k - q, q * p].filter((x) => x !== h), `${p}/k = ${q} means ${q}k = ${p}. So ${p} + h = ${k} and h = ${h}.`, [h + 1])
+  }),
+  // 3. A rule for the next entry in a linear table.
+  form(CALC[0], function tableRule() {
+    const m = r(2, 6), c = r(-4, 6)
+    const xs = [-1, 0, 1, 2], rule = `b = ${m}a${tail(c)}`
+    return ask(`A linear function f has ${xs.map((x) => `f(${num(x)}) = ${num(m * x + c)}`).join(', ')}, and f(a) = b. Which equation gives b?`, rule,
+      [`b = a${tail(c)}`, `b = ${m}a${tail(c + m)}`, `b = ${m + 1}a${tail(c)}`], `f goes up by ${m} each time n goes up by 1, and f(0) = ${num(c)}. So f(n) = ${m}n${tail(c)} and ${rule}.`)
+  }),
+  // 4. A conditional probability from a two-way table.
+  form(T2_NOCALC[18], function conditionalTable() {
+    let MA, MT, FM, T, FT, FA, A; do { MA = 5 * r(3, 10); MT = MA + 5 * r(2, 8); FM = 5 * r(2, 8); T = MT + FM + 5 * r(2, 8); FT = T - MT; FA = FT - FM; A = MA + FA } while (FA <= 0)
+    return ask(`${T} students chose Art or Music. ${MA} boys chose Art, ${MT} students are boys, and ${FM} girls chose Music. If a student who chose Art is picked at random, what is the probability that it is a girl?`,
+      frac(FA, A), [frac(FA, T), frac(FA, FT), frac(MA, A)].filter((x) => x !== frac(FA, A)), `Girls: ${T} ${M} ${MT} = ${FT}. Girls who chose Art: ${FT} ${M} ${FM} = ${FA}. All Art students: ${MA} + ${FA} = ${A}. Probability = ${FA}/${A} = ${frac(FA, A)}.`, [frac(FA + 1, A), frac(FM, T), frac(A, T), frac(FA, MT)])
+  }),
+  // 5 and 6. Mean or biggest change from paired scores.
+  form(CALC[7], function pairedScores() {
+    const n = r(6, 9), t1 = [...Array(n)].map(() => 10 * r(4, 10)), t2 = t1.map(() => 10 * r(4, 10)), askMean = pick([true, false])
+    const mean = t1.reduce((a, b) => a + b, 0) / n, change = Math.max(...t1.map((v, i) => Math.abs(v - t2[i])))
+    return ask(`${n} students took two tests. Their (test 1, test 2) scores are ${t1.map((v, i) => pt(v, t2[i])).join(', ')}. ${askMean ? 'What is the mean score on test 1 (to 2 decimal places where needed)?' : 'What is the greatest change in one student’s score from test 1 to test 2?'}`,
+      askMean ? dec(mean) : change, askMean ? [dec(t2.reduce((a, b) => a + b, 0) / n), dec(mean + 2.5), dec(mean - 3)] : [change + 10, change - 10, Math.max(...t1) - Math.min(...t2)].filter((x) => x !== change && x > 0),
+      askMean ? `Add the test 1 scores: ${t1.reduce((a, b) => a + b, 0)}. Divide by ${n}: ${dec(mean)}.` : `Work out |test 2 ${M} test 1| for each student. The largest is ${change}.`, [change + 20])
+  }),
+  // 7. Meaning of the rate in a model.
+  form(T2_CALC[3], function interpretRate() {
+    const rate = pick([0.1, 0.2, 0.3, 0.5]), start = r(5, 20), y0 = 2000 + 5 * r(0, 4)
+    return ask(`A bird's average lifespan, in years, is modelled by L = ${rate}(t ${M} ${y0}) + ${start}, where t is the year. What does the number ${rate} mean?`,
+      `The lifespan goes up by ${rate} years each year after ${y0}.`, [`The lifespan in ${y0} was ${rate} years.`, `The lifespan goes up by ${rate} years every 10 years.`, `The lifespan goes down by ${rate} years each year after ${y0}.`],
+      `${rate} multiplies (t ${M} ${y0}), the number of years after ${y0}, so each extra year adds ${rate} to L. At t = ${y0}, L = ${start}.`)
+  }),
+  // 8. Diameter from an expanded circle equation.
+  form(CALC[17], function circleDiameter() {
+    const h = r(-4, 4), k = r(-4, 4), R2 = pick([5, 10, 13, 20, 8, 18]), c = R2 - h * h - k * k
+    const xs = h ? `x² ${h > 0 ? M : '+'} ${Math.abs(2 * h)}x` : 'x²', ys = k ? `y² ${k > 0 ? M : '+'} ${Math.abs(2 * k)}y` : 'y²'
+    const root = (n) => { for (let s = 10; s > 1; s--) if (n % (s * s) === 0) return `${s === 1 ? '' : s}√${n / (s * s)}`.replace('√1', ''); return `√${n}` }
+    return ask(`${xs} + ${ys}${tail(-c)} = 0 is the equation of a circle. What is its diameter?`, `2${root(R2)}`.replace(/^2(\d+)√/, (m, d) => `${2 * d}√`), [root(R2), String(R2), String(2 * R2)],
+      `Complete the squares: (x ${M} ${num(h)})² + (y ${M} ${num(k)})² = ${R2}. The radius is √${R2}, so the diameter is 2√${R2}.`)
+  }),
+  // 9. Combine two equations instead of solving.
+  function systemCombination() {
+    let a, b, x, y; do { a = r(2, 6); b = r(1, 5); x = r(-3, 8); y = r(-3, 8) } while (a === b || (x + y) === 0)
+    const C1 = x - a * y, C2 = a * x - y
+    return ask(`x ${M} ${a}y = ${num(C1)} and ${a}x ${M} y = ${num(C2)}. What is x + y?`, num(x + y), [num(x - y), num((C1 + C2) / 2), num(C2 - C1)].filter((v) => v !== num(x + y)),
+      `Subtract the first equation from the second: (${a}x ${M} y) ${M} (x ${M} ${a}y) = ${a - 1}x + ${a - 1}y = ${num(C2 - C1)}. Divide by ${a - 1}: x + y = ${num(x + y)}.`, [num(x + y + 1)])
+  },
+  // 10. A power of a power.
+  form(NO_CALC[13], function powerOfPower() {
+    const p = pick([2, 3, 4]), q = pick([3, 5]), k = q * r(-3, -1), e = (k * p) / q
+    return ask(`If a > 0 and (a^k)^(${p}/${q}) = 1/a^${-e}, what is k?`, num(k), [num(-k), num(e), num(k + q)].filter((x) => x !== num(k)),
+      `(a^k)^(${p}/${q}) = a^(${p}k/${q}) and 1/a^${-e} = a^(${num(e)}). So ${p}k/${q} = ${num(e)} and k = ${num(k)}.`, [num(k - 1)])
+  }),
+  // 11. Similar triangles across a lake.
+  form(NO_CALC[18], function lakeWidth() {
+    const DE = r(4, 9), CD = r(6, 15), k = pick([20, 25, 40, 50]), BE = DE * k, AB = CD * k
+    return ask(`To measure a lake's length AB, a surveyor draws lines AD and BC that cross at E, with AB parallel to CD. DE = ${DE} feet, CD = ${CD} feet and BE = ${BE} feet. How long is the lake?`, AB, [BE + CD, (BE * DE) / CD, CD * DE].map(Math.round).filter((x) => x !== AB),
+      `Triangles ABE and DCE are similar (AB ∥ CD). BE matches DE, and AB matches CD: AB/${CD} = ${BE}/${DE}, so AB = ${AB}.`, [AB + 50])
+  }),
+  // 12. Collect like terms and factor.
+  function factorCommon() {
+    // Built so the x²y terms leave exactly −x²y, as in the source question.
+    const s = r(2, 5), p = s - 1, q = r(1, 5), t = r(2, 6), u = r(1, 5), w = q + t
+    return ask(`Which of the following is equal to ${p === 1 ? '' : p}x²y ${M} ${q === 1 ? '' : q}xy² ${M} xy(${s}x + ${t}y ${M} ${u})?`,
+      `${M}xy(x + ${w}y ${M} ${u})`, [`xy(x ${M} ${w}y ${M} ${u})`, `xy(x + ${w}y ${M} ${u})`, `${M}xy(x ${M} ${w}y + ${u})`],
+      `Expand the bracket: ${M}${s}x²y ${M} ${t}xy² + ${u}xy. Add the first two terms: ${p}x²y ${M} ${s}x²y = ${M}x²y and ${M}${q}xy² ${M} ${t}xy² = ${M}${w}xy². So the total is ${M}x²y ${M} ${w}xy² + ${u}xy = ${M}xy(x + ${w}y ${M} ${u}).`)
+  },
+  // 13. Arc of a circle from a tangent.
+  form(T2_NOCALC[17], function tangentArc() {
+    const rr = r(2, 12), rt = (k) => `${k}√3`
+    return ask(`PT is tangent to a circle with centre O at T. OP meets the circle at M. Angle OPT is 30° and TP = ${rt(rr)}. How long is the minor arc TM?`, `${frac(rr, 3)}π`.replace(/^(\d+)\//, '$1/').replace(/^(\d+\/\d+)π$/, '($1)π'),
+      [`${frac(2 * rr, 3)}π`.replace(/^(\d+\/\d+)π$/, '($1)π'), `${rr}π`, `${frac(rr, 6)}π`.replace(/^(\d+\/\d+)π$/, '($1)π')],
+      `OT is a radius and meets the tangent at 90°. With angle P = 30°, OT = TP/√3 = ${rr}, and angle TOP = 60° = π/3. Arc TM = ${rr} × π/3.`, [`${rr + 1}π`])
+  }),
+  // 14. Split a total by a ratio.
+  function ratioSum() {
+    const a = r(1, 5), b = r(a + 1, 9), k = r(2, 9), total = (a + b) * k, s = r(2, Math.min(20, total - 1))
+    return ask(`Two numbers are in the ratio ${a}:${b}. If ${s} is taken away from their sum, the result is ${total - s}. What is the average of the two numbers?`, dec(total / 2), [dec(total), dec((total - s) / 2), dec(b * k)].filter((x) => x !== dec(total / 2)),
+      `The sum is ${total - s} + ${s} = ${total}, and the average of two numbers is half their sum: ${dec(total / 2)}. (The numbers are ${a * k} and ${b * k}.)`, [dec(total / 2 + 1)])
+  },
+  // 15. Area of the triangle cut off by a line.
+  form(CALC[16], function lineTriangleArea() {
+    return ask('f(x) = mx − m, with m > 0. Its graph crosses the y-axis at P and the x-axis at R. O is the origin. Which expression gives the area of triangle OPR?', 'm/2', ['m', 'm²/2', 'm²'],
+      'At x = 0, y = −m, so OP = m. At y = 0, mx = m, so x = 1 and OR = 1. Area = (1/2)(1)(m) = m/2.')
+  }),
+  // 16. One pipe fills while another empties.
+  form(CALC[30], function fillAndEmpty() {
+    let a, b, T; do { a = r(2, 6); b = r(a + 1, 12); T = (a * b) / (b - a) } while (!Number.isInteger(T * 2))
+    return ask(`Pipe S fills a tank in ${a} hours. Pipe U empties it in ${b} hours. With both open, how many hours does it take to fill the empty tank?`, dec(T), [dec((a * b) / (a + b)), String(b - a), String(a + b)].filter((x) => x !== dec(T)),
+      `Each hour: 1/${a} filled, 1/${b} emptied, so 1/${a} ${M} 1/${b} = ${frac(b - a, a * b)} of the tank. Time = ${dec(T)} hours.`, [dec(T + 1)])
+  }),
+  // 17. Solve a reciprocal formula.
+  form(T5_NOCALC[8], function reciprocalFormula() {
+    return ask('1/R + 1/S = 1/T. Which of the following gives S in terms of R and T?', 'S = RT/(R − T)', ['S = (R − T)/(RT)', 'S = (T − R)/(RT)', 'S = RT/(T − R)'],
+      '1/S = 1/T − 1/R = (R − T)/(RT). Flip both sides: S = RT/(R − T).')
+  }),
+  // 18. How long an object stays above a height.
+  form(CALC[8], function timeAbove() {
+    let p, q; do { p = r(1, 4); q = r(p + 1, 7) } while (false)
+    const a = pick([4, 5, 6, 16]), B = a * (p + q), H = a * p * q
+    return ask(`h(t) = ${B}t ${M} ${a}t² gives the height, in feet, of an object t seconds after it is thrown up. For how many seconds is the object higher than ${H} feet?`, q - p, [q, p + q, (p + q) / 2].filter((x) => x !== q - p),
+      `${B}t ${M} ${a}t² > ${H} means t² ${M} ${p + q}t + ${p * q} < 0, so (t ${M} ${p})(t ${M} ${q}) < 0: ${p} < t < ${q}. That is ${q - p} seconds.`, [q - p + 1])
+  }),
+  // 19 and 20. Two club plans read from a graph.
+  form(T5_NOCALC[11], function clubPlans() {
+    const fee = 50 * r(2, 6), rb = 5 * r(6, 12), ra = rb + 5 * r(2, 6), m = fee / (ra - rb)
+    if (!Number.isInteger(m)) return clubPlans()
+    const askRate = pick([true, false])
+    return ask(`Club A charges $${ra} a month and no joining fee. Club B charges a $${fee} joining fee plus a monthly charge; after 12 months its total is $${fee + 12 * rb}. ${askRate ? 'What is club B’s monthly charge, in dollars?' : 'What is the total cost, in dollars, when both clubs cost the same?'}`,
+      askRate ? rb : ra * m, askRate ? [Math.round((fee + 12 * rb) / 12), ra, rb + 5] : [fee + rb * 12, ra * (m + 1), fee * 2].filter((x) => x !== ra * m),
+      `Club B: (${fee + 12 * rb} ${M} ${fee})/12 = ${rb} a month. Equal when ${ra}m = ${fee} + ${rb}m: m = ${m} months, total $${ra * m}.`, [ra * m + 10])
+  }),
+  // 21. Which constants make a parabola miss a line.
+  form(T6_NOCALC[13], function parabolaMissChoice() {
+    const c = r(2, 9), h = r(1, 4), pair = (a, b) => `a = ${num(a)} and b = ${num(b)}`
+    const right = pick([[r(1, 3), c + r(1, 5)], [-r(1, 3), c - r(1, 5)]])
+    return ask(`y = a(x ${M} ${h})² + b and y = ${c}. For which values of a and b does this system have no solution?`, pair(...right),
+      [pair(r(1, 3), c - r(1, 5)), pair(r(1, 3), c), pair(-r(1, 3), c + r(1, 5))], `The parabola's vertex is at height b. If a > 0 it opens up, so it misses y = ${c} only when b > ${c}. If a < 0 it opens down and misses only when b < ${c}.`)
+  }),
+  // 22. A constant from a difference of two values.
+  form(CALC[18], function differenceConstant() {
+    const t1 = pick([0.1, 0.2, 1]), t2 = t1 * pick([2, 3]), a = pick([100, 160, 200, 240, 16]), H = 30, diff = a * (t2 * t2 - t1 * t1)
+    return ask(`An apple falls from a branch ${H} feet up. Its height after t seconds is D(t) = ${H} ${M} at². If D(${t1}) ${M} D(${t2}) = ${dec(diff)}, what is a?`, a, [Math.round(diff / (t2 - t1)), Math.round(diff / (t2 * t2)), a + 40],
+      `D(${t1}) ${M} D(${t2}) = a(${t2}² ${M} ${t1}²) = ${dec(t2 * t2 - t1 * t1, 4)}a = ${dec(diff)}, so a = ${a}.`)
+  }),
+  // 23. Mean, median and mode statements.
+  function meanMedianMode() {
+    let v, mean, med, mode; do {
+      v = [...Array(6)].map(() => 5 * r(1, 8)); v[r(0, 5)] = v[r(0, 5)]
+      const s = [...v].sort((a, b) => a - b); mean = v.reduce((a, b) => a + b, 0) / 6; med = (s[2] + s[3]) / 2
+      const cnt = {}; v.forEach((x) => { cnt[x] = (cnt[x] || 0) + 1 }); const top = Math.max(...Object.values(cnt)); const modes = Object.keys(cnt).filter((k) => cnt[k] === top)
+      mode = top > 1 && modes.length === 1 ? Number(modes[0]) : null
+    } while (mode == null)
+    const t = [mean === med, mean === mode, med === mode]
+    if (!t.some(Boolean)) return meanMedianMode()
+    const right = romanLabel(t)
+    return ask(`Daily high temperatures for 6 days were ${v.join(', ')}. Which of these are true? I. mean = median II. mean = mode III. median = mode`, right, romanWrong(right),
+      `Mean = ${dec(mean)}, median = ${dec(med)}, mode = ${mode}. So the true ones are ${right.replace(' only', '')}.`)
+  },
+  // 24. sin a = cos b in a right triangle.
+  form(T5_NOCALC[3], function sinCosRightAngle() {
+    return ask('In triangle DEF, the angles at E, F and D are a°, b° and c°. If sin(a°) = cos(b°) and a ≠ b, which of the following must be true?', 'c = 90', ['a = b', 'a > b', 'a = 60'],
+      'sin(a°) = cos(b°) happens when a + b = 90 (complementary angles). Then c = 180 − 90 = 90.')
+  }),
+  // 25. A class size that keeps every part whole.
+  function divisibilityCount() {
+    const [f1, f2, f3] = pick([[[2, 3], [2, 5], [1, 3]], [[3, 4], [1, 3], [1, 2]], [[1, 2], [3, 5], [2, 3]], [[2, 5], [1, 2], [1, 3]]])
+    // Every group (girls, senior girls, senior girls who passed) must be a whole number, so the class size must make
+    // each running product a whole number: it is a multiple of each running product's denominator.
+    const den = (n, d) => d / gcd(n, d), lcm = (a, b) => (a * b) / gcd(a, b)
+    const need = [den(f1[0], f1[1]), den(f1[0] * f2[0], f1[1] * f2[1]), den(f1[0] * f2[0] * f3[0], f1[1] * f2[1] * f3[1])].reduce(lcm)
+    const good = need * r(1, 3), bad = [good + need / 3, good - need / 2, good + need / 5, good + 1, good - 1].map(Math.round).filter((x) => x > 0 && x % need !== 0)
+    return ask(`In a class, ${f1[0]}/${f1[1]} of the students are girls, ${f2[0]}/${f2[1]} of the girls are seniors, and ${f3[0]}/${f3[1]} of the senior girls passed a test. Which could be the number of students in the class?`, good, bad,
+      `The girls who passed are ${f1[0]}/${f1[1]} × ${f2[0]}/${f2[1]} × ${f3[0]}/${f3[1]} = ${frac(f1[0] * f2[0] * f3[0], f1[1] * f2[1] * f3[1])} of the class, and every group must be a whole number of students. The class size must be a multiple of ${need}: ${good} works.`, [good + 1, good + 2])
+  },
+  // 26. A cone on a cylinder.
+  form(CALC[34], function coneOnCylinder() {
+    const V = r(300, 3000), k = pick([1, 2, 3])
+    const cone = (V * k) / 3, total = V + cone
+    return ask(`A silo is a cylinder with a cone on top. They have the same radius, and the cone is ${k === 1 ? 'as tall as' : `${k} times as tall as`} the cylinder. If the cylinder holds ${V} cubic feet, what is the volume of the silo, in cubic feet (to 2 decimal places where needed)?`,
+      dec(total), [dec(V * 2), dec(V + V * k), dec(V + V / 3)].filter((x) => x !== dec(total)), `A cone holds 1/3 of a cylinder with the same base and height. This cone is ${k} times as tall, so it holds ${k}/3 × ${V} = ${dec(cone)}. Total: ${dec(total)}.`, [dec(total + 10)])
+  }),
+  // 27. Count the integers where a quadratic is negative.
+  form(CALC[4], function negativeCount() {
+    const p = r(-3, 2), q = p + r(3, 8)
+    return ask(`k = ${poly([1, -(p + q), p * q])}. For how many integers x is k negative?`, q - p - 1, [q - p, q - p + 1, q - p - 2].filter((x) => x >= 0),
+      `k = (x ${p < 0 ? '+' : M} ${Math.abs(p)})(x ${M} ${q})${p === 0 ? '' : ''} is negative between its roots, ${num(p)} < x < ${q}. The integers strictly between are ${q - p - 1} in number.`, [q - p + 2])
+  }),
+  // 28. Two rectangles inside a square.
+  function rectanglesInSquare() {
+    const [p, q] = pick([[5, 2], [3, 1], [4, 1], [7, 3]]), g = r(2, 5)
+    const k = (3 * g - 2 * g) / (p - 2 * q), side = p * k + 2 * g
+    if (!(k > 0) || !Number.isInteger(k)) return rectanglesInSquare()
+    return ask(`Two identical rectangles, each a tall by b wide, stand side by side inside a square. The gaps between the rectangles and the square's sides, and between the two rectangles, are all ${g} inches. If a : b = ${p} : ${q}, what is the area of the square?`,
+      side * side, [(side - g) ** 2, (side + g) ** 2, side * 4],
+      `Across: 3 gaps + 2b = ${3 * g} + 2b. Up: 2 gaps + a = ${2 * g} + a. They are equal (a square). With a = ${p}k and b = ${q}k: ${3 * g} + ${2 * q}k = ${2 * g} + ${p}k, so k = ${k}, the side is ${side} and the area is ${side * side}.`)
+  },
+  // 29. Area between two cuts in a right triangle.
+  form(T5_NOCALC[19], function stripInTriangle() {
+    const n = pick([3, 4]), i = r(1, n - 2), T = n * n * r(2, 9), big = (T * ((n - i) ** 2)) / (n * n), small = (T * ((n - i - 1) ** 2)) / (n * n)
+    return ask(`Right triangle ABC has its right angle at A. Points cut AC into ${n} equal parts, and at each cut a line goes straight up to BC. If triangle ABC has area ${T}, what is the area of the strip between cut ${i} and cut ${i + 1} (counting from A)?`,
+      dec(big - small), [dec(T / n), dec(big), dec(small)].filter((x) => x !== dec(big - small)), `The triangle to the right of each cut is similar to ABC. Cut ${i} leaves ${n - i}/${n} of the length, so ${(n - i) ** 2}/${n * n} of the area: ${dec(big)}. Cut ${i + 1} leaves ${dec(small)}. The strip is ${dec(big)} ${M} ${dec(small)} = ${dec(big - small)}.`, [dec(big - small + 1)])
+  }),
+  // 30. Equal complex numbers with roots.
+  form(NO_CALC[1], function complexRootsEqual() {
+    const s = pick([2, 3, 5, 7]), p = r(1, 3), q = r(p + 1, 5)
+    return ask(`a ${M} b + ${q}i√${s} = ${p === 1 ? '' : p}√${s} + (a + b)i, where a and b are real and i = √${M}1. What is a² ${M} b²?`, p * q * s, [p * q, (p + q) * s, p * q * s * 2],
+      `Real parts: a ${M} b = ${p === 1 ? '' : p}√${s}. Imaginary parts: a + b = ${q}√${s}. a² ${M} b² = (a ${M} b)(a + b) = ${p * q} × ${s} = ${p * q * s}.`)
+  }),
+  // 31. Where two linear functions from tables meet.
+  form(T5_NOCALC[11], function twoTablesMeet() {
+    const m1 = r(3, 6), c1 = r(1, 9), m2 = r(1, m1 - 1), a = r(3, 12), c2 = c1 + (m1 - m2) * a, b = m1 * a + c1
+    return ask(`Linear function f has f(1) = ${m1 + c1}, f(3) = ${3 * m1 + c1}, f(5) = ${5 * m1 + c1}. Linear function g has g(0) = ${c2}, g(1) = ${c2 + m2}, g(2) = ${c2 + 2 * m2}. If f(a) = g(a) = b, what is a + b?`, a + b, [b, a + c2, a + b + m1],
+      `f(x) = ${m1}x + ${c1} and g(x) = ${m2}x + ${c2}. Equal when ${m1 - m2}x = ${c2 - c1}, x = ${a}; then b = ${b}, and a + b = ${a + b}.`)
+  }),
+  // 32. Share out items two ways.
+  form(T5_NOCALC[11], function shareTwoWays() {
+    const s = r(8, 30), p = r(3, 6), q = p + r(1, 3), left = r(2, 15), need = (q - p) * s - left
+    if (need <= 0) return shareTwoWays()
+    return ask(`A teacher has some workbooks. Giving each student ${p} leaves ${left} over. Giving each student ${q} would need ${need} more. How many students are there?`, s, [s + 2, left + need, Math.round((left + need) / q)].filter((x) => x !== s),
+      `The number of books is ${p}s + ${left} = ${q}s ${M} ${need}. So ${q - p}s = ${left + need} and s = ${s}.`, [s - 1])
+  }),
+  // 34. A shifted function's values give its constants.
+  form(T4_NOCALC[4], function shiftedValues() {
+    const h = r(1, 4), a = r(-5, 6), b = r(-5, 9)
+    const f = (x) => x * x + a * x + b
+    return ask(`f(x) = x² + ax + b and g(x) = f(x ${M} ${h}). If g(${h}) = ${num(f(0))} and g(${h + 1}) = ${num(f(1))}, what is a?`, num(a), [num(b), num(-a), num(a + 1)].filter((x) => x !== num(a)),
+      `g(${h}) = f(0) = b = ${num(b)}. g(${h + 1}) = f(1) = 1 + a + b = ${num(f(1))}, so a = ${num(a)}.`, [num(a - 1)])
+  }),
+  // 35. Sector area from an arc length.
+  form(T2_NOCALC[17], function sectorFromArc() {
+    const d = pick([2, 3, 4, 6]), L = r(4, 15), rr = (L * d) / Math.PI, A = (rr * L) / 2
+    return ask(`Central angle AOB measures π/${d} radians, and minor arc AB is ${L} long. What is the area of the sector, to the nearest tenth?`, dec(A, 1), [dec(rr, 1), dec(A * 2, 1), dec(Math.PI * rr * rr, 1)],
+      `r = arc/angle = ${L}/(π/${d}) = ${dec(rr, 2)}. Sector area = (1/2) × r × arc = (1/2)(${dec(rr, 2)})(${L}) ≈ ${dec(A, 1)}.`)
+  }),
+  // 36. Minimum value after finding a constant.
+  form(CALC[26], function minimumAfterConstant() {
+    const b = 2 * r(1, 4), v = r(1, 9), k = -v, minv = v - (b * b) / 4
+    return ask(`P(x) = x² + ${b}x ${M} k. If P(0) = ${v}, what is the minimum value of P?`, num(minv), [num(v), num(-minv), num(minv - b)].filter((x) => x !== num(minv)),
+      `P(0) = ${M}k = ${v}, so k = ${num(k)} and P(x) = x² + ${b}x + ${v}. The lowest point is at x = ${M}${b / 2}: P = ${(b * b) / 4} ${M} ${b * b / 2} + ${v} = ${num(minv)}.`, [num(minv + 1)])
+  }),
+  // 37 and 38. When a business makes a profit.
+  form(T5_NOCALC[11], function profitPoint() {
+    const p = 5 * r(10, 30), c = p - 5 * r(1, 6), F = 500 * r(2, 10), target = pick([0, 10000, 50000, 100000])
+    const x = target === 0 ? Math.floor(F / (p - c)) + 1 : (target + F) / (p - c)
+    if (!Number.isInteger(x)) return profitPoint()
+    return ask(`A company's revenue is R = ${p}x and its cost is C = ${c}x + ${F}, for x units sold. ${target === 0 ? 'What is the smallest number of units for which it makes a profit?' : `How many units must it sell to make a profit of $${target.toLocaleString('en-US')}?`}`,
+      x, [Math.round(F / p), Math.round((target + F) / p), x + 1].filter((v) => v !== x),
+      `Profit = R ${M} C = ${p - c}x ${M} ${F}. ${target === 0 ? `${p - c}x > ${F} means x > ${dec(F / (p - c))}, so the smallest whole number is ${x}.` : `${p - c}x ${M} ${F} = ${target} gives x = ${x}.`}`, [x + 2])
+  }),
+]
+
+export const MAKERS = [...NO_CALC, ...CALC, ...T5_NOCALC, ...T2_NOCALC, ...T3_NOCALC, ...T4_NOCALC, ...T6_NOCALC, ...T7_NOCALC, ...T8_NOCALC, ...T2_CALC, ...T3_CALC]
 
 // Types: each one is a list of forms. A form made with form(name, ...) joins the type of the maker with that name.
 export const TYPES = (() => {

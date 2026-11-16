@@ -3,6 +3,7 @@ import { Linking, Pressable, Text, View } from 'react-native'
 import { colors } from './lib/constants'
 import { SAT_CLASSES } from './lib/satClasses'
 import { SAT_SAMPLE } from './lib/satSample'
+import { makeSatTest } from './lib/satMath'
 import { BackLink, Button, Card, Screen, ShellActions, Title, styles, useScope } from './ui'
 
 // Short SAT practice test and SAT classes. Same content as the website's SatTest.jsx and SatClasses.jsx.
@@ -13,14 +14,16 @@ const H2 = { fontSize: 20, fontWeight: '800', color: colors.ink }
 export function SatTestPage({ onBack }) {
   const { goTab, openPage } = useContext(ShellActions)
   const { setScope } = useScope()
+  const [qs, setQs] = useState(() => makeSatTest(SAT_SAMPLE))
   const [i, setI] = useState(0)
   const [picked, setPicked] = useState([])
   const [done, setDone] = useState(false)
-  const total = SAT_SAMPLE.length
-  const q = SAT_SAMPLE[i]
-  const right = picked.filter((a, n) => a === SAT_SAMPLE[n].answer).length
+  const total = qs.length
+  const q = qs[i]
+  const right = picked.filter((a, n) => a === qs[n].answer).length
   const choose = (n) => setPicked((p) => { const c = [...p]; c[i] = n; return c })
-  const restart = () => { setI(0); setPicked([]); setDone(false) }
+  // A new attempt gets new questions (math made fresh, see lib/satMath.js).
+  const restart = () => { setQs(makeSatTest(SAT_SAMPLE)); setI(0); setPicked([]); setDone(false) }
 
   if (done) {
     const score = practiceScore(right, total)
@@ -45,7 +48,7 @@ export function SatTestPage({ onBack }) {
           </Pressable>
         </View>
         <View style={{ gap: 12, marginTop: 16 }}>
-          {SAT_SAMPLE.map((s, n) => (
+          {qs.map((s, n) => (
             <Card key={s.id}>
               <Text style={styles.hint}>{s.section}</Text>
               <Text style={{ fontWeight: '700', color: colors.ink, fontSize: 15 }}>{s.q}</Text>

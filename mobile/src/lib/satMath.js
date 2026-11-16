@@ -1,5 +1,5 @@
 // SAT-style math questions (no calculator and calculator sections), made fresh each time the test starts.
-// Each maker below copies the TYPE of one question from the owner's practice tests (section 3 of tests 1 to 8, section 4 of test 1), with new numbers and names,
+// Each maker below copies the TYPE of one question from the owner's practice tests (section 3 of tests 1 to 8, section 4 of tests 1 and 2), with new numbers and names,
 // so every attempt is different but tests the same skill. The wording is written for this site, not copied.
 // Grid-in (type the answer) questions in the source are multiple choice here, like the rest of the test.
 // Same file in the web app (src/data/satMath.js) and the phone app (mobile/src/lib/satMath.js): keep them identical.
@@ -1527,7 +1527,241 @@ T8_NOCALC.push(form(T8_NOCALC[1], function semicircleIntercept() {
     `The centre is (${w}, 0) and the radius is ${rr}. R is ${w} across from the centre, so b = √(${rr}² ${M} ${w}²) = ${h}.`, [h + 1, h - 1])
 }))
 
-export const MAKERS = [...NO_CALC, ...CALC, ...T5_NOCALC, ...T2_NOCALC, ...T3_NOCALC, ...T4_NOCALC, ...T6_NOCALC, ...T7_NOCALC, ...T8_NOCALC]
+const money = (v) => (Number.isInteger(v) ? String(v) : v.toFixed(2))
+
+// Practice test 2, section 4 (calculator). Question 6 is left out: it only asks to pick one of four drawn graphs.
+const T2_CALC = [
+  // 1. A deduction, then a percent off.
+  function discountSequence() {
+    const D = 10 * r(2, 6), T = 50 * r(2, 6), p = pick([10, 20, 25, 30, 40]), keep = (100 - p) / 100, pp = p / 100
+    const e = (a, b) => `${dec(a)}k ${M} ${dec(b)}`
+    return ask(`A store takes $${D} off every purchase over $${T}. After that, early shoppers get a further ${p}% off. What does an early shopper pay for a purchase of k dollars, with k > ${T}?`,
+      e(keep, D * keep), [e(pp, D * pp), e(pp, D * keep), e(keep, D)], `First take off $${D}: k ${M} ${D}. Then ${p}% off leaves ${100 - p}%: ${dec(keep)}(k ${M} ${D}) = ${e(keep, D * keep)}.`)
+  },
+  // 2. Map scale.
+  form(NO_CALC[6], function mapScale() {
+    const c = r(2, 9)
+    return ask(`On a map, ${c} centimetres stand for k kilometres. How many kilometres do p centimetres stand for?`, `pk/${c}`, [`${c}pk`, `k/(${c}p)`, `${c}k/p`],
+      `One centimetre stands for k/${c} kilometres, so p centimetres stand for p × k/${c} = pk/${c}.`)
+  }),
+  // 3. Parallel lines with a right angle between them.
+  form(CALC[2], function parallelRightAngle() {
+    const d = 2 * r(3, 20), a1 = 45 + d / 2
+    return ask(`Lines ℓ and m are parallel. A bent path goes from ℓ down to m, turning through a right angle (90°) between them. Angle 1 is between the path and ℓ, and angle 2 is between the path and m, both on the side of the bend. If angle 1 is ${d}° more than angle 2, what is angle 1?`,
+      a1, [90 - a1, 45, a1 + 10].filter((x) => x !== a1 && x > 0), `Draw a line through the corner parallel to ℓ and m: it splits the 90° into parts equal to angle 1 and angle 2. So angle 1 + angle 2 = 90 and angle 1 = angle 2 + ${d}. Then 2 × angle 2 = ${90 - d}, angle 2 = ${45 - d / 2}, and angle 1 = ${a1}.`, [a1 - 5])
+  }),
+  // 4. What the numbers in a model mean.
+  function interpretConstant() {
+    const S = 10 * r(6, 30), rate = 5 * r(2, 10), name = pick(NAMES), askStart = pick([true, false])
+    const opts = [`${name} has already saved $${S}.`, `${name} saves $${S} each week.`, `The computer costs $${S}.`, `${name} has already saved $${rate}.`, `${name} saves $${rate} each week.`, `The computer costs $${rate}.`]
+    const right = askStart ? opts[0] : opts[4]
+    return ask(`${name} is saving for a computer. The total saved after w weeks is T = ${S} + ${rate}w. What does the number ${askStart ? S : rate} mean?`,
+      right, (askStart ? [opts[1], opts[2], opts[3]] : [opts[3], opts[1], opts[5]]), `At w = 0, T = ${S}, so ${S} is what was saved before the weeks start. Each week adds ${rate}, so ${rate} is the amount saved per week.`)
+  },
+  // 5. A proportion table.
+  form(CALC[0], function proportionTable() {
+    const k = r(3, 9), n = r(10, 20)
+    return ask(`Human age H is directly proportional to dog age D. A chart shows: D = 0 gives H = a, D = 2 gives H = ${2 * k}, D = 4 gives H = ${4 * k}, and D = ${n} gives H = b. What is a + b?`,
+      k * n, [k * n + k, 2 * k * n, k * (n - 1)], `Directly proportional means H = kD with no constant, so a = 0. From D = 2, H = ${2 * k}: H = ${k}D. Then b = ${k * n} and a + b = ${k * n}.`)
+  }),
+  // 7. A fraction condition with a linked pair.
+  form(T2_NOCALC[0], function fractionCondition() {
+    const q = pick([2, 3]), c = q === 2 ? r(1, 9) : 2 * r(1, 5), b = (2 * c * q) / (2 * (q - 1)), a = 2 * b - c
+    return ask(`In the fraction (a ${M} ${c})/(2b), a is ${c} less than two times b. If the fraction equals 1/${q}, what is a?`, dec(a), [dec(b), dec(a + c), dec(2 * b)].filter((x) => x !== dec(a)),
+      `a = 2b ${M} ${c}, so a ${M} ${c} = 2b ${M} ${2 * c}. Then (2b ${M} ${2 * c})/(2b) = 1/${q} gives ${q}(2b ${M} ${2 * c}) = 2b, so b = ${dec(b)} and a = ${dec(a)}.`, [dec(a + 1)])
+  }),
+  // 8. The most items within a budget.
+  function maxCount() {
+    let B, F, c; do { B = 5 * r(8, 30); F = 5 * r(1, 4); c = r(2, 7) } while ((B - F) % c === 0)
+    const n = Math.floor((B - F) / c), name = pick(NAMES)
+    return ask(`${name} has $${B} to spend at a fair. Entry is $${F} and each ride costs $${c}. What is the greatest number of rides ${name} can go on?`, n, [n + 1, Math.floor(B / c), Math.round((B + F) / c)].filter((x) => x !== n),
+      `Money for rides: ${B} ${M} ${F} = ${B - F}. ${B - F} ÷ ${c} = ${dec((B - F) / c)}, and only whole rides count: ${n}.`, [n - 1])
+  },
+  // 9. Choose the system of inequalities.
+  function inequalitySystemChoice() {
+    const p1 = pick([5, 8, 10, 12]), p2 = p1 + pick([2, 5, 10]), N = 50 * r(4, 12), R = 500 * r(2, 8)
+    return ask(`A concert sells x tickets at $${p1} and y tickets at $${p2}. At most ${N} tickets can be sold, and ticket money must be at least $${R}. Which system fits?`,
+      `${p1}x + ${p2}y ≥ ${R}, x + y ≤ ${N}, x ≥ 0, y ≥ 0`, [`${p1}x + ${p2}y ≤ ${R}, x + y ≤ ${N}, x ≥ 0, y ≥ 0`, `${p1}x + ${p2}y ≤ ${N}, x + y ≥ ${R}, x ≥ 0, y ≥ 0`, `${p1}/x + ${p2}/y ≤ ${N}, x + y ≤ ${R}, x ≥ 0, y ≥ 0`],
+      `Money: ${p1}x + ${p2}y must be at least ${R} (≥). Tickets: x + y can be at most ${N} (≤). Ticket numbers cannot be negative.`)
+  },
+  // 11 and 12. Area inside a fixed length of fence.
+  function fenceArea() {
+    const P = 4 * r(10, 50), half = P / 2, askF = pick([true, false])
+    if (askF) return ask(`A farmer has ${P} feet of fence for a rectangle with length x and width y. Which expression gives the area as a function of x?`, `${half}x ${M} x²`, [`${P}x ${M} x²`, `${half}x + x²`, `${half}x²`],
+      `2x + 2y = ${P}, so y = ${half} ${M} x. Area = x(${half} ${M} x) = ${half}x ${M} x².`)
+    const y = r(5, half - 5), x = half - y
+    return ask(`A farmer uses ${P} feet of fence for a rectangle with length x and width y. If y = ${y}, what is the area in square feet?`, x * y, [y * y, half * y, P * y].filter((v) => v !== x * y),
+      `x + y = ${half}, so x = ${x}. Area = ${x} × ${y} = ${x * y}.`, [x * y + 10])
+  },
+  // 14. Largest area for a perimeter limit.
+  function maxRectangleArea() {
+    const P = 2 * r(20, 60), strict = pick([true, false]), s = strict ? P / 2 - 1 : P / 2, A = Math.floor(s / 2) * Math.ceil(s / 2)
+    return ask(`A rectangle with whole-number sides has a perimeter ${strict ? 'less than' : 'of at most'} ${P} inches. What is the largest possible area, in square inches?`,
+      A, [(P / 4) ** 2, strict ? Math.floor(P / 4) ** 2 + P : (P / 2 - 1) ** 2 / 4, A - 1].map((v) => Math.round(v)).filter((v) => v !== A),
+      `The sides add to ${strict ? `at most ${s} (the perimeter must be even and below ${P})` : `at most ${s}`}. The area is largest when the sides are as close as possible: ${Math.floor(s / 2)} × ${Math.ceil(s / 2)} = ${A}.`, [A + 1, A + 5])
+  },
+  // 13. Extend a steady change to a later year.
+  form(CALC[0], function percentTrend() {
+    const y1 = 1990 + 5 * r(0, 2), gap = 10, v1 = r(100, 250) / 10, step = pick([0.2, 0.3, 0.4, 0.5]) * pick([1, -1]), v2 = v1 + step * gap, y3 = y1 + gap + 5 * r(1, 4), v3 = v2 + step * (y3 - y1 - gap)
+    return ask(`The percent of workers over 60 at a factory was ${dec(v1, 1)} in ${y1} and ${dec(v2, 1)} in ${y1 + gap}. If it changes by the same amount every year, what will it be in ${y3}?`,
+      dec(v3, 1), [dec(v2 + (v2 - v1), 1), dec(v2 + step, 1), dec(v3 + 1, 1)].filter((x) => x !== dec(v3, 1)), `It changes by (${dec(v2, 1)} ${M} ${dec(v1, 1)})/${gap} = ${dec(step, 2)} a year. From ${y1 + gap} to ${y3} is ${y3 - y1 - gap} years: ${dec(v2, 1)} + ${y3 - y1 - gap} × ${dec(step, 2)} = ${dec(v3, 1)}.`, [dec(v3 - 1, 1)])
+  }),
+  // 10. A value halfway between two known values.
+  form(CALC[0], function linearMidValue() {
+    const x1 = r(1, 5), d = r(2, 6), m = r(-4, 5) || 2, c = r(-5, 9), x2 = x1 + 2 * d, x3 = x1 + d, f = (x) => m * x + c
+    return ask(`A linear function f has f(${x1}) = ${num(f(x1))} and f(${x2}) = ${num(f(x2))}. What is f(${x3})?`, num(f(x3)), [num(f(x3) + m), num(f(x2) + m * d), num(f(x1) + f(x2))].filter((x) => x !== num(f(x3))),
+      `${x3} is halfway between ${x1} and ${x2}, so f(${x3}) is halfway between ${num(f(x1))} and ${num(f(x2))}: ${num(f(x3))}.`, [num(f(x3) - 1)])
+  }),
+  // 15. Which quadrant holds z².
+  form(NO_CALC[1], function complexSquareQuadrant() {
+    let a, b; do { a = r(-5, 5); b = r(-5, 5) } while (!a || !b || a * a === b * b)
+    const re = a * a - b * b, im = 2 * a * b, q = re > 0 ? (im > 0 ? 'I' : 'IV') : (im > 0 ? 'II' : 'III')
+    return ask(`Complex numbers are plotted with the real part across and the imaginary part up. If z = ${num(a)} ${b < 0 ? M : '+'} ${Math.abs(b)}i, which quadrant contains z²?`, `Quadrant ${q}`, ['I', 'II', 'III', 'IV'].filter((x) => x !== q).map((x) => `Quadrant ${x}`),
+      `z² = (${num(a)})² ${M} (${Math.abs(b)})² + 2(${num(a)})(${num(b)})i = ${num(re)} ${im < 0 ? M : '+'} ${Math.abs(im)}i. Real part ${re > 0 ? 'positive' : 'negative'}, imaginary part ${im > 0 ? 'positive' : 'negative'}: Quadrant ${q}.`)
+  }),
+  // 16. Two 30-degree angles stacked in a right triangle.
+  form(CALC[27], function stackedAngles() {
+    const s = r(1, 3), rt = (k) => `${k === 1 ? '' : k}√3`
+    return ask(`Triangle ABD has a right angle at D. C is on BD with CD = ${s} and AD = ${rt(s)}. Angle BAC equals angle CAD. How long is AB?`, rt(2 * s), [String(3 * s), String(2 * s), rt(3 * s)],
+      `tan∠CAD = ${s}/${rt(s)} = 1/√3, so ∠CAD = 30° and ∠BAD = 60°. Then BD = AD × √3 = ${3 * s} and AB = √(AD² + BD²) = √(${3 * s * s} + ${9 * s * s}) = ${rt(2 * s)}.`)
+  }),
+  // 17 and 18. Exponential growth from points on its graph.
+  form(CALC[15], function exponentialGraph() {
+    const A = pick([500, 1000, 2000]), b = pick([2, 3]), askB = pick([true, false]), n = r(4, 6)
+    return askB
+      ? ask(`The number of bacteria after x hours is f(x) = ${A} × b^x. Its graph passes through (1, ${A * b}) and (2, ${A * b * b}). What is b?`, b, [A, b + 1, b * b],
+        `f(1) = ${A}b = ${A * b}, so b = ${b}. Check: f(2) = ${A} × ${b * b} = ${A * b * b}.`)
+      : ask(`The number of bacteria after x hours is f(x) = ${A} × b^x, and the graph passes through (1, ${A * b}) and (2, ${A * b * b}). How many bacteria are there after ${n} hours?`, A * b ** n, [A * b ** (n - 1), A * b * n, A * b ** (n + 1)],
+        `b = ${A * b}/${A} = ${b}. f(${n}) = ${A} × ${b}^${n} = ${A * b ** n}.`)
+  }),
+  // 19. Scale a sample up to the whole group.
+  function sampleScale() {
+    const n = pick([40, 50, 60, 80, 100]), k = r(5, n / 2), N = n * r(5, 20)
+    return ask(`A survey of ${n} students found that ${k} of them chose science as their favourite subject. If the school has ${N} students, about how many would be expected to choose science?`,
+      (k * N) / n, [k * (N / 100), N - (k * N) / n, k * 10].map(Math.round).filter((v) => v !== (k * N) / n), `${k} out of ${n} is ${dec((100 * k) / n, 1)}%. ${dec((100 * k) / n, 1)}% of ${N} is ${dec((k * N) / n)}.`, [Math.round((k * N) / n) + 10])
+  },
+  // 20. Centre of a circle from its expanded equation.
+  form(CALC[17], function circleCenterExpanded() {
+    const h = r(-5, 5), k = r(-5, 5), c = r(1, 20)
+    if (!h && !k) return circleCenterExpanded()
+    const xs = h ? `x² ${h > 0 ? M : '+'} ${Math.abs(2 * h)}x` : 'x²', ys = k ? `y² ${k > 0 ? M : '+'} ${Math.abs(2 * k)}y` : 'y²'
+    return ask(`${xs} + ${ys} = ${c}. This is the equation of a circle. What is its centre?`, pt(h, k), [pt(-h, -k), pt(2 * h, 2 * k), pt(h, -k)].filter((x) => x !== pt(h, k)),
+      `Complete the squares: (x ${M} ${num(h)})² + (y ${M} ${num(k)})² = ${c + h * h + k * k}. The centre is ${pt(h, k)}.`, [pt(k, h), pt(h + 1, k)])
+  }),
+  // 21. Intercept of a perpendicular line through a point.
+  form(NO_CALC[14], function perpendicularIntercept() {
+    let x0, y0, X, s, b; do { x0 = r(1, 4); y0 = r(1, 5); X = x0 + r(1, 4); s = (X - x0) / y0; b = y0 - s * x0 } while (!Number.isInteger(b))
+    return ask(`Line ℓ passes through P(${x0}, ${y0}) and (${X}, 0). Line m has the equation y = ax + b, is perpendicular to ℓ and passes through P. What is b?`, num(b), [num(-b), num(y0), dec(b + s)].filter((x) => x !== num(b)),
+      `Line ℓ has slope ${M}${y0}/${X - x0}, so line m has slope ${frac(X - x0, y0)}. Through P: ${y0} = ${frac(X - x0, y0)} × ${x0} + b, so b = ${num(b)}.`, [num(b - 1), num(b + 2)])
+  }),
+  // 22. Solve an exponent, then use it.
+  form(NO_CALC[13], function powerFromExponent() {
+    const a = pick([2, 3]), k = r(1, 4), c = r(1, 4), E = a * k - c
+    if (E < 1) return powerFromExponent()
+    return ask(`2^(${a}k ${M} ${c}) = ${2 ** E}. What is the value of 2^k?`, 2 ** k, [2 ** (k + 1), k, 2 ** E].filter((v) => v !== 2 ** k),
+      `${2 ** E} = 2^${E}, so ${a}k ${M} ${c} = ${E} and k = ${k}. Then 2^k = ${2 ** k}.`, [2 ** k + 2])
+  }),
+  // 23. Which statement about f and |f| is true.
+  form(CALC[24], function absStatement() {
+    const xs = [-3, 0, 2, 4, 6], ys = [3, 1, r(-4, -2), 0, 5]
+    const f = (x) => { for (let i = 0; i < 4; i++) if (x >= xs[i] && x <= xs[i + 1]) return ys[i] + ((ys[i + 1] - ys[i]) * (x - xs[i])) / (xs[i + 1] - xs[i]) }
+    const neg = pick([2, 2.5, 3]), pos = pick([-2, -1, 5]), any = pick([0, -2.5])
+    return ask(`The graph of f is made of straight pieces joining ${xs.map((x, i) => pt(x, ys[i])).join(', ')}. Which of the following is true?`,
+      `f(${neg}) < |f(${neg})|`, [`f(${num(pos)}) < |f(${num(pos)})|`, `f(${num(any)}) > |f(${num(any)})|`, `f(${neg}) > |f(${neg})|`],
+      `f(x) < |f(x)| only when f(x) is negative. f(${neg}) = ${dec(f(neg))}, which is negative. f(x) > |f(x)| is never true, and f(${num(pos)}) is not negative.`)
+  }),
+  // 24. A downward parabola and a horizontal line that miss each other.
+  form(T6_NOCALC[13], function parabolaNoSolution() {
+    const n = pick([2, 4, 5, 10]), c = r(2, 9)
+    return ask(`y = ${M}(1/${n})x² + k and y = ${c}. In this system k is a constant. For which value of k does the system have no real solution?`, dec(c - r(1, 20) / 10, 2), [String(c + r(1, 5)), String(c), dec(c + 3.5)],
+      `The parabola opens downward with its highest point at y = k. It misses the line y = ${c} only when k < ${c}.`)
+  }),
+  // 25. Shaded area in a rectangle with midpoints.
+  function rectangleMidpointShaded() {
+    const A = r(2, 15)
+    return ask(`In rectangle ABCD, E is the midpoint of BC and F is the midpoint of CD. Triangle CEF has area ${A}. What is the area of the region inside triangle BCD but outside triangle CEF?`, 3 * A, [4 * A, 2 * A, 8 * A],
+      `CEF has half the width and half the height of the rectangle, so its area is 1/8 of the rectangle: the rectangle is ${8 * A}. Triangle BCD is half: ${4 * A}. Without CEF: ${4 * A} ${M} ${A} = ${3 * A}.`)
+  },
+  // 26. x² + y² from x − y and xy.
+  form(T3_NOCALC[1], function sumSquaresFromDiff() {
+    let x, y; do { x = r(-3, 9); y = r(-6, 6) } while (x === y || x * y === 0)
+    const sum = pick([true, false]), d = sum ? x + y : x - y, p = x * y, ans = sum ? d * d - 2 * p : d * d + 2 * p
+    return ask(`x ${sum ? '+' : M} y = ${num(d)} and xy = ${num(p)}. What is x² + y²?`, ans, [d * d, d * d + p, sum ? d * d + 2 * p : d * d - 2 * p].filter((v) => v !== ans),
+      `(x ${sum ? '+' : M} y)² = x² + y² ${sum ? '+' : M} 2xy. So x² + y² = ${d * d} ${sum ? M : '+'} 2(${num(p)}) = ${ans}.`, [ans + 1])
+  }),
+  // 27. Fourth corner of a parallelogram.
+  function parallelogramVertex() {
+    const A = [r(-5, 0), r(-6, 0)], B = [A[0] + r(2, 5), A[1] - r(1, 4)], D = [A[0] + r(1, 4), A[1] + r(4, 12)], C = [B[0] + D[0] - A[0], B[1] + D[1] - A[1]]
+    return ask(`ABCD is a parallelogram (corners in that order) with A${pt(...A)}, B${pt(...B)} and D${pt(...D)}. What are the coordinates of C?`, pt(...C),
+      [pt(A[0] + D[0] - B[0], A[1] + D[1] - B[1]), pt(A[0] + B[0] - D[0], A[1] + B[1] - D[1]), pt(C[0] + 1, C[1] - 1)],
+      `In a parallelogram, going from A to B is the same move as going from D to C. A to B moves (${num(B[0] - A[0])}, ${num(B[1] - A[1])}), so C = D + that move = ${pt(...C)}.`)
+  },
+  // 28. Largest value inside a circle with a limit.
+  function maxUnderCircle() {
+    const [a, h, R] = pick([[4, 3, 5], [3, 4, 5], [12, 5, 13], [5, 12, 13], [8, 6, 10], [6, 8, 10]])
+    return ask(`a² + b² ≤ ${R * R} and b ≥ ${h}. What is the greatest possible value of a?`, a, [num(-a), h, R].filter((x) => x !== a),
+      `b is at least ${h}, so b² is at least ${h * h}. Then a² ≤ ${R * R} ${M} ${h * h} = ${a * a}, so a ≤ ${a}.`, [a + 1])
+  },
+  // 29. From an equilateral triangle to a square on the same side.
+  form(T2_NOCALC[7], function equilateralToSquare() {
+    const s = 2 * r(2, 8), k = (s * s) / 4
+    return ask(`A square and an equilateral triangle share one side. If the triangle's area is ${k}√3 square inches, what is the area of the square?`, s * s, [`${2 * k}√3`, String(k * 4 + 4 * s), `${s * s}√3`],
+      `An equilateral triangle of side s has area (√3/4)s². So s²/4 = ${k}, s² = ${s * s}, and the square's area is ${s * s}.`)
+  }),
+  // 30. Average speed from points on a distance graph.
+  form(CALC[18], function averageSpeedGraph() {
+    const ts = [0, 1, 2, 3, 4, 5, 6, 7, 8], ds = [0]; for (let i = 1; i < 9; i++) ds.push(ds[i - 1] + 10 * r(4, 10))
+    const t1 = r(1, 4), t2 = t1 + r(2, 4), v = (ds[t2] - ds[t1]) / (t2 - t1)
+    return ask(`A car's distance travelled (miles) after t hours is read from a graph: ${ts.map((t, i) => `t = ${t}: ${ds[i]}`).join(', ')}. What is its average speed, in miles per hour, from t = ${t1} to t = ${t2}?`,
+      dec(v), [dec(ds[t2] / t2), dec((ds[t2] - ds[t1]) / t2), 'It cannot be determined from the given information.'].filter((x) => x !== dec(v)), `Average speed = change in distance ÷ change in time = (${ds[t2]} ${M} ${ds[t1]})/(${t2} ${M} ${t1}) = ${dec(v)}.`, [dec(v + 5)])
+  }),
+  // 31. Distance at a steady rate.
+  form(NO_CALC[6], function bikeRate() {
+    const d = 5 * r(4, 12), h = r(2, 5), t = r(3, 9) + 0.5, name = pick(NAMES)
+    return ask(`${name} rides ${d} miles in ${h} hours. At this rate, how many miles can ${name} ride in ${Math.floor(t)} hours and 30 minutes?`, dec((d / h) * t), [dec((d / h) * Math.floor(t)), dec(d * t / 2), dec((d / h) * (t + 1))],
+      `${name} rides ${dec(d / h)} miles per hour. ${Math.floor(t)} hours 30 minutes is ${t} hours: ${dec(d / h)} × ${t} = ${dec((d / h) * t)} miles.`)
+  }),
+  // 32. Consecutive odd or even numbers.
+  function consecutiveNumbers() {
+    const odd = pick([true, false]), n = r(4, 9), first = 2 * r(1, 20) + (odd ? 1 : 0), last = first + 2 * (n - 1), avg = (first + last) / 2, askMax = pick([true, false])
+    return ask(`The average of ${n} consecutive ${odd ? 'odd' : 'even'} integers is ${dec(avg)}. What is the ${askMax ? 'greatest' : 'smallest'} of them?`, askMax ? last : first,
+      askMax ? [last - 2, last + 2, avg + n] : [first + 2, first - 2, avg - n].filter((v) => v !== first), `They are spaced 2 apart and centred on ${dec(avg)}. The ${n} numbers run from ${first} to ${last}.`)
+  },
+  // 33. A composition of functions.
+  function compositionValue() {
+    const m = pick([1, 2, 3]), c = r(-4, 4), d = r(1, 5), kk = r(1, 4), w = kk * kk - d, v = m * w + c
+    return ask(`f(x) = ${coef(m)}x${c ? tail(c) : ''} and g(x) = x² ${M} ${d}. If f(g(k)) = ${num(v)}, what is |k|?`, kk, [kk * kk, Math.abs(w) || kk + 2, kk + 1].filter((x) => x !== kk),
+      `f(g(k)) = ${m === 1 ? '' : m}g(k)${c ? tail(c) : ''} = ${num(v)}, so g(k) = ${num(w)}. Then k² ${M} ${d} = ${num(w)}, k² = ${kk * kk} and |k| = ${kk}.`, [kk + 2])
+  },
+  // 34. Axis of symmetry fixes a coefficient.
+  form(CALC[26], function axisOfSymmetry() {
+    const a = r(1, 6), h = r(-4, 5) || 2, c = r(-9, 9)
+    return ask(`In the xy-plane, the line x = ${num(h)} is the axis of symmetry of f(x) = ${coef(a)}x² ${M} kx${c ? tail(c) : ''}. What is k?`, num(2 * a * h), [num(a * h), num(-2 * a * h), num(2 * h)].filter((x) => x !== num(2 * a * h)),
+      `The axis of ax² + bx + c is x = ${M}b/(2a). Here b = ${M}k, so x = k/${2 * a} = ${num(h)} and k = ${num(2 * a * h)}.`, [num(2 * a * h + a)])
+  }),
+  // 35. Mixing two solutions.
+  function mixturePercent() {
+    let a, b, p, q, m; do { a = 10 * r(1, 6); b = 10 * r(1, 6); p = 5 * r(1, 6); q = 5 * r(1, 8); m = (a * p + b * q) / (a + b) } while (p === q || !Number.isInteger(m * 2))
+    return ask(`${a} grams of solution P is ${p}% salt and ${b} grams of solution Q is ${q}% salt. If they are mixed, what percent of the mixture is salt?`, dec(m), [dec((p + q) / 2), dec(p + q), dec((a * p + b * q) / 100)].filter((x) => x !== dec(m)),
+      `Salt: ${a} × ${p / 100} + ${b} × ${q / 100} = ${dec((a * p + b * q) / 100)} grams in ${a + b} grams. ${dec((a * p + b * q) / 100)}/${a + b} = ${dec(m)}%.`, [dec(m + 1)])
+  },
+  // 36. Radius of a circle inside a right triangle.
+  function incircleRadius() {
+    const [a, b, c] = pick([[3, 4, 5], [5, 12, 13], [8, 15, 17], [7, 24, 25], [20, 21, 29]]), k = pick([1, 2]), A = a * k, B = b * k, C = c * k, rr = (A + B - C) / 2
+    return ask(`A circle fits inside right triangle PQR, touching all three sides. The legs are PQ = ${A} and PR = ${B}. What is the radius of the circle?`, rr, [C / 2, dec((A * B) / C), rr + 1].map(String).filter((x) => x !== String(rr)),
+      `The hypotenuse is ${C}. For a right triangle the inside circle's radius is (leg + leg ${M} hypotenuse)/2 = (${A} + ${B} ${M} ${C})/2 = ${rr}. (Check: area ${(A * B) / 2} = radius × half the perimeter = ${rr} × ${(A + B + C) / 2}.)`)
+  },
+  // 37 and 38. A linear cost from two known costs.
+  form(CALC[0], function linearCostTwoPoints() {
+    const fixed = r(5, 25), rate = pick([0.25, 0.5, 0.75, 1, 1.5]), m1 = 5 * r(2, 6), m2 = m1 + 5 * r(1, 4), m3 = m2 + 5 * r(1, 3), askFixed = pick([true, false])
+    const c1 = fixed + rate * m1, c2 = fixed + rate * m2
+    return ask(`An internet call costs a fixed charge plus a charge per minute. A ${m1}-minute call costs $${money(c1)} and a ${m2}-minute call costs $${money(c2)}. ${askFixed ? 'What is the fixed charge, in dollars?' : `What does a ${m3}-minute call cost, in dollars?`}`,
+      dec(askFixed ? fixed : fixed + rate * m3), askFixed ? [dec(rate), dec(c1 - rate), dec(c1 / m1)] : [dec(rate * m3), dec((c2 / m2) * m3), dec(c2 + rate)],
+      `Per minute: (${money(c2)} ${M} ${money(c1)})/(${m2} ${M} ${m1}) = ${dec(rate)}. Fixed: ${money(c1)} ${M} ${m1} × ${dec(rate)} = ${fixed}.${askFixed ? '' : ` A ${m3}-minute call: ${fixed} + ${m3} × ${dec(rate)} = ${dec(fixed + rate * m3)}.`}`)
+  }),
+]
+
+export const MAKERS = [...NO_CALC, ...CALC, ...T5_NOCALC, ...T2_NOCALC, ...T3_NOCALC, ...T4_NOCALC, ...T6_NOCALC, ...T7_NOCALC, ...T8_NOCALC, ...T2_CALC]
 
 // Types: each one is a list of forms. A form made with form(name, ...) joins the type of the maker with that name.
 export const TYPES = (() => {

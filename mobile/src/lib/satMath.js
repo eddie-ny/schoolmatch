@@ -1,5 +1,5 @@
 // SAT-style math questions (no calculator and calculator sections), made fresh each time the test starts.
-// Each maker below copies the TYPE of one question from the owner's practice tests (test 1 sections 3 and 4, tests 2 to 7 section 3), with new numbers and names,
+// Each maker below copies the TYPE of one question from the owner's practice tests (section 3 of tests 1 to 8, section 4 of test 1), with new numbers and names,
 // so every attempt is different but tests the same skill. The wording is written for this site, not copied.
 // Grid-in (type the answer) questions in the source are multiple choice here, like the rest of the test.
 // Same file in the web app (src/data/satMath.js) and the phone app (mobile/src/lib/satMath.js): keep them identical.
@@ -1256,10 +1256,10 @@ const T6_NOCALC = [
   },
   // 19. A quadratic hiding inside a function.
   function disguisedQuadratic() {
-    let p, q; do { p = r(1, 7); q = r(1, 7) } while (p === q)
-    const s = p + q, v = r(-5, 9), c = p * q + v, n = r(1, 5)
-    return ask(`f(x) = (g(x))² ${M} ${s}g(x) + ${c}. If f(${n}) = ${num(v)}, which of the following could be the value of g(${n})?`, p, [-p, s, p * q].filter((x) => x !== q && x !== p),
-      `Let u = g(${n}). Then u² ${M} ${s}u + ${c} = ${num(v)}, so u² ${M} ${s}u + ${p * q} = 0 = (u ${M} ${p})(u ${M} ${q}). So g(${n}) is ${p} or ${q}.`, [-q, s + 1])
+    let p, q, v; do { p = r(1, 7); q = r(1, 7); v = r(-5, 9) } while (p === q || p * q + v === 0)
+    const s = p + q, c = p * q + v, n = r(1, 5)
+    return ask(`f(x) = (g(x))² ${M} ${s}g(x)${tail(c)}. If f(${n}) = ${num(v)}, which of the following could be the value of g(${n})?`, p, [-p, s, p * q].filter((x) => x !== q && x !== p),
+      `Let u = g(${n}). Then u² ${M} ${s}u${tail(c)} = ${num(v)}, so u² ${M} ${s}u + ${p * q} = 0 = (u ${M} ${p})(u ${M} ${q}). So g(${n}) is ${p} or ${q}.`, [-q, s + 1])
   },
   // 20. Rectangle from the y-intercept of a parabola.
   form(T3_NOCALC[5], function parabolaInterceptRectangle() {
@@ -1403,7 +1403,131 @@ const T7_NOCALC = [
   },
 ]
 
-export const MAKERS = [...NO_CALC, ...CALC, ...T5_NOCALC, ...T2_NOCALC, ...T3_NOCALC, ...T4_NOCALC, ...T6_NOCALC, ...T7_NOCALC]
+// Practice test 8, section 3 (no calculator), questions 1 to 20.
+const T8_NOCALC = [
+  // 1. Find x² without finding x.
+  form(T3_NOCALC[1], function squareWithoutSolving() {
+    const k = r(1, 9), s = 1 + k
+    return ask(`If ${k}/(x ${M} 1) = x + 1 and x ≠ 1, what is the value of x²?`, s, [k, k - 1, s * s].filter((v) => v !== s && v > 0),
+      `Multiply by (x ${M} 1): ${k} = (x + 1)(x ${M} 1) = x² ${M} 1. So x² = ${s}.`, [s + 1, s + 2])
+  }),
+  // 2. Rectangle inside a semicircle.
+  function semicircleRectangle() {
+    const [w, h, rr] = pick([[4, 3, 5], [3, 4, 5], [12, 5, 13], [5, 12, 13], [8, 6, 10], [6, 8, 10], [15, 8, 17], [8, 15, 17]])
+    return ask(`A rectangle ABCD sits inside a semicircle: A and D are on the diameter, and B and C are on the curve. The diameter is ${2 * rr} and the rectangle's height CD is ${h}. How long is BC?`,
+      2 * w, [w, rr, 2 * rr - h].filter((x) => x !== 2 * w), `The centre is the midpoint of AD. From the centre to C is a radius, ${rr}. Half of BC is √(${rr}² ${M} ${h}²) = ${w}, so BC = ${2 * w}.`, [2 * w + 2, 2 * w - 2])
+  },
+  // 3. A negative fraction power.
+  form(NO_CALC[13], function fractionPowerSolve() {
+    const k = r(1, 3), m = frac(1, k), val = 4 ** k
+    return ask(`If ${val} = (1/4)^(${M}1/m), what is the value of m?`, m, [`${M}${m}`, frac(1, 2 * k), `${M}${frac(1, 2 * k)}`].filter((x) => x !== m),
+      `(1/4)^(${M}1/m) = 4^(1/m). And ${val} = 4^${k}. So 1/m = ${k} and m = ${m}.`, [String(k)])
+  }),
+  // 4. Cost of a trip from a price per unit and a rate.
+  form(NO_CALC[6], function fuelCost() {
+    const price = pick([2.25, 2.5, 3, 3.5, 4.2, 5]), mpg = pick([20, 25, 30, 40]), trips = r(2, 12), miles = mpg * trips, name = pick(NAMES)
+    return ask(`${name} pays $${price.toFixed(2)} per gallon of fuel and drives ${mpg} miles on one gallon. How many dollars will ${name} spend to drive ${miles} miles?`,
+      dec(price * trips), [dec(price * mpg), dec(miles / price), dec(price * trips * 2)], `${miles} miles ÷ ${mpg} miles per gallon = ${trips} gallons. ${trips} × $${price.toFixed(2)} = $${dec(price * trips)}.`, [dec(price * trips + 2)])
+  }),
+  // 5. Altitude to the hypotenuse.
+  function altitudeHypotenuse() {
+    const [db, cd] = pick([[4, 6], [2, 4], [4, 8], [3, 6], [1, 3], [9, 6], [8, 4]]), ad = (cd * cd) / db, area = (ad * cd) / 2
+    return ask(`Triangle ABC has a right angle at C. CD is drawn from C straight down to AB, with D between A and B. If DB = ${db} and CD = ${cd}, what is the area of triangle ACD?`,
+      dec(area), [dec((db * cd) / 2), dec(((ad + db) * cd) / 2), dec(ad * cd)], `Triangles ACD and CBD are similar, so AD/CD = CD/DB: AD = ${cd}²/${db} = ${dec(ad)}. Area of ACD = (1/2)(${dec(ad)})(${cd}) = ${dec(area)}.`)
+  },
+  // 6. Percents of squares give a ratio.
+  form(CALC[33], function percentSquares() {
+    const [p, q, rat] = pick([[125, 5, [1, 5]], [20, 80, [2, 1]], [50, 2, [1, 5]], [9, 36, [2, 1]], [8, 50, [5, 2]], [45, 5, [1, 3]]])
+    return ask(`If a and b are positive and ${p}% of a² is equal to ${q}% of b², what is a/b?`, frac(rat[0], rat[1]), [frac(rat[1], rat[0]), frac(rat[0] * rat[0], rat[1] * rat[1]), String(rat[0] + rat[1])],
+      `${p / 100}a² = ${q / 100}b², so a²/b² = ${q}/${p} = ${frac(q, p)}. a and b are positive, so a/b = ${frac(rat[0], rat[1])}.`)
+  }),
+  // 7 and 8. A phone plan with free minutes.
+  function planOverage() {
+    const base = pick([10, 15, 20, 25]), K = pick([100, 200, 300, 500]), rate = pick([0.1, 0.15, 0.2, 0.25]), extra = r(4, 30) * 10, paid = base + rate * extra, askK = pick([true, false])
+    return askK
+      ? ask(`A phone plan costs $${base} for the first ${K} minutes and $${rate.toFixed(2)} for each extra minute. The cost for t minutes (more than ${K}) is C(t) = ${base} + ${rate}(t ${M} K). What is K?`, K, [rate, base, K + base].map(String),
+        `The extra minutes are the minutes over ${K}, which is t ${M} ${K}. So K = ${K}.`)
+      : ask(`A phone plan costs $${base} for the first ${K} minutes and $${rate.toFixed(2)} for each extra minute. A customer paid $${dec(paid)}. How many minutes did they use?`, K + extra, [extra, Math.round(paid / rate), K + extra + 50],
+        `$${dec(paid)} ${M} $${base} = $${dec(paid - base)} for extra minutes. ${dec(paid - base)} ÷ ${rate} = ${extra} extra minutes, so ${K} + ${extra} = ${K + extra} in all.`)
+  },
+  // 9. Factor theorem with an unknown.
+  form(CALC[22], function factorUnknown() {
+    const c = pick([1, 2, -1]), B = r(-5, 5), a = -(c ** 4 + B * c ** 3) / (1 - c)
+    if (!Number.isInteger(a) || c === 1) return factorUnknown()
+    const fx = `x⁴${B ? `${B < 0 ? ` ${M} ` : ' + '}${Math.abs(B) === 1 ? '' : Math.abs(B)}x³` : ''} ${M} ax + a`
+    return ask(`If (x ${c > 0 ? M : '+'} ${Math.abs(c)}) is a factor of ${fx}, where a is a constant, what is a?`, num(a), [num(-a), num(a * 2), num(a + 2)].filter((x) => x !== num(a)),
+      `A factor (x ${c > 0 ? M : '+'} ${Math.abs(c)}) means the polynomial is 0 at x = ${num(c)}: ${c ** 4}${tail(B * c ** 3)} ${M} a(${num(c)}) + a = 0, so ${c ** 4 + B * c ** 3} + ${num(1 - c)}a = 0 and a = ${num(a)}.`, [num(a - 1)])
+  }),
+  // 10. Altitude from the right angle, from a sine.
+  form(T4_NOCALC[15], function altitudeFromSine() {
+    const [a, b, c] = pick([[3, 4, 5], [5, 12, 13], [8, 15, 17]]), t = pick([2, 4, 5]), BC = c * t, AB = a * t, AC = b * t, AD = (AB * AC) / BC
+    return ask(`Triangle ABC has a right angle at A, and AD is drawn from A to BC, meeting it at a right angle. If sin C = ${a}/${c}${c === 5 ? ' (0.6)' : ''} and BC = ${BC}, what is AD (to 2 decimal places where needed)?`,
+      dec(AD), [String(AB), String(AC), dec((AB * AB) / BC)].filter((x) => x !== dec(AD)), `sin C = AB/BC, so AB = ${AB}; then AC = ${AC}. Area two ways: (1/2)(${AB})(${AC}) = (1/2)(${BC})(AD), so AD = ${AB * AC}/${BC} = ${dec(AD)}.`)
+  }),
+  // 11. An identity with a bracket.
+  form(NO_CALC[16], function identityBracket() {
+    const a = r(2, 7), b = r(-6, 6) || 3
+    return ask(`If a(x + b) = ${a}x${tail(a * b)} for all real x, what is b?`, num(b), [num(-b), num(a * b), num(a)].filter((x) => x !== num(b)),
+      `Matching x terms gives a = ${a}. Then ab = ${num(a * b)}, so b = ${num(b)}.`, [num(b + 1), num(b - 1)])
+  }),
+  // 13. Divide complex numbers with a real part.
+  form(NO_CALC[1], function complexQuotient() {
+    const [p, q] = pick([[3, 1], [2, 1], [1, 2], [4, 3], [1, 3]]), den = p * p + q * q, re = (p * p - q * q) / den, im = (2 * p * q) / den, askA = pick([true, false])
+    return ask(`(${p} + ${q === 1 ? '' : q}i)/(${p} ${M} ${q === 1 ? '' : q}i) = a + bi, where a and b are real numbers and i = √${M}1. What is ${askA ? 'a' : 'b'}?`,
+      dec(askA ? re : im), [dec(askA ? im : re), dec(-(askA ? re : im)), dec(p / den)].filter((x) => x !== dec(askA ? re : im)),
+      `Multiply top and bottom by (${p} + ${q === 1 ? '' : q}i): the top is ${p * p} + ${2 * p * q}i + ${q * q}i² = ${p * p - q * q} + ${2 * p * q}i, and the bottom is ${p * p} + ${q * q} = ${den}. So a = ${dec(re)} and b = ${dec(im)}.`, [dec((askA ? re : im) + 0.1)])
+  }),
+  // 14 and 15. Probability and fractions from a two-way table.
+  form(T2_NOCALC[18], function tableProbability() {
+    let MA, A, F, T, FA, FG, MT, MG; do { MA = 10 * r(3, 10); A = MA + 10 * r(2, 8); F = 10 * r(5, 12); T = 10 * r(15, 30); FA = A - MA; FG = F - FA; MT = T - F; MG = MT - MA } while (FG <= 0 || MG <= 0)
+    const prob = pick([true, false])
+    return prob
+      ? ask(`In a survey of ${T} students, ${MA} boys prefer Algebra, ${A} students in all prefer Algebra and ${F} are girls. Everyone else prefers Geometry. What is the probability that a student picked at random is a girl who prefers Geometry (to 3 decimal places where needed)?`,
+        dec(FG / T, 3), [dec(FA / T, 3), dec(FG / F, 3), dec(MG / T, 3)].filter((x) => x !== dec(FG / T, 3)), `Girls who prefer Algebra: ${A} ${M} ${MA} = ${FA}. Girls who prefer Geometry: ${F} ${M} ${FA} = ${FG}. Probability = ${FG}/${T} = ${dec(FG / T, 3)}.`, [dec(FG / T + 0.05, 3)])
+      : ask(`In a survey of ${T} students, ${MA} boys prefer Algebra, ${A} students in all prefer Algebra and ${F} are girls. Everyone else prefers Geometry. What fraction of the boys prefer Geometry?`,
+        frac(MG, MT), [frac(MG, T), frac(MA, MT), frac(MG, MA)].filter((x) => x !== frac(MG, MT)), `Boys: ${T} ${M} ${F} = ${MT}. Boys who prefer Geometry: ${MT} ${M} ${MA} = ${MG}. Fraction = ${frac(MG, MT)}.`, [frac(MG + 1, MT)])
+  }),
+  // 16. Parallel lines cut two crossing lines in proportion.
+  function parallelProportion() {
+    const a = r(2, 12), b = r(2, 15), k = pick([0.5, 1.5, 2, 2.5, 3]), c = a * k, d = b * k
+    return ask(`Three parallel lines cross two other lines. On the first crossing line they cut off pieces AB = ${a} and BC = ${b}. On the second, the matching pieces are PQ = ${dec(c)} and QR. How long is QR?`,
+      dec(d), [dec((a * b) / c), dec(b + c - a), dec(c * 2)].filter((x) => x !== dec(d)), `Parallel lines cut crossing lines in the same ratio: QR/PQ = BC/AB = ${b}/${a}. QR = ${dec(c)} × ${b}/${a} = ${dec(d)}.`, [dec(d + 1), dec(d - 1)])
+  },
+  // 17. A round trip at two speeds.
+  form(CALC[19], function roundTripDistance() {
+    const [v1, v2] = pick([[60, 40], [50, 30], [45, 30], [60, 30], [40, 24], [80, 60]]), D = (v1 * v2 / gcd(v1, v2)) * r(1, 3) / pick([1, 2]), T = D / v1 + D / v2
+    if (!Number.isInteger(D)) return roundTripDistance()
+    return ask(`${pick(NAMES)} drove from town A to town B at ${v1} miles per hour and came back the same way at ${v2} miles per hour. The round trip took ${dec(T)} hours. How far is it from A to B, in miles?`,
+      D, [Math.round((T * (v1 + v2)) / 2), 2 * D, Math.round(T * v2)].filter((x) => x !== D), `Time = D/${v1} + D/${v2} = ${dec(T)}. So D(1/${v1} + 1/${v2}) = ${dec(T)} and D = ${D}.`, [D + 6])
+  }),
+  // 18. Another cubic by grouping, written as an equation.
+  form(T4_NOCALC[16], function groupingCubicEquals() {
+    const b = r(1, 9), rr = r(1, 6)
+    return ask(`x³ ${M} ${coef(rr)}x² + ${b}x = ${b * rr}. For what real value of x is this equation true?`, rr, [-rr, b, rr + b].filter((v) => v !== rr),
+      `Move ${b * rr} over: x²(x ${M} ${rr}) + ${b}(x ${M} ${rr}) = (x² + ${b})(x ${M} ${rr}) = 0. x² + ${b} is never 0, so x = ${rr}.`, [rr + 1])
+  }),
+  // 19. A perfect square with an unknown middle term.
+  form(NO_CALC[12], function perfectSquareMatch() {
+    const h = r(2, 7), j = r(1, 4)
+    return ask(`x² + (k + ${j})x + ${h * h} = (x + h)², where k and h are positive constants. If this is true for all x, what is k?`, 2 * h - j, [2 * h, h - j, h * h - j].filter((v) => v !== 2 * h - j),
+      `(x + h)² = x² + 2hx + h². So h² = ${h * h} gives h = ${h}, and k + ${j} = ${2 * h}, so k = ${2 * h - j}.`, [2 * h - j + 1])
+  }),
+  // 20. Two squares with an L-shaped gap.
+  form(CALC[25], function lShapeSquares() {
+    let N, pairs; do { N = 4 * r(3, 12); pairs = []; for (let d = 2; d * d < N; d += 2) if (N % d === 0 && (N / d) % 2 === 0) pairs.push([(d + N / d) / 2, (N / d - d) / 2]) } while (pairs.length !== 1)
+    const [b, a] = pairs[0]
+    return ask(`A square of side a sits in a corner of a larger square of side b (a and b are whole numbers). The L-shaped part of the larger square not covered has area ${N}. What is the area of the larger square?`,
+      b * b, [a * a, N, (b + 1) ** 2], `b² ${M} a² = (b ${M} a)(b + a) = ${N}. Whole-number sides need both factors even: ${b - a} × ${b + a}, so b = ${b} and a = ${a}. The larger square's area is ${b * b}.`)
+  }),
+]
+// 12. A semicircle on the axes, a form of question 2. (Added after the list so it can point at question 2.)
+T8_NOCALC.push(form(T8_NOCALC[1], function semicircleIntercept() {
+  const [w, h, rr] = pick([[3, 4, 5], [4, 3, 5], [5, 12, 13], [12, 5, 13], [6, 8, 10], [8, 6, 10]]), left = -(rr - w), right = rr + w
+  return ask(`A semicircle above the x-axis runs from (${num(left)}, 0) to (${right}, 0). It crosses the y-axis at R(0, b). What is b?`, h, [w, rr, Math.round((right - left) / 4)].filter((x) => x !== h),
+    `The centre is (${w}, 0) and the radius is ${rr}. R is ${w} across from the centre, so b = √(${rr}² ${M} ${w}²) = ${h}.`, [h + 1, h - 1])
+}))
+
+export const MAKERS = [...NO_CALC, ...CALC, ...T5_NOCALC, ...T2_NOCALC, ...T3_NOCALC, ...T4_NOCALC, ...T6_NOCALC, ...T7_NOCALC, ...T8_NOCALC]
 
 // Types: each one is a list of forms. A form made with form(name, ...) joins the type of the maker with that name.
 export const TYPES = (() => {

@@ -1,5 +1,5 @@
 // SAT-style math questions (no calculator and calculator sections), made fresh each time the test starts.
-// Each maker below copies the TYPE of one question from the owner's practice test 1 (sections 3 and 4, 16 Nov), with new numbers and names,
+// Each maker below copies the TYPE of one question from the owner's practice tests (test 1 sections 3 and 4, test 5 section 3), with new numbers and names,
 // so every attempt is different but tests the same skill. The wording is written for this site, not copied.
 // Grid-in (type the answer) questions in the source are multiple choice here, like the rest of the test.
 // Same file in the web app (src/data/satMath.js) and the phone app (mobile/src/lib/satMath.js): keep them identical.
@@ -556,7 +556,154 @@ const CALC = [
   },
 ]
 
-export const MAKERS = [...NO_CALC, ...CALC]
+// Practice test 5, section 3 (no calculator), questions 1 to 20.
+const T5_NOCALC = [
+  // 1. Two letters on both sides: find their difference.
+  function differenceOfLetters() {
+    const k = r(2, 9), D = r(2, 15), c2 = r(1, 20), c1 = k * D - c2
+    if (c1 <= 0) return differenceOfLetters()
+    return ask(`If ${k}r ${M} ${c1} = ${k}s + ${c2}, what is the value of r ${M} s?`, D, [c1 + c2, D + 2, D - 3].filter((x) => x > 0 && x !== D),
+      `Move the s term and the numbers: ${k}r ${M} ${k}s = ${c1} + ${c2} = ${k * D}. Divide by ${k}: r ${M} s = ${D}.`, [D + 1, D - 1])
+  },
+  // 2. Difference of squares in a system.
+  function squaresSystem() {
+    let x, y; do { x = r(3, 10); y = r(-4, x - 1) } while (x + y <= 0 || y === 0)
+    const S = x + y, N = x * x - y * y, askX = pick([true, false])
+    return ask(`x² ${M} y² = ${N} and x + y = ${S}. In this system of equations, what is the value of ${askX ? 'x' : 'y'}?`,
+      num(askX ? x : y), [num(askX ? y : x), num(N / S), num(S)], `x² ${M} y² = (x + y)(x ${M} y), so ${S}(x ${M} y) = ${N} and x ${M} y = ${N / S}. Adding x + y = ${S} gives x = ${x}, so y = ${num(y)}.`, [num((askX ? x : y) + 1)])
+  },
+  // 3. Expand a square with 1/x.
+  function squareWithReciprocal() {
+    const k = r(1, 3), kx = k === 1 ? '1/x' : `${k}/x`, k2 = k === 1 ? '1/x²' : `${k * k}/x²`
+    return ask(`Which of the following is equal to (x ${M} ${kx})² + ${4 * k}?`, `(x + ${kx})²`,
+      [`x² ${M} ${k2} + ${4 * k}`, `x² + ${k2} + ${4 * k}`, `(x + ${kx})² ${M} ${4 * k}`],
+      `(x ${M} ${kx})² = x² ${M} ${2 * k} + ${k2}. Adding ${4 * k} gives x² + ${2 * k} + ${k2}, which is (x + ${kx})².`)
+  },
+  // 4. cos a = sin b means a + b = 90.
+  function complementAngles() {
+    let x, m, n, c1, c2, a, b
+    do { x = r(5, 25); m = r(1, 4); n = r(1, 3); const rest = 90 - (m + n) * x; c1 = r(-20, 30); c2 = rest - c1; a = m * x + c1; b = n * x + c2 } while (a <= 5 || b <= 5 || a >= 85 || c2 === 0 || c1 === 0)
+    return ask(`In a right triangle, the two acute angles measure a° and b°, where a = ${coef(m)}x${tail(c1)} and b = ${coef(n)}x${tail(c2)}. If cos a° = sin b°, what is the value of x?`,
+      x, [x + 5, x - 5, dec(90 / (m + n), 1)].filter((v) => String(v) !== String(x)), `cos a° = sin b° when a + b = 90. So ${m + n}x${tail(c1 + c2)} = 90 and x = ${x}.`, [x + 2])
+  },
+  // 5. Area of a 30-60-90 triangle from its hypotenuse.
+  function triangleArea306090() {
+    const H = 4 * r(1, 6), k = (H * H) / 8, root = (v) => `${v === 1 ? '' : v}√3`
+    return ask(`In triangle ABC, angle A is 30° and angle B is 60°. The length of AB is ${H}. What is the area of triangle ABC?`,
+      root(k), [root(2 * k), root(k / 2), String(k)], `Angle C is 90°, so AB = ${H} is the hypotenuse. The legs are ${H / 2} and ${H / 2}√3. Area = (1/2)(${H / 2})(${H / 2}√3) = ${root(k)}.`)
+  },
+  // 6. Product of square roots of negative numbers.
+  function rootsOfNegatives() {
+    const [a, b, v] = pick([[6, 24, 12], [2, 8, 4], [3, 12, 6], [2, 18, 6], [5, 20, 10], [3, 27, 9], [8, 18, 12], [4, 9, 6], [2, 32, 8]])
+    return ask(`If i = √${M}1, which of the following is equal to √${M}${a} · √${M}${b}?`, num(-v), [String(v), `${v}i`, `${M}${v}i`],
+      `√${M}${a} = i√${a} and √${M}${b} = i√${b}. Their product is i²√${a * b} = ${M}1 × ${v} = ${M}${v}. (Multiplying ${M}${a} by ${M}${b} first gives the wrong sign.)`)
+  },
+  // 7 and 8. Straight-line loss of value.
+  function depreciationRate() {
+    const Y = pick([5, 8, 10, 12, 15]), a = pick([20, 25, 40, 50, 60, 75]), V = a * Y, name = pick(NAMES)
+    return ask(`${name} bought a machine for $${V}. After ${Y} years it will be worth $0. Its value in year t is P(t) = b + at, where a and b are constants. What is the value of a?`,
+      num(-a), [String(a), num(-Y), String(V / 2)], `P(0) = ${V} gives b = ${V}. P(${Y}) = 0 gives ${V} + ${Y}a = 0, so a = ${M}${a}.`)
+  },
+  function depreciationTime() {
+    const Y = pick([5, 8, 10, 12, 15]), a = pick([20, 25, 40, 50, 60, 75]), V = a * Y
+    let D; do { D = 10 * r(2, Math.floor(V / 10) - 1) } while (!Number.isInteger((D / a) * 10))
+    const t = D / a
+    return ask(`A machine bought for $${V} loses the same amount of value every year and is worth $0 after ${Y} years. After how many years will its value have gone down by $${D}?`,
+      dec(t, 1), [dec(Y - t, 1), dec(D / Y, 1), dec(t + 1, 1)].filter((x) => x !== dec(t, 1)), `It loses ${V}/${Y} = $${a} a year. $${D} ÷ $${a} = ${dec(t, 1)} years.`, [dec(t + 2, 1), dec(t + 0.5, 1)])
+  },
+  // 9. Solve a formula for one letter.
+  function solveFormula() {
+    return pick([true, false])
+      ? ask('P = (A − d)/(B + d). Which of the following gives d in terms of the other letters?', 'd = (A − PB)/(P + 1)',
+        ['d = (P − PB)/(A − 1)', 'd = (A − P)/(B − 1)', 'd = (A − 1)/(P − B)'],
+        'Multiply by (B + d): PB + Pd = A − d. Collect d: Pd + d = A − PB, so d(P + 1) = A − PB and d = (A − PB)/(P + 1).')
+      : ask('P = (A + d)/(B − d). Which of the following gives d in terms of the other letters?', 'd = (PB − A)/(P + 1)',
+        ['d = (A − PB)/(P + 1)', 'd = (PB − A)/(P − 1)', 'd = (A + B)/(P + 1)'],
+        'Multiply by (B − d): PB − Pd = A + d. Collect d: PB − A = d + Pd = d(P + 1), so d = (PB − A)/(P + 1).')
+  },
+  // 10. Cube from its long diagonal.
+  function cubeFromDiagonal() {
+    const D = r(3, 15)
+    return ask(`A long diagonal of a cube (from one corner through the inside to the opposite corner) is ${D} long. What is the surface area of the cube?`,
+      2 * D * D, [D * D, 6 * D * D, 3 * D * D], `If the edge is s, the long diagonal is s√3 = ${D}, so s² = ${D * D}/3. Surface area = 6s² = 6 × ${D * D}/3 = ${2 * D * D}.`)
+  },
+  // 11. "More than half of" with a total.
+  function moreThanHalf() {
+    const B = 2 * r(30, 200), c = 10 * r(1, 10), A = c + B / 2, T = A + B, n1 = pick(NAMES)
+    let n2; do { n2 = pick(NAMES) } while (n2 === n1)
+    const askA = pick([true, false])
+    return ask(`On a road trip, ${n1} drove ${c} miles more than half the number of miles ${n2} drove. Together they drove ${T} miles. How many miles did ${askA ? n1 : n2} drive?`,
+      askA ? A : B, [askA ? B : A, T / 2, (askA ? A : B) + c], `${n1} = ${c} + ${n2}/2. So ${c} + ${n2}/2 + ${n2} = ${T}, (3/2) × ${n2} = ${T - c}, ${n2} = ${B}, and ${n1} = ${A}.`, [(askA ? A : B) + 10])
+  },
+  // 12. When two phone plans cost the same.
+  function plansEqual() {
+    let r1, r2, F1, F2, m
+    do { r1 = 5 * r(2, 8); r2 = 5 * r(1, 6); F1 = 5 * r(2, 8); m = 5 * r(4, 40); F2 = F1 + ((r1 - r2) * m) / 100 } while (r2 >= r1 || !Number.isInteger(F2 * 100) || F2 === F1)
+    const c = (x) => `$${(x / 100).toFixed(2)}`
+    return ask(`Plan A costs $${F1} a month plus ${c(r1)} a minute. Plan B costs $${Number.isInteger(F2) ? F2 : F2.toFixed(2)} a month plus ${c(r2)} a minute. For how many minutes in a month do both plans cost the same?`,
+      m, [Math.round(F2 - F1), m + 20, m - 15].filter((x) => x > 0 && x !== m), `${F1} + ${r1 / 100}m = ${dec(F2)} + ${r2 / 100}m, so ${(r1 - r2) / 100}m = ${dec(F2 - F1)} and m = ${m}.`, [m + 5, m + 10])
+  },
+  // 13. Rewrite a fraction by dividing.
+  function rewriteFraction() {
+    const a = r(2, 10), b = r(1, 9), c = r(1, 4), rest = b + a * c
+    return ask(`Which of the following is equal to (${a}x + ${b})/(x ${M} ${c})?`, `${rest}/(x ${M} ${c}) + ${a}`,
+      [`${b}/(x ${M} ${c}) + ${a}`, `${b}/(x ${M} ${c}) ${M} ${a}`, num(-rest)],
+      `${a}x + ${b} = ${a}(x ${M} ${c}) + ${rest}. Divide by (x ${M} ${c}): ${a} + ${rest}/(x ${M} ${c}).`)
+  },
+  // 14. A chase: when the faster one catches up.
+  function chaseSpeed() {
+    const t = pick([10, 20, 25, 40, 50]), p = r(30, 70), T = p + r(10, 30), G = (T - p) * t
+    return ask(`A cheetah is ${G} feet behind its prey. It starts running at ${T} feet per second, and at the same moment the prey runs away in the same direction at p feet per second. The cheetah catches the prey after ${t} seconds. What is p?`,
+      p, [T - p, G / t + T, Math.round(G / t)].filter((x) => x !== p && x > 0), `The cheetah covers ${T} × ${t} = ${T * t} feet. The prey covers ${G} feet less: ${T * t - G} feet. p = ${T * t - G}/${t} = ${p}.`, [p + 5, p - 7])
+  },
+  // 15. Remainder theorem.
+  function remainderTheorem() {
+    const a = r(1, 6), b = r(-6, 6), c = r(-9, 9), k = pick([1, 2, 3, -1, -2]), P = (x) => a * x * x + b * x + c
+    const poly = `${coef(a)}x²${b ? `${b < 0 ? ` ${M} ` : ' + '}${Math.abs(b) === 1 ? '' : Math.abs(b)}x` : ''}${c ? tail(c) : ''}`
+    const div = `(x ${k > 0 ? M : '+'} ${Math.abs(k)})`
+    return ask(`When P(x) is divided by ${div}, P(x) = ${div}Q(x) + R, where Q(x) is the quotient and R is the remainder. If P(x) = ${poly}, what is R?`,
+      num(P(k)), [num(P(-k)), num(c), num(a + b + c)], `Put x = ${num(k)}: the first part becomes 0, so R = P(${num(k)}) = ${num(P(k))}.`, [num(P(k) + 2), num(P(k) - 2)])
+  },
+  // 16. Difference of squares equal to a prime.
+  function primeSquares() {
+    const p = pick([7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47])
+    return ask(`R² ${M} S² = ${p}. If R and S are positive integers, what is the value of R?`, (p + 1) / 2, [(p - 1) / 2, p, (p + 3) / 2],
+      `(R ${M} S)(R + S) = ${p}. ${p} is prime, so R ${M} S = 1 and R + S = ${p}. Then R = ${(p + 1) / 2}.`)
+  },
+  // 17. Combine two groups with different ratios.
+  function combinedRatio() {
+    let a1, a2, b1, b2, kA, kB, c1, c2
+    do {
+      a1 = r(1, 5); a2 = r(1, 5); b1 = r(1, 5); b2 = r(1, 5); kA = r(5, 15); kB = r(5, 25)
+      const boys = kA * a1 + kB * b1, girls = kA * a2 + kB * b2, g = gcd(boys, girls); c1 = boys / g; c2 = girls / g
+    } while (gcd(a1, a2) !== 1 || gcd(b1, b2) !== 1 || a1 * b2 === a2 * b1 || c1 > 20 || c2 > 20)
+    const nA = kA * (a1 + a2), nB = kB * (b1 + b2)
+    const bg = (n, w) => `${n} ${n === 1 ? w : `${w}s`}`
+    return ask(`Group A has ${nA} students, with ${bg(a1, 'boy')} for every ${bg(a2, 'girl')}. In group B there ${b1 === 1 ? 'is' : 'are'} ${bg(b1, 'boy')} for every ${bg(b2, 'girl')}. Together, the ratio of boys to girls is ${c1}:${c2}. How many students are in group B?`,
+      nB, [nA, kB * b1, nB + nA].filter((x) => x !== nB), `Group A: ${kA * a1} boys and ${kA * a2} girls. Group B: ${b1}k boys and ${b2}k girls. (${kA * a1} + ${b1}k)/(${kA * a2} + ${b2}k) = ${c1}/${c2} gives k = ${kB}, so group B has ${nB} students.`, [nB + 10, nB - 5])
+  },
+  // 18. An equation true for every x: each coefficient is 0.
+  function zeroCoefficients() {
+    const p = r(1, 6), q = r(1, 6), s = r(1, 9)
+    return ask(`(a ${M} ${p})x² + (b + ${q})x + (c ${M} ${s}) = 0. In this equation a, b and c are constants. If it is true for all values of x, what is a + b + c?`,
+      num(p - q + s), [num(p + q + s), num(-(p - q + s)), num(p - q)], `For it to be 0 for every x, each bracket must be 0: a = ${p}, b = ${M}${q}, c = ${s}. So a + b + c = ${num(p - q + s)}.`, [num(p - q + s + 1)])
+  },
+  // 19. Infinitely many solutions: the equations are multiples.
+  function infinitelyMany() {
+    const k = r(2, 4), a1 = r(1, 9), b2 = r(1, 9), C2 = r(1, 9)
+    const pr = frac(k * k * b2, a1)
+    return ask(`${coef(a1)}x + py = ${k * C2} and rx + ${coef(b2)}y = ${C2}. In this system, p and r are constants. If the system has infinitely many solutions, what is the value of p/r?`,
+      pr, [frac(a1, k * k * b2), frac(b2, a1), frac(k * b2, a1)].filter((x) => x !== pr), `Infinitely many solutions means the first equation is ${k} times the second: ${a1} = ${k}r, p = ${k} × ${b2} = ${k * b2}. So r = ${frac(a1, k)} and p/r = ${pr}.`, [frac(k * k * b2 + a1, a1)])
+  },
+  // 20. Midpoints cut off a quarter of a triangle.
+  function midpointTriangle() {
+    const ABC = 4 * r(3, 30), small = ABC / 4, shaded = ABC - small
+    return ask(`In triangle ABC, D is the midpoint of AB and E is the midpoint of BC. The region of the triangle below segment DE (the part that is not triangle DBE) has area ${shaded}. What is the area of triangle ABC?`,
+      ABC, [2 * shaded, shaded + shaded / 3 + 4, shaded * 4].filter((x) => Number.isInteger(x) && x !== ABC), `DE is half of AC, so triangle DBE is similar with half the sides and 1/4 of the area. The rest is 3/4 of ABC: ${shaded} = (3/4) × ABC, so ABC = ${ABC}.`, [ABC + 4, ABC - 4])
+  },
+]
+
+export const MAKERS = [...NO_CALC, ...CALC, ...T5_NOCALC]
 
 // One new question of every type, in the order of the owner's set.
 export const makeMathQuestions = () => MAKERS.map((make, n) => ({ id: `m${n + 1}-${Math.random().toString(36).slice(2, 7)}`, ...make() }))

@@ -1,5 +1,5 @@
 // SAT-style math questions (no calculator and calculator sections), made fresh each time the test starts.
-// Each maker below copies the TYPE of one question from the owner's practice tests (test 1 sections 3 and 4, tests 2 to 6 section 3), with new numbers and names,
+// Each maker below copies the TYPE of one question from the owner's practice tests (test 1 sections 3 and 4, tests 2 to 7 section 3), with new numbers and names,
 // so every attempt is different but tests the same skill. The wording is written for this site, not copied.
 // Grid-in (type the answer) questions in the source are multiple choice here, like the rest of the test.
 // Same file in the web app (src/data/satMath.js) and the phone app (mobile/src/lib/satMath.js): keep them identical.
@@ -1269,7 +1269,141 @@ const T6_NOCALC = [
   }),
 ]
 
-export const MAKERS = [...NO_CALC, ...CALC, ...T5_NOCALC, ...T2_NOCALC, ...T3_NOCALC, ...T4_NOCALC, ...T6_NOCALC]
+// Practice test 7, section 3 (no calculator), questions 1 to 20.
+const T7_NOCALC = [
+  // 1. A range written as an absolute value.
+  form(CALC[4], function absRange() {
+    const mid = r(-3, 9), half = r(1, 6), lo = mid - half, hi = mid + half
+    const ab = (s, op) => `|x ${s} ${Math.abs(mid)}| ${op} ${half}`, sIn = mid < 0 ? '+' : M, sOut = mid < 0 ? M : '+'
+    return ask(`Which of the following is the same as ${num(lo)} ≤ x ≤ ${num(hi)}?`, ab(sIn, '≤'), [ab(sOut, '≤'), ab(sIn, '≥'), ab(sOut, '≥')],
+      `The middle of ${num(lo)} and ${num(hi)} is ${num(mid)}, and each end is ${half} away. So x is within ${half} of ${num(mid)}: ${ab(sIn, '≤')}.`)
+  }),
+  // 2. Correlation from how a scatter plot looks.
+  function correlationFromPlot() {
+    const down = pick([true, false]), kind = pick(['tight', 'tight', 'weak', 'exact'])
+    const sgn = down ? -1 : 1, val = { tight: 0.95, weak: 0.3, exact: 1 }[kind] * sgn
+    const words = { tight: 'lie close to, but not exactly on, a straight line', weak: 'are spread out widely but drift slightly', exact: 'all lie exactly on one straight line' }[kind]
+    const pool = kind === 'weak' ? [-0.95, -0.3, 0.3, 0.95] : [-1, -0.95, 0.95, 1]
+    return ask(`In a scatter plot, the points go ${down ? 'down' : 'up'} from left to right and ${words}. Which correlation coefficient best fits the data?`,
+      num(val), pool.filter((v) => v !== val).map(num), `${down ? 'Going down means a negative' : 'Going up means a positive'} correlation. ${kind === 'exact' ? 'Points exactly on a line give ±1.' : kind === 'tight' ? 'Close to a line, but not on it, is strong but not perfect: about 0.95.' : 'Widely spread points give a weak value near 0.'} So ${num(val)}.`)
+  },
+  // 3. A value of a linear function from another value.
+  form(CALC[0], function linearValue() {
+    const p = r(1, 5), q = pick([2, 3, 4].filter((x) => gcd(x, p) === 1)), x1 = q * r(1, 4), x2 = x1 + q * r(-3, -1), v = r(-5, 9), m = -p / q, f2 = v + m * (x2 - x1)
+    return ask(`f(x) = ${M}(${p}/${q})x + b, where b is a constant. If f(${x1}) = ${num(v)}, what is f(${num(x2)})?`, num(f2), [num(-f2), num(v - m * (x2 - x1)), num(f2 + p)].filter((x) => x !== num(f2)),
+      `Going from x = ${x1} to x = ${num(x2)} changes x by ${num(x2 - x1)}, so f changes by ${M}(${p}/${q})(${num(x2 - x1)}) = ${num(m * (x2 - x1))}. f(${num(x2)}) = ${num(v)} + ${num(m * (x2 - x1))} = ${num(f2)}.`, [num(f2 - 1)])
+  }),
+  // 4. Negative power times a root.
+  form(T6_NOCALC[5], function negativeRootPower() {
+    const n = r(1, 4), k = 2 * n + 1
+    return ask(`Which of the following is equal to x⁻${sup(n)}(1/√x), for x > 0?`, `1/√(x${sup(k)})`, [`1/√(x${sup(k - 2)})`, `1/x${sup(n + 1)}`, `√(x${sup(k)})/2`],
+      `x⁻${sup(n)} = x^(${M}${n}) and 1/√x = x^(${M}1/2). Add the powers: x^(${M}${k}/2) = 1/√(x${sup(k)}).`)
+  }),
+  // 5. Trigonometry inside a rectangle with midpoints.
+  function rectangleTrig() {
+    const [a, b, c] = pick([[3, 4, 5], [5, 12, 13], [8, 15, 17], [7, 24, 25]])
+    return ask(`In rectangle ABCD, E is the midpoint of BC and F is the midpoint of CD. If sin∠BAE = ${a}/${c}, what is tan∠EFC?`, frac(2 * a, b), [frac(a, b), frac(b, 2 * a), frac(a, c)],
+      `In right triangle ABE, sin = BE/AE = ${a}/${c}, so BE = ${a}k and AB = ${b}k. Then CE = BE = ${a}k and CF = AB/2 = ${frac(b, 2)}k. tan∠EFC = CE/CF = ${frac(2 * a, b)}.`)
+  },
+  // 6. Find f(x) from f(kx).
+  form(T4_NOCALC[4], function innerScale() {
+    const k = r(2, 4), a = r(1, 7), b = r(1, 9)
+    const ax = `${coef(a, k)}x + ${b}`
+    return ask(`If f(${k}x) = ${coef(a)}x + ${b}, which of the following is f(x)?`, ax, [`(1/${k})(${coef(a)}x + ${b})`, `(1/${k})x + ${b}`, `${coef(a, k)}x + ${k * b}`],
+      `Let u = ${k}x, so x = u/${k}. Then f(u) = ${a}(u/${k}) + ${b} = ${coef(a, k)}u + ${b}. So f(x) = ${ax}.`, [`${coef(a, k)}x ${M} ${b}`, `${coef(a * k)}x + ${b}`, `${coef(a, k)}x`])
+  }),
+  // 7. Square of a difference with a reciprocal.
+  form(T5_NOCALC[2], function squareMinusRecip() {
+    const k = r(1, 3), ka = k === 1 ? '1/a' : `${k}/a`, k2 = k === 1 ? '1/a²' : `${k * k}/a²`
+    return ask(`Which of the following is equal to (a ${M} ${ka})²?`, `a² + ${k2} ${M} ${2 * k}`, [`a² ${M} ${k2}`, `a² + ${k2}`, `a² + ${k2} + ${2 * k}`],
+      `(a ${M} ${ka})² = a² ${M} 2(a)(${ka}) + ${k2} = a² ${M} ${2 * k} + ${k2}.`)
+  }),
+  // 8. Choose the linear model for a steady drop.
+  form(CALC[14], function linearModelChoice() {
+    const V = 50 * r(4, 20), d = 5 * r(2, 8), rate = dec(d / V, 3)
+    return ask(`A phone is worth $${V} now and loses $${d} of value each year. Which equation gives its value P, in dollars, after t years?`, `P = ${V} ${M} ${d}t`, [`P = ${V} + ${d}t`, `P = ${V}(1 ${M} ${rate})^t`, `P = ${V}(1 + ${rate})^t`],
+      `Losing the same $${d} every year is a straight-line (linear) drop: start at ${V} and take away ${d} for each year, P = ${V} ${M} ${d}t.`)
+  }),
+  // 9. When a steady drop reaches a value.
+  form(T5_NOCALC[7], function depreciationReach() {
+    const d = 5 * r(2, 8), V = d * r(8, 20), t = r(2, 7), W = V - d * t
+    return ask(`A phone is worth $${V} now and loses $${d} of value each year. In how many years will it be worth $${W}?`, t, [Math.round(W / d), t + 1, Math.round(V / d)].filter((x) => x !== t),
+      `It must lose $${V - W}. At $${d} a year that takes ${V - W}/${d} = ${t} years.`, [t + 2])
+  }),
+  // 10. A parallel line in standard form.
+  form(NO_CALC[14], function parallelEquation() {
+    let p, q; do { p = r(2, 5); q = r(2, 6) } while (p === q)
+    const k = r(1, 3), slope = frac(q, p), e = r(1, 12)
+    const line = (a, b) => `${coef(a)}x ${b < 0 ? '+' : M} ${coef(Math.abs(b))}y = ${e}`
+    return ask(`(1/${p})x ${M} (1/${q})y = ${r(2, 10)}. Which of the following equations gives a line parallel to the graph of this equation?`, line(q * k, p * k), [line(q * k, -p * k), line(p * k, q * k), line(p * k, -q * k)],
+      `Multiply by ${p * q}: ${q}x ${M} ${p}y = (number), so y = (${slope})x + ... . A parallel line has slope ${slope}. ${line(q * k, p * k)} gives y = (${slope})x ${M} ${frac(e, p * k)}.`)
+  }),
+  // 11. Square root of a fraction.
+  form(T2_NOCALC[4], function rootFraction() {
+    const a = r(1, 9), b = r(2, 4), x = frac(-a, b * b - 1)
+    return ask(`√((x ${M} ${a})/x) = ${b}. Which of the following is the solution to this equation?`, x, [frac(a, b * b - 1), frac(b * b - 1, -a), 'There is no solution'],
+      `Square both sides: (x ${M} ${a})/x = ${b * b}, so x ${M} ${a} = ${b * b}x and ${M}${a} = ${b * b - 1}x. x = ${x}. Check: (x ${M} ${a})/x is then ${b * b}, which is positive, so it works.`)
+  }),
+  // 12. A horizontal line that misses a parabola.
+  form(T6_NOCALC[13], function lineMissesParabola() {
+    const n = r(2, 8), low = -n * n
+    return ask(`y = k and y = (x + ${n})(x ${M} ${n}). In this system, k is a constant. If the system has no solution, which of the following could be k?`, num(low - r(1, 30)), [num(n * n), num(-low + 10), num(low + r(1, 10))],
+      `(x + ${n})(x ${M} ${n}) = x² ${M} ${n * n}, whose lowest value is ${num(low)}. The line y = k misses it only when k < ${num(low)}.`)
+  }),
+  // 13. Match vertex form to standard form.
+  form(NO_CALC[11], function vertexFormMatch() {
+    const m = r(1, 4), a = r(-4, 5) || 2, b = r(-9, 30), B = -2 * m * a, C = m * a * a + b
+    return ask(`f(x) = ${coef(m)}(x ${M} a)² + b, where a and b are constants. If f(x) = ${poly([m, B, C])} is the same function, what is b?`, num(b), [num(C), num(b + m * a * a * 2), num(-b)].filter((x) => x !== num(b)),
+      `Expand: ${coef(m)}x² ${M} ${2 * m}ax + ${m}a² + b. Matching x terms: ${M}${2 * m}a = ${num(B)}, so a = ${num(a)}. Then ${m}(${a * a}) + b = ${C}, so b = ${num(b)}.`, [num(b + 1), num(b - 1)])
+  }),
+  // 14. Simplify a fraction inside a fraction.
+  function complexFraction() {
+    const m = r(1, 4), n = r(2, 5)
+    return ask(`If a > 1, which of the following is equal to (1 ${M} ${m}/(${n}a))/(a ${M} ${m * m}/(${n * n}a))?`, `${n}/(${n}a + ${m})`, [`${n}/(${n}a ${M} ${m})`, `(${n}a ${M} ${m})/(${n}a + ${m})`, `(${n}a ${M} ${m})/${n}`],
+      `Top: (${n}a ${M} ${m})/(${n}a). Bottom: (${n * n}a² ${M} ${m * m})/(${n * n}a) = (${n}a ${M} ${m})(${n}a + ${m})/(${n * n}a). Dividing cancels (${n}a ${M} ${m}) and leaves ${n * n}a/(${n}a × (${n}a + ${m})) = ${n}/(${n}a + ${m}).`)
+  },
+  // 15. Powers when a linear combination is known.
+  form(NO_CALC[13], function exponentLinear() {
+    const k = pick([2, 3]), p = pick([2, 3, 4]), e1 = pick([2, 3, 4].filter((e) => (k * p) % e === 0)), u = (k * p) / e1, t = r(1, 3)
+    const b1 = 3 ** e1, b2 = 3 ** k
+    return ask(`If ${p}x ${M} y = ${frac(t, k)}, what is the value of ${b1}^(${u === 1 ? '' : u}x)/${b2}^y?`, 3 ** t, [3 ** (t + 1), 3 ** (t * k), t * 3].filter((x) => x !== 3 ** t),
+      `${b1}^(${u === 1 ? '' : u}x) = 3^(${k * p}x) and ${b2}^y = 3^(${k}y). The quotient is 3^(${k}(${p}x ${M} y)) = 3^(${k} × ${frac(t, k)}) = 3^${t} = ${3 ** t}.`, [3 ** t + 3])
+  }),
+  // 16. Inverse proportion with function notation.
+  form(T3_NOCALC[9], function inverseHalf() {
+    const a = r(2, 8), v = r(2, 12) * 2, b = a * pick([2, 3, 4])
+    return ask(`y = f(x) is inversely proportional to x. If f(${a}) = ${v}, what is f(${b})?`, frac(a * v, b), [String((v * b) / a), String(v), frac(a * v, b * b)].filter((x) => x !== frac(a * v, b)),
+      `Inversely proportional: x × f(x) stays the same, ${a} × ${v} = ${a * v}. So f(${b}) = ${a * v}/${b} = ${frac(a * v, b)}.`, [frac(a * v + b, b)])
+  }),
+  // 17. Areas split by a point on a diagonal.
+  function diagonalAreaRatio() {
+    let p, q; do { p = r(1, 4); q = r(p + 1, 7) } while (gcd(p, q) !== 1)
+    const S = p * r(2, 10), ans = (S * (q - p)) / p
+    return ask(`In rectangle ABCD, E is on diagonal AC with AE = ${p}/${q} of AC. If the area of triangle AED is ${S}, what is the area of triangle CED?`, ans, [S, (S * q) / p, (S * p) / (q - p)].filter((x) => Number.isInteger(x) && x !== ans),
+      `Triangles AED and CED share the same height from D to AC, so their areas are in the ratio AE : EC = ${p} : ${q - p}. So CED = ${S} × ${q - p}/${p} = ${ans}.`, [ans + p, ans + 2 * p])
+  },
+  // 18. Area of a right triangle from a sine.
+  form(NO_CALC[15], function rightTriangleSine() {
+    const [a, b, c] = pick([[3, 4, 5], [5, 12, 13], [8, 15, 17]]), t = r(1, 4), AB = b * t, BC = a * t
+    return ask(`Triangle ABC has a right angle at B. Angle A is x° with sin x° = ${a}/${c}${c === 5 ? ' (0.6)' : ''}, and AB = ${AB}. What is the area of triangle ABC?`,
+      (AB * BC) / 2, [AB * BC, (AB * c * t) / 2, (BC * c * t) / 2].filter((x) => x !== (AB * BC) / 2), `sin x = ${a}/${c} means the sides are ${a}k, ${b}k and ${c}k, with AB (next to angle A) = ${b}k = ${AB}, so k = ${t} and BC = ${BC}. Area = (1/2)(${AB})(${BC}) = ${(AB * BC) / 2}.`)
+  }),
+  // 19. Triangle under the meeting point of a cubic and a line.
+  function cubicLineTriangle() {
+    const m = pick([1, 2]), a = pick([1, 2, 4, 8].filter((x) => x !== m * m)), area = frac(m * m, 2 * a)
+    return ask(`The graphs of f(x) = ax³ and g(x) = ${coef(m)}x meet at the origin O and at a point A with positive x. B is on the x-axis straight below A. If the area of triangle AOB is ${area}, what is a?`,
+      a, [2 * a, m, a * a].filter((x) => x !== a), `ax³ = ${m}x gives x² = ${m}/a. A = (x, ${m}x), so the area is (1/2)(x)(${m}x) = ${m}x²/2 = ${m * m}/(2a). Setting ${m * m}/(2a) = ${area} gives a = ${a}.`, [a + 1, a + 3, 3 * a, 16])
+  },
+  // 20. Partial fractions.
+  function partialFractions() {
+    const p = r(1, 6), q = r(1, 6), s = p + q, c = s * r(1, 5) * pick([1, -1]), askA = pick([true, false]), a = c / s, b = -c / s
+    return ask(`${num(c)}/(${poly([1, q - p, -p * q])}) = a/(x ${M} ${p}) + b/(x + ${q}), for all x except ${p} and ${M}${q}. What is the value of ${askA ? 'a' : 'b'}?`,
+      num(askA ? a : b), [num(askA ? b : a), num(c), num((askA ? a : b) * 2)].filter((x) => x !== num(askA ? a : b)),
+      `The bottom is (x ${M} ${p})(x + ${q}). So ${c} = a(x + ${q}) + b(x ${M} ${p}). Put x = ${p}: ${c} = ${s}a, a = ${num(a)}. Put x = ${M}${q}: ${c} = ${M}${s}b, b = ${num(b)}.`, [num((askA ? a : b) + 1)])
+  },
+]
+
+export const MAKERS = [...NO_CALC, ...CALC, ...T5_NOCALC, ...T2_NOCALC, ...T3_NOCALC, ...T4_NOCALC, ...T6_NOCALC, ...T7_NOCALC]
 
 // Types: each one is a list of forms. A form made with form(name, ...) joins the type of the maker with that name.
 export const TYPES = (() => {

@@ -1,5 +1,5 @@
 // SAT-style math questions (no calculator and calculator sections), made fresh each time the test starts.
-// Each maker below copies the TYPE of one question from the owner's practice tests (section 3 of tests 1 to 8, section 4 of tests 1 to 5), with new numbers and names,
+// Each maker below copies the TYPE of one question from the owner's practice tests (section 3 of tests 1 to 8, section 4 of tests 1 to 6), with new numbers and names,
 // so every attempt is different but tests the same skill. The wording is written for this site, not copied.
 // Grid-in (type the answer) questions in the source are multiple choice here, like the rest of the test.
 // Same file in the web app (src/data/satMath.js) and the phone app (mobile/src/lib/satMath.js): keep them identical.
@@ -2519,7 +2519,301 @@ const T5_CALC = [
   }),
 ]
 
-export const MAKERS = [...NO_CALC, ...CALC, ...T5_NOCALC, ...T2_NOCALC, ...T3_NOCALC, ...T4_NOCALC, ...T6_NOCALC, ...T7_NOCALC, ...T8_NOCALC, ...T2_CALC, ...T3_CALC, ...T4_CALC, ...T5_CALC]
+// Practice test 6, section 4 (calculator), questions 1 to 38. All but the angle question are new forms of existing types.
+// An angle in radians as a multiple of π: 105 degrees -> "7π/12".
+const piRad = (deg) => { const g = gcd(deg, 180), n = deg / g, d = 180 / g; return `${n === 1 ? '' : n}π${d === 1 ? '' : '/' + d}` }
+// "k√s" with k = 1 shown as "√s".
+const rootOf = (k, s) => `${k === 1 ? '' : k}√${s}`
+const T6_CALC = [
+  // 1. Put in the value, then solve for the other letter.
+  form(T2_NOCALC[0], function productSolve() {
+    let t, a, y, b, c; do { t = r(1, 6); a = r(1, 6); y = r(2, 9); b = r(-5, 5); c = (t + a) * y - t * t - b * t } while (c === 0 || b === 0)
+    return ask(`If (x + ${a})y = ${poly([1, b, c])}, what is the value of y when x = ${t}?`, y, [y + a, (t + a) * y, y - 1],
+      `Put x = ${t}: (${t} + ${a})y = ${t * t}${tail(b * t)}${tail(c)} = ${(t + a) * y}. So y = ${(t + a) * y}/${t + a} = ${y}.`, [y + 2])
+  }),
+  // 2. New price for some of the items.
+  form(NO_CALC[6], function cutPriceCost() {
+    const n = pick([8, 10, 12, 20]), m = r(2, 5), cut = r(1, 3)
+    return ask(`The total cost of ${n} notebooks that all cost the same is k dollars. If the price of each notebook is cut by $${cut}, how much will ${m} notebooks cost at the new price?`,
+      `${coef(m, n)}k ${M} ${m * cut}`, [`k ${M} ${cut}`, `${coef(m, n)}k ${M} ${cut}`, `${coef(1, n)}k ${M} ${m * cut}`],
+      `One notebook costs k/${n}, so the new price is k/${n} ${M} ${cut}. ${m} of them cost ${m}(k/${n} ${M} ${cut}) = ${coef(m, n)}k ${M} ${m * cut}.`)
+  }),
+  // 3. Growth factor in an exponential model.
+  form(CALC[14], function growthFactor() {
+    const p = pick([1.5, 2.4, 2.8, 3.5, 4.2, 6.5]), base = pick([180, 250, 320, 400])
+    return ask(`The yearly cost of servicing a boiler goes up by ${p}% each year. ${pick(NAMES)} paid $${base} this year, and the cost t years from now is C(t) = ${base}Pᵗ. What is the value of P?`,
+      dec(1 + p / 100, 3), [dec(p / 100, 3), dec(p / 10, 2), dec(1 + p / 10, 2)],
+      `Going up by ${p}% means each year's cost is 100% + ${p}% = ${dec(1 + p / 100, 3)} times the year before, so P = ${dec(1 + p / 100, 3)}.`)
+  }),
+  // 4. Value of an exponential model after some years.
+  form(CALC[15], function growthAmount() {
+    const p = pick([2, 2.5, 3, 4, 5, 6]), base = pick([200, 250, 320, 400, 500]), y = r(3, 6), v = (t, q) => Math.round(base * (1 + q / 100) ** t)
+    return ask(`A yearly service fee is $${base} now and goes up by ${p}% each year. To the nearest dollar, what will the fee be ${y} years from now?`,
+      `$${v(y, p)}`, [`$${v(y - 2, p)}`, `$${v(y, 2 * p)}`, `$${v(y, 3 * p)}`],
+      `Each year multiplies the fee by ${dec(1 + p / 100, 3)}. After ${y} years: ${base}(${dec(1 + p / 100, 3)})${sup(y)} ≈ $${v(y, p)}.`, [`$${v(y + 2, p)}`, `$${v(y - 1, p)}`])
+  }),
+  // 5. Describe the graph of a line given in intercept form.
+  form(T6_NOCALC[3], function interceptFormGraph() {
+    const p = r(2, 9), q = r(2, 9), neg = pick([true, false])
+    const says = (up, above) => `It goes ${up ? 'up' : 'down'} from left to right and crosses the y-axis ${above ? 'above' : 'below'} the origin.`
+    return ask(`x/${p} ${neg ? M : '+'} y/${q} = 1. In the xy-plane, which of the following describes the graph of the equation above?`, says(neg, !neg),
+      [says(!neg, !neg), says(neg, neg), says(!neg, neg)],
+      `Solve for y: y = ${neg ? `${coef(q, p)}x ${M} ${q}` : `${M}${coef(q, p)}x + ${q}`}. The slope is ${neg ? 'positive' : 'negative'} and the y-intercept is ${neg ? M : ''}${q}.`)
+  }),
+  // 6. Which constants give no solution.
+  form(T4_NOCALC[9], function noSolutionConstants() {
+    const m = pick([0.4, 0.6, 0.8, 1.5, 2.5]), c = r(2, 9), d = pick([m, c + r(1, 3)])
+    return ask(`ax + ${c} = ${m}x + b. In the equation above, a and b are constants. For which of the following values of a and b does the equation have no solution?`,
+      `a = ${m}, b = ${d}`, [`a = ${m}, b = ${c}`, `a = ${c}, b = ${m}`, `a = ${2 * c}, b = ${c}`],
+      `No solution means the x terms cancel but the numbers do not: a = ${m} and b ≠ ${c}. Only a = ${m}, b = ${d} does that. (a = ${m}, b = ${c} gives infinitely many solutions.)`)
+  }),
+  // 7. Angle between a line through the origin and the positive x-axis, in radians.
+  function angleFromSlope() {
+    const [slope, deg] = pick([['√3', 60], ['', 45], ['(√3/3)', 30], [`${M}√3`, 120], [M, 135], [`${M}(√3/3)`, 150]])
+    const all = [30, 45, 60, 90, 120, 135, 150].filter((x) => x !== deg).sort(() => Math.random() - 0.5)
+    return ask(`In the xy-plane, O is the origin, P is a point on the line y = ${slope}x above the x-axis, and R is a point on the positive x-axis. What is the measure, in radians, of angle POR?`,
+      piRad(deg), all.slice(0, 3).map(piRad),
+      `The slope is the tangent of the angle the line makes with the positive x-axis. tan θ = ${slope.replace(/[()]/g, '') || '1'}${slope === M ? '1' : ''} gives θ = ${deg}°, which is ${piRad(deg)} radians.`)
+  },
+  // 8. Simplify a complex fraction with i in the bottom.
+  form(NO_CALC[1], function overI() {
+    let p, q, plus, V; do { p = r(1, 6); q = r(1, 6); plus = pick([true, false]); V = plus ? p - q : p + q } while (V === 0)
+    const ci = (n) => (n === 1 ? 'i' : n === -1 ? `${M}i` : `${num(n)}i`)
+    return ask(`If i = √${M}1, which of the following is equal to (${p} ${plus ? '+' : M} ${q}i²)/i?`, ci(-V), [ci(V), num(V), `${num(-V)} + i`],
+      `i² = ${M}1, so the top is ${p} ${plus ? M : '+'} ${q} = ${num(V)}. Then ${num(V)}/i = ${num(V)}i/i² = ${ci(-V)}.`, [ci(V + 1), ci(-V - 1)])
+  }),
+  // 9. Remainder when dividing by x − t.
+  form(T5_NOCALC[14], function remainderValue() {
+    const t = pick([1, 2, 3, -1, -2]), b = r(-6, 6), c = r(-9, 9), R = t * t + b * t + c
+    return ask(`What is the remainder when ${poly([1, b, c])} is divided by x ${t > 0 ? M : '+'} ${Math.abs(t)}?`, R, [t * t - b * t + c, c, R + t],
+      `The remainder is the value at x = ${num(t)}: (${num(t)})²${tail(b)}(${num(t)})${tail(c)} = ${num(R)}.`, [R + 1, R - 1])
+  }),
+  // 10. Product of two k-th roots.
+  form(NO_CALC[13], function rootProduct() {
+    const [c, k] = pick([[2, 4], [2, 5], [2, 6], [2, 7], [3, 3], [3, 4], [2, 8]]), m = r(1, k - 1), a = c ** m, b = c ** (k - m)
+    return ask(`(ᵏ√${a})(ᵏ√${b}) = ${c}. In the equation above, ᵏ√ means the k-th root. What is the value of k?`, k, [k - 1, k + 1, m],
+      `The roots multiply: ᵏ√(${a} × ${b}) = ᵏ√${a * b} = ${c}. Since ${c}${sup(k)} = ${a * b}, k = ${k}.`, [k + 2, k - 2])
+  }),
+  // 11. Constant that makes two lines perpendicular.
+  form(NO_CALC[14], function perpendicularConstant() {
+    let p, q; do { p = r(1, 4); q = r(1, 6) } while (p === q)
+    const c1 = r(1, 9), c2 = r(1, 9)
+    return ask(`ax ${M} y = ${c1} and ${p === 1 ? '' : p}x + ${q}y = ${c2}. If the lines represented above are perpendicular, what is the value of a?`, frac(q, p), [frac(-q, p), frac(p, q), frac(-p, q)],
+      `The first line has slope a. The second has slope ${M}${frac(p, q)}. Perpendicular slopes multiply to ${M}1: a × (${M}${frac(p, q)}) = ${M}1, so a = ${frac(q, p)}.`)
+  }),
+  // 12. Hourly rate from two pay amounts.
+  form(CALC[18], function extraHoursRate() {
+    const h = r(3, 9), who = pick(NAMES)
+    return ask(`${who} works one week and earns a dollars. If ${who} had worked ${h} more hours that week, the pay would have been b dollars. If the hourly rate is the same, what is the hourly rate, in dollars?`,
+      `(b ${M} a)/${h}`, [`b/${h}`, `a/${h}`, `(a ${M} b)/${h}`],
+      `The extra ${h} hours brought in b ${M} a dollars, so one hour pays (b ${M} a)/${h}.`)
+  }),
+  // 13. Fill in a missing cell of a two-way table.
+  form(T2_NOCALC[18], function tableMissingCell() {
+    const [A, B, C] = ['New Year', 'Easter', 'Christmas'], mA = r(20, 60), mB = r(20, 60), mC = r(20, 60), fA = r(20, 70), fB = r(20, 70), fC = r(20, 70)
+    const MT = mA + mB + mC, TB = mB + fB, TC = mC + fC, T = MT + fA + fB + fC
+    return ask(`In a survey, people chose their favorite holiday: ${A}, ${B} or ${C}. ${mA} males chose ${A} and ${mC} males chose ${C}, and ${MT} males answered in all. ${fA} females chose ${A}. ${TB} people chose ${B}, ${TC} chose ${C}, and ${T} people answered. How many females chose ${B}?`,
+      fB, [mB, TB - mA, fC].filter((v) => v !== fB),
+      `Males who chose ${B}: ${MT} ${M} ${mA} ${M} ${mC} = ${mB}. Females who chose ${B}: ${TB} ${M} ${mB} = ${fB}.`, [fB + 5, fB - 5])
+  }),
+  // 14. Which cell is a given percent of the total.
+  form(T2_NOCALC[18], function tablePercentCell() {
+    let mA, mB, mC, fA, fB, fC, T, cells, pick1
+    do {
+      mA = r(20, 60); mB = r(20, 60); mC = r(20, 60); fA = r(20, 70); fB = r(20, 70); fC = r(20, 70); T = mA + mB + mC + fA + fB + fC
+      cells = [[`Females who chose Easter`, fB], [`Males who chose Christmas`, mC], [`Females who chose New Year`, fA], [`Females who chose Christmas`, fC]]
+      pick1 = r(0, 3)
+    } while (cells.some(([, v], i) => i !== pick1 && Math.abs(Math.round((100 * v) / T) - Math.round((100 * cells[pick1][1]) / T)) < 3))
+    const pc = Math.round((100 * cells[pick1][1]) / T)
+    return ask(`In a survey, ${T} people chose their favorite holiday: New Year, Easter or Christmas. ${mA} males chose New Year, ${mC} males chose Christmas and ${mA + mB + mC} males answered in all. ${fA} females chose New Year, ${mB + fB} people chose Easter and ${mC + fC} chose Christmas. Which group is about ${pc}% of everyone who answered?`,
+      cells[pick1][0], cells.filter((_, i) => i !== pick1).map((c) => c[0]),
+      `Fill in the table: females who chose Easter = ${mB + fB} ${M} ${mB} = ${fB}, females who chose Christmas = ${mC + fC} ${M} ${mC} = ${fC}. ${cells[pick1][1]}/${T} ≈ ${pc}%.`)
+  }),
+  // 15. True statements about a linear cost model.
+  form(NO_CALC[17], function linearModelStatements() {
+    let s, b, K, IIok, IIIok, d; do { s = pick([1.5, 2.5, 0.5, 4, 1.2]) * pick([1, -1]); b = 10 * r(20, 50); K = 10 * r(1, 4); d = 10; IIok = pick([true, false]); IIIok = pick([true, false]) } while (!(s > 0 || IIok || IIIok))
+    const C = b + s * K, shownC = IIok ? C : C + 10 * pick([1, -1]), step = Math.abs(s * d), dir = IIIok === s < 0 ? 'decreases' : 'increases'
+    const right = romanLabel([s > 0, IIok, IIIok])
+    return ask(`C = ${dec(s, 1)}K + ${b}. The equation above gives the cost C, in dollars, of producing K toys. Which of the following must be true? I. There is a positive correlation between C and K. II. When the company produces ${K} toys, the cost is $${dec(shownC, 1)}. III. As K increases by ${d}, C ${dir} by $${dec(step, 1)}.`,
+      right, romanWrong(right),
+      `I: the slope ${dec(s, 1)} is ${s > 0 ? 'positive, so true' : 'negative, so false'}. II: C = ${dec(s, 1)}(${K}) + ${b} = ${dec(C, 1)}, so ${IIok ? 'true' : 'false'}. III: 10 more toys change C by ${dec(s * d, 1)}, so ${IIIok ? 'true' : 'false'}.`)
+  }),
+  // 16. Match coefficients when the constant also depends on k.
+  form(NO_CALC[12], function matchWithK() {
+    let q, p, c; do { q = r(2, 5); p = r(1, 6); c = p * (q - 1) - q } while (c === 0)
+    const k = p + q
+    return ask(`If x² + kx + k${tail(c)} = (x + p)(x + ${q}) for all values of x, where k and p are constants, what is the value of k?`, k, [p, q, p * q].filter((v) => v !== k),
+      `Expand: x² + (p + ${q})x + ${q}p. So k = p + ${q} and k${tail(c)} = ${q}p. Then p + ${q + c} = ${q}p, so p = ${p} and k = ${k}.`, [k + 1, k - 1])
+  }),
+  // 17. Solve for k inside a function value.
+  form(T2_CALC[29], function functionAtRoot() {
+    let a, k, b, n, v; do { a = r(2, 4); k = r(2, 9); b = r(1, 9); n = pick([2, 3]); v = (a * k - b) / n } while (!Number.isInteger(v) || v <= 0)
+    return ask(`f(x) = ${a}x² ${M} ${b}. If (1/${n})f(√k) = ${v}, what is the value of k?`, k, [k * k, n * v + b, v],
+      `f(√k) = ${a}k ${M} ${b}. So (${a}k ${M} ${b})/${n} = ${v}, ${a}k ${M} ${b} = ${n * v}, ${a}k = ${n * v + b} and k = ${k}.`, [k + 1, k - 1])
+  }),
+  // 18. Angle between two points seen from the origin, in radians.
+  form(null, function angleBetweenPoints() { // joins angleFromSlope below the list
+    const at = (deg, k) => ({
+      30: [rootOf(k, 3), String(k)], 45: [rootOf(k, 2), rootOf(k, 2)], 60: [String(k), rootOf(k, 3)],
+      120: [`${M}${k}`, rootOf(k, 3)], 135: [`${M}${rootOf(k, 2)}`, rootOf(k, 2)], 150: [`${M}${rootOf(k, 3)}`, String(k)],
+    })[deg]
+    const a = pick([30, 45, 60]), b = pick([120, 135, 150]), A = at(a, r(1, 6)), B = at(b, r(1, 6))
+    return ask(`In the xy-plane, O is the origin, A = (${A[0]}, ${A[1]}) and B = (${B[0]}, ${B[1]}). What is the measure, in radians, of angle AOB?`,
+      piRad(b - a), [piRad(180 - (b - a)), piRad(b), piRad(a)],
+      `OA makes ${a}° with the positive x-axis (tan = ${A[1]}/${A[0]}) and OB makes ${b}°. Angle AOB = ${b}° ${M} ${a}° = ${b - a}°, which is ${piRad(b - a)} radians.`, [piRad(b - a + 15), piRad(b - a - 15)])
+  }),
+  // 19. Coordinates of a corner of a regular hexagon.
+  form(T2_NOCALC[7], function hexagonCorner() {
+    const s0 = r(1, 8), L = pick([2, 3, 4, 5, 6, 8]), left = pick([true, false])
+    const right = left ? s0 - L / 2 : s0 + 1.5 * L
+    return ask(`A regular hexagon with sides of length ${L} sits on the x-axis: its bottom side runs from (${s0}, 0) to (${s0 + L}, 0). P(a, b) is the corner of the hexagon farthest to the ${left ? 'left' : 'right'}. What is the value of a?`,
+      dec(right, 1), left ? [dec(s0 - L, 1), dec(s0, 1), dec(s0 - L * 0.87, 1)] : [dec(s0 + L, 1), dec(s0 + 2 * L, 1), dec(s0 + L + L * 0.87, 1)],
+      `Each corner of a regular hexagon is 120°. The slanted side from the bottom corner goes out at 60° from the x-axis, so it moves ${L} × cos 60° = ${dec(L / 2, 1)} sideways. a = ${left ? `${s0} ${M} ${dec(L / 2, 1)}` : `${s0 + L} + ${dec(L / 2, 1)}`} = ${dec(right, 1)}.`, [dec(right + 0.5, 1), dec(right - 0.5, 1)])
+  }),
+  // 20. What a point in a system of inequalities tells you about the constants.
+  form(T2_CALC[7], function inequalityConstants() {
+    const y0 = r(-3, 5), m1 = r(-4, -1), m2 = r(1, 4), aBelow = pick([true, false])
+    const q = aBelow ? `y > ${m1 === -1 ? M : num(m1)}x + a and y < ${m2 === 1 ? '' : m2}x + b` : `y < ${m1 === -1 ? M : num(m1)}x + a and y > ${m2 === 1 ? '' : m2}x + b`
+    return ask(`${q}. In this system of inequalities, a and b are constants. If (0, ${num(y0)}) is a solution of the system, which of the following must be true?`,
+      aBelow ? 'a < b' : 'a > b', [aBelow ? 'a > b' : 'a < b', 'a = b', 'a = −b'],
+      `Put x = 0, y = ${num(y0)}: ${aBelow ? `${num(y0)} > a and ${num(y0)} < b, so a < ${num(y0)} < b` : `${num(y0)} < a and ${num(y0)} > b, so b < ${num(y0)} < a`}.`)
+  }),
+  // 21. Solution set when one factor is a quadratic with irrational roots.
+  form(T3_NOCALC[12], function cubicSolutionSet() {
+    let t, h, D; do { t = r(-4, 4); h = r(-4, 4); D = pick([2, 3, 5, 6, 7, 10, 11]) } while (h === 0 || t === 0)
+    const c = h * h - D, set = (a, root) => `{${num(a)}, ${num(root[0])} ± ${root[1]}}`
+    return ask(`(x ${t > 0 ? M : '+'} ${Math.abs(t)})(${poly([1, 2 * h, c])}) = 0. Which of the following is the solution set of the equation above?`,
+      set(t, [-h, `√${D}`]), [set(t, [h, `√${D}`]), set(-t, [-h, `√${D}`]), set(t, [-h, `2√${D}`])],
+      `The first factor gives x = ${num(t)}. For ${poly([1, 2 * h, c])} = 0, complete the square: (x ${h > 0 ? '+' : M} ${Math.abs(h)})² = ${D}, so x = ${num(-h)} ± √${D}.`)
+  }),
+  // 22. Statements about two triangles made by parallel segments.
+  form(NO_CALC[18], function parallelBowtie() {
+    const yes = ['AB/CD = BE/CE', 'AB/CD = AE/DE', '∠ABE = ∠DCE', '∠BAE = ∠CDE', 'AE · CE = BE · DE']
+    const no = ['BE · CE = AE · DE', '∠ABE = ∠CDE', 'BC ⊥ AD', 'AB/CD = BE/DE', 'AB/CD = CE/BE', '∠BAE = ∠DCE'].sort(() => Math.random() - 0.5)
+    const right = pick(yes)
+    return ask(`Segments AD and BC cross at point E, and AB is parallel to CD (A and B are on one side of E, C and D on the other). Which of the following must be true?`, right, no.slice(0, 3),
+      `AB ∥ CD makes the alternate angles equal (∠ABE = ∠DCE and ∠BAE = ∠CDE), so triangle ABE is similar to triangle DCE with A↔D, B↔C, E↔E. Matching sides: AB/DC = BE/CE = AE/DE, which also gives AE · CE = BE · DE.`)
+  }),
+  // 23. Find a coefficient of a cubic from where its graph crosses the axes.
+  form(CALC[22], function cubicFromGraph() {
+    let p, r1, r2, r3, s1; do { p = pick([1, 2]); [r1, r2, r3] = [r(-4, -1), r(1, 4), pick([r(-5, -1), r(1, 5)])]; s1 = r1 + r2 + r3 } while (s1 === 0 || new Set([r1, r2, r3]).size < 3)
+    const a = p * (r1 * r2 + r1 * r3 + r2 * r3), b = -p * r1 * r2 * r3, x2 = -p * s1
+    const head = `${p === 1 ? '' : p}x³ ${x2 < 0 ? M : '+'} ${Math.abs(x2) === 1 ? '' : Math.abs(x2)}x² + ax + b`
+    return ask(`f(x) = ${head}, where a and b are constants. The graph of f crosses the y-axis at (0, ${num(b)}) and crosses the x-axis at x = ${num(r1)}, at x = ${r2} and at one other point. What is the value of a?`,
+      a, [-a, b, a + p].filter((v) => v !== a),
+      `f(0) = b, so b = ${num(b)}. Then f(${r2}) = 0: ${p * r2 ** 3}${tail(x2 * r2 * r2)} + ${r2}a${tail(b)} = 0, so ${r2}a = ${num(-(p * r2 ** 3 + x2 * r2 * r2 + b))} and a = ${num(a)}.`, [a + 1, a - 1, a + 2])
+  }),
+  // 24. Slope after shifting and stretching a line.
+  form(T4_NOCALC[4], function shiftedSlope() {
+    const c = pick([1, 1, 2, 3, -1, -2]), mn = r(1, 5), md = pick([2, 3, 5, 7].filter((d) => gcd(d, mn) === 1)), h = r(1, 6), k = r(-12, 12)
+    return ask(`g(x) = ${coef(c)}f(x ${M} ${h})${k ? tail(k) : ''}. If the slope of the linear function f is ${frac(mn, md)}, what is the slope of the function g?`, frac(c * mn, md),
+      [frac(-c * mn, md), frac(c * md, mn), frac(-c * md, mn)],
+      `Sliding the graph ${h} right${k ? ` and ${Math.abs(k)} ${k > 0 ? 'up' : 'down'}` : ''} does not change its slope.${c === 1 ? '' : ` Multiplying by ${c} multiplies the slope by ${c}.`} The slope of g is ${frac(c * mn, md)}.`, [frac(mn + md, md), frac(c * mn + 1, md)])
+  }),
+  // 25. Absolute value inequality for a height limit.
+  form(CALC[4], function heightLimitAbs() {
+    const L = r(40, 50), half = r(4, 12), U = L + 2 * half, mid = L + half, out = pick([true, false])
+    return ask(`A ride only lets on riders who are at least ${L} inches tall and at most ${U} inches tall. Which inequality describes the heights h, in inches, of people who are ${out ? 'NOT allowed' : 'allowed'} on the ride?`,
+      `|h ${M} ${mid}| ${out ? '>' : '≤'} ${half}`, [`|h ${M} ${mid}| ${out ? '≤' : '>'} ${half}`, `|h ${M} ${L}| > ${U}`, `|h ${M} ${U}| > ${L}`],
+      `The allowed heights run from ${L} to ${U}, centered at ${mid} with ${half} on each side: |h ${M} ${mid}| ≤ ${half}. ${out ? `Not allowed is the opposite: |h ${M} ${mid}| > ${half}.` : ''}`)
+  }),
+  // 26. Quadratic in 1/a.
+  form(T6_NOCALC[16], function reciprocalQuadratic() {
+    let u1, u2; do { u1 = r(1, 5); u2 = -r(1, 6) } while (u1 + u2 === 0)
+    const p = -(u1 + u2), q = u1 * u2
+    return ask(`a⁻² ${p < 0 ? M : '+'} ${Math.abs(p) === 1 ? '' : Math.abs(p)}a⁻¹ ${M} ${-q} = 0. In the equation above, a > 0. What is the value of a?`, frac(1, u1), [num(u1), frac(1, -u2), num(-u2)],
+      `Let u = 1/a: u² ${p < 0 ? M : '+'} ${Math.abs(p) === 1 ? '' : Math.abs(p)}u ${M} ${-q} = 0, so (u ${M} ${u1})(u + ${-u2}) = 0. Since a > 0, u = ${u1}, so a = ${frac(1, u1)}.`, [frac(1, u1 + 1), frac(2, u1)])
+  }),
+  // 27. Diagonal of a cube from its volume or surface area.
+  form(T5_NOCALC[9], function cubeDiagonalFrom() {
+    const s = r(2, 7), byVol = pick([true, false]), face = pick([true, false])
+    const right = face ? `${s}√2` : `${s}√3`
+    return ask(`The ${byVol ? `volume of a cube is ${s ** 3}` : `surface area of a cube is ${6 * s * s}`}. What is the length of a diagonal of ${face ? 'one face of the cube' : 'the cube that goes through the inside, from one corner to the opposite corner'}?`,
+      right, [String(s), face ? `${s}√3` : `${s}√2`, `${2 * s}√2`],
+      `${byVol ? `s³ = ${s ** 3}` : `6s² = ${6 * s * s}`}, so s = ${s}. ${face ? `A face diagonal is s√2 = ${s}√2.` : `The long diagonal is √(s² + s² + s²) = s√3 = ${s}√3.`}`)
+  }),
+  // 28. Change in a formula when two letters change.
+  form(T3_NOCALC[9], function formulaScale() {
+    const [vw, vm] = pick([['doubled', 2], ['tripled', 3]]), [rw, rn, rd] = pick([['halved', 1, 2], ['doubled', 2, 1], ['tripled', 3, 1], ['cut to one third', 1, 3]])
+    const f = frac(vm * vm * rd, rn)
+    return ask(`F = kv²/r. In the equation above, k is a constant. If v is ${vw} and r is ${rw}, which of the following is true?`, `F is multiplied by ${f}.`,
+      [`F is multiplied by ${frac(vm * rd, rn)}.`, `F is multiplied by ${frac(vm * vm * rn, rd)}.`, `F is multiplied by ${vm * vm}.`],
+      `v² is multiplied by ${vm * vm}. Dividing by the new r multiplies F by ${frac(rd, rn)}. In all, F is multiplied by ${vm * vm} × ${frac(rd, rn)} = ${f}.`, [`F is multiplied by ${frac(vm * vm * rd + 1, rn)}.`])
+  }),
+  // 29. Square inside an isosceles triangle.
+  form(NO_CALC[18], function squareInTriangle() {
+    const [B, H] = pick([[10, 10], [6, 12], [12, 6], [15, 10], [20, 5], [12, 4], [8, 24], [30, 20], [24, 12]]), x = (B * H) / (B + H)
+    return ask(`An isosceles triangle has a base of ${B} and a height of ${H}. A square sits on the base with its two top corners on the other two sides. What is the area of the square?`,
+      x * x, [(x - 1) ** 2, (x + 1) ** 2, (B * H) / 4].filter((v) => v !== x * x),
+      `Above the square is a smaller triangle like the big one, with base x and height ${H} ${M} x. So x/${B} = (${H} ${M} x)/${H}, ${H}x = ${B * H} ${M} ${B}x, x = ${x}. Area = ${x * x}.`, [x * x + 2 * x])
+  }),
+  // 30. Greatest or least difference from two absolute value equations.
+  form(CALC[4], function absDifferenceExtreme() {
+    const p = r(1, 6), s = r(3, 10), q = r(1, 6), t = r(3, 9), most = pick([true, false])
+    const kHi = p + s, kLo = p - s, mHi = -q + t, mLo = -q - t, right = most ? kHi - mLo : kLo - mHi
+    return ask(`|k ${M} ${p}| = ${s} and |m + ${q}| = ${t}. In the equations above, what is the ${most ? 'greatest' : 'least'} possible value of k ${M} m?`, right,
+      [kHi - mHi, kLo - mLo, most ? s + t : -(s + t)].filter((v) => v !== right),
+      `k = ${p} ± ${s}, so k is ${num(kLo)} or ${kHi}. m = ${M}${q} ± ${t}, so m is ${num(mLo)} or ${num(mHi)}. ${most ? `Greatest: ${kHi} ${M} (${num(mLo)}) = ${right}.` : `Least: ${num(kLo)} ${M} ${mHi < 0 ? `(${num(mHi)})` : mHi} = ${num(right)}.`}`, [right + 1, right - 1])
+  }),
+  // 31. Ratio of two pieces of a rectangle side from two tangents.
+  form(T7_NOCALC[4], function rectangleTanRatio() {
+    let a1, b1, a2, b2; do { a1 = r(1, 4); b1 = r(2, 6); a2 = r(1, 4); b2 = r(2, 7) } while (gcd(a1, b1) !== 1 || gcd(a2, b2) !== 1 || a1 * b2 === b1 * a2 || a1 >= b1 || a2 >= b2)
+    return ask(`ABCD is a rectangle with AB on top and CD on the bottom. Point P is on side BC. If tan∠BAP = ${a1}/${b1} and tan∠CDP = ${a2}/${b2}, what is the value of BP/CP?`,
+      frac(a1 * b2, b1 * a2), [frac(b1 * a2, a1 * b2), frac(a1 * a2, b1 * b2), frac(a1, a2)],
+      `tan∠BAP = BP/AB, so BP = (${a1}/${b1})AB. tan∠CDP = CP/DC and DC = AB, so CP = (${a2}/${b2})AB. BP/CP = (${a1}/${b1}) ÷ (${a2}/${b2}) = ${frac(a1 * b2, b1 * a2)}.`)
+  }),
+  // 32. Same base on both sides with a squared exponent.
+  form(NO_CALC[13], function squaredExponent() {
+    const p = r(1, 5), base = pick(['a', 'a', '3', '5'])
+    return ask(`${base}^((x + ${p})²) = (1/${base})^(${M}${4 * p}x).${base === 'a' ? ' In the equation above, a > 0 and a ≠ 1.' : ''} What is the value of x?`, p, [-p, 2 * p, 4 * p],
+      `(1/${base})^(${M}${4 * p}x) = ${base}^(${4 * p}x). So (x + ${p})² = ${4 * p}x, x² ${M} ${2 * p}x + ${p * p} = 0, (x ${M} ${p})² = 0 and x = ${p}.`, [p + 1])
+  }),
+  // 33. Ratio of kinetic energies.
+  form(T3_NOCALC[9], function energyRatio() {
+    const n = pick([2, 3, 4]), v2 = pick([4, 5, 6, 8, 10]), v1 = v2 * pick([1, 2, 3])
+    return ask(`Kinetic energy = (1/2)mv², where m is the mass and v is the speed. One cart has mass k kilograms and moves at ${v1} meters per second. Another has mass ${n}k kilograms and moves at ${v2} meters per second. What is the ratio of the first cart's kinetic energy to the second cart's?`,
+      frac(v1 * v1, n * v2 * v2), [frac(v1, n * v2), frac(n * v2 * v2, v1 * v1), frac(v1 * v1, v2 * v2)],
+      `First: (1/2)(k)(${v1})² = ${(v1 * v1) / 2}k. Second: (1/2)(${n}k)(${v2})² = ${(n * v2 * v2) / 2}k. Ratio = ${(v1 * v1) / 2}/${(n * v2 * v2) / 2} = ${frac(v1 * v1, n * v2 * v2)}.`, [frac(v1 * v1 + 1, n * v2 * v2)])
+  }),
+  // 34. Greatest height of h = ct(T − t).
+  form(CALC[8], function productPeak() {
+    const c = r(2, 5), T = 2 * r(5, 15), top = (c * T * T) / 4
+    return ask(`h = ${c}t(${T} ${M} t). An arrow is shot straight up and comes back down. Its height h, in meters, t seconds after it is shot is given by the equation above. What is the greatest height, in meters, the arrow reaches?`,
+      top, [c * T, (T / 2) ** 2, (c * T * T) / 2],
+      `The height is 0 at t = 0 and t = ${T}, so it is greatest halfway, at t = ${T / 2}. h = ${c}(${T / 2})(${T / 2}) = ${top}.`, [top + c])
+  }),
+  // 35. Distance from the origin to a line.
+  form(T8_NOCALC[4], function distanceToLine() {
+    const [p, q, c] = pick([[4, 3, 5], [3, 4, 5], [8, 6, 10], [6, 8, 10], [5, 12, 13], [12, 5, 13], [15, 8, 17]])
+    return ask(`Line ℓ passes through (0, ${q}) and (${p}, 0). Line m passes through the origin O and is perpendicular to ℓ, meeting it at P. What is the length of OP?`, frac(p * q, c),
+      [frac(c, 2), frac(p * q, p + q), frac(p + q, 2)],
+      `ℓ and the axes make a right triangle with legs ${p} and ${q} and hypotenuse ${c}. Its area is (1/2)(${p})(${q}) = ${(p * q) / 2}, which is also (1/2)(${c})(OP). So OP = ${p * q}/${c}${frac(p * q, c) === `${p * q}/${c}` ? '' : ` = ${frac(p * q, c)}`}.`)
+  }),
+  // 36. Infinitely many solutions with b in both equations.
+  form(T5_NOCALC[18], function infinitelyManyB() {
+    const s = r(2, 5), a = r(2, 6), A = s * a, B = s * s
+    return ask(`${A}x + ${B}y = b and ax + by = 1. In the system of equations above, a and b are constants and b > 0. If the system has infinitely many solutions, what is the value of a?`,
+      a, [s, A, a * s].filter((v) => v !== a),
+      `The first equation must be a multiple of the second: ${A}/a = ${B}/b = b/1. From ${B}/b = b, b² = ${B} and b = ${s}. Then ${A}/a = ${s}, so a = ${a}.`, [a + 1, a - 1])
+  }),
+  // 37. Area of the trapezoid under where a line meets y = x².
+  form(T4_CALC[T4_CALC.length - 2], function trapezoidUnderParabola() {
+    const m = r(1, 3), u = r(1, 3), w = u + m, c = u * w, area = ((u * u + w * w) * (u + w)) / 2
+    return ask(`f(x) = x² and g(x) = ${m === 1 ? '' : m}x + ${c}. The graphs of f and g meet at B (left) and C (right). A and D are the points on the x-axis straight below B and C. What is the area of quadrilateral ABCD?`,
+      dec(area, 1), [dec(area * 2, 1), dec((w * w * (u + w)) / 2, 1), dec(((u + w) * (u + w)) / 2, 1)],
+      `x² = ${m === 1 ? '' : m}x + ${c} gives (x + ${u})(x ${M} ${w}) = 0, so B = (${M}${u}, ${u * u}) and C = (${w}, ${w * w}). ABCD is a trapezoid with parallel sides ${u * u} and ${w * w} and width ${u + w}: area = (${u * u} + ${w * w})/2 × ${u + w} = ${dec(area, 1)}.`, [dec(area + 1, 1)])
+  }),
+  // 38. Slope of f from two values of g = pf + k.
+  form(T3_NOCALC[1], function slopeThroughG() {
+    const p = r(2, 4), x1 = r(0, 3), d = r(2, 5), x2 = x1 + d, y1 = r(-5, 12), dy = r(2, 20), y2 = y1 + dy
+    return ask(`g(x) = ${p}f(x) + k. In the equation above, f is a linear function and k is a constant. If g(${x1}) = ${num(y1)} and g(${x2}) = ${num(y2)}, what is the slope of f?`, frac(dy, p * d),
+      [frac(dy, d), frac(p * dy, d), frac(d, dy)],
+      `The slope of g is (${num(y2)} ${M} ${y1 < 0 ? `(${num(y1)})` : y1})/(${x2} ${M} ${x1}) = ${frac(dy, d)}. The k does not change slope, and the ${p} multiplies it, so the slope of f is (${frac(dy, d)}) ÷ ${p} = ${frac(dy, p * d)}.`)
+  }),
+]
+T6_CALC[17].sameAs = T6_CALC[6] // angleBetweenPoints is a form of angleFromSlope
+
+export const MAKERS = [...NO_CALC, ...CALC, ...T5_NOCALC, ...T2_NOCALC, ...T3_NOCALC, ...T4_NOCALC, ...T6_NOCALC, ...T7_NOCALC, ...T8_NOCALC, ...T2_CALC, ...T3_CALC, ...T4_CALC, ...T5_CALC, ...T6_CALC]
 
 // Types: each one is a list of forms. A form made with form(name, ...) joins the type of the maker with that name.
 export const TYPES = (() => {

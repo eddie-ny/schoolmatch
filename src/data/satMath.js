@@ -1,5 +1,5 @@
 // SAT-style math questions (no calculator and calculator sections), made fresh each time the test starts.
-// Each maker below copies the TYPE of one question from the owner's practice tests (test 1 sections 3 and 4, tests 2 to 5 section 3), with new numbers and names,
+// Each maker below copies the TYPE of one question from the owner's practice tests (test 1 sections 3 and 4, tests 2 to 6 section 3), with new numbers and names,
 // so every attempt is different but tests the same skill. The wording is written for this site, not copied.
 // Grid-in (type the answer) questions in the source are multiple choice here, like the rest of the test.
 // Same file in the web app (src/data/satMath.js) and the phone app (mobile/src/lib/satMath.js): keep them identical.
@@ -1131,7 +1131,145 @@ const T4_NOCALC = [
   },
 ]
 
-export const MAKERS = [...NO_CALC, ...CALC, ...T5_NOCALC, ...T2_NOCALC, ...T3_NOCALC, ...T4_NOCALC]
+// "Which of these are true?" with statements I, II and III: the right combination plus 3 wrong ones.
+const ROMAN = [[1, 0, 0], [0, 1, 0], [0, 0, 1], [1, 1, 0], [1, 0, 1], [0, 1, 1], [1, 1, 1]]
+const romanLabel = (t) => { const on = ['I', 'II', 'III'].filter((_, i) => t[i]); return on.length === 3 ? 'I, II and III' : `${on.join(' and ')} only` }
+const romanWrong = (right) => ROMAN.map((t) => romanLabel(t.map(Boolean))).filter((x) => x !== right).sort(() => Math.random() - 0.5).slice(0, 3)
+const sup = (n) => String(n).split('').map((d) => '⁰¹²³⁴⁵⁶⁷⁸⁹'[d]).join('')
+
+// Practice test 6, section 3 (no calculator), questions 1 to 20.
+const T6_NOCALC = [
+  // 1. Another expression found without solving.
+  form(T3_NOCALC[1], function expressionScaled() {
+    const p = r(2, 5), q = r(1, 9), m = r(2, 6)
+    return ask(`If ${m * p}x ${M} ${m * q} = a, what is ${p}x ${M} ${q} in terms of a?`, `a/${m}`, [`a/${m} ${M} ${q}`, `a/${m} + ${q}`, `a/${m} + ${m}`],
+      `${m * p}x ${M} ${m * q} = ${m}(${p}x ${M} ${q}). So ${m}(${p}x ${M} ${q}) = a and ${p}x ${M} ${q} = a/${m}.`, [`a/${m} ${M} ${m}`, `${m}a`, `a ${M} ${q}`])
+  }),
+  // 2. Arithmetic sequence.
+  function arithmeticSequence() {
+    const a = 5 * r(2, 8), d = r(2, 9), n = r(8, 30), name = pick(NAMES), v = a + (n - 1) * d
+    return ask(`${name} walks on a treadmill for ${a} minutes on day 1 and adds ${d} minutes each day after that. How many minutes will ${name} walk on day ${n}?`,
+      v, [a + n * d, n * d, a + (n - 2) * d], `Day 1 is ${a}, and ${d} is added ${n - 1} times to reach day ${n}: ${a} + ${n - 1} × ${d} = ${v}.`)
+  },
+  // 3. Count whole numbers inside an absolute-value inequality.
+  form(CALC[4], function absCount() {
+    const c = r(-4, 6), d = r(2, 6), strict = pick([true, false]), n = strict ? 2 * d - 1 : 2 * d + 1
+    const lhs = `|a ${c < 0 ? '+' : M} ${Math.abs(c)}|`
+    return ask(`How many integers a satisfy ${lhs} ${strict ? '<' : '≤'} ${d}?`, n, [strict ? 2 * d + 1 : 2 * d - 1, 2 * d, d].filter((x) => x !== n),
+      `${lhs} ${strict ? '<' : '≤'} ${d} means ${num(c - d)} ${strict ? '<' : '≤'} a ${strict ? '<' : '≤'} ${num(c + d)}. The integers from ${num(strict ? c - d + 1 : c - d)} to ${num(strict ? c + d - 1 : c + d)} number ${n}.`, [n + 1])
+  }),
+  // 4. A line's equation from the shape of its graph.
+  function lineFromGraph() {
+    const c = r(1, 9), down = pick([true, false]), above = pick([true, false])
+    const eqs = { true_true: `x + y ${M} ${c} = 0`, false_true: `x ${M} y + ${c} = 0`, true_false: `x + y + ${c} = 0`, false_false: `x ${M} y ${M} ${c} = 0` }
+    const right = eqs[`${down}_${above}`]
+    return ask(`Line ℓ ${down ? 'goes down' : 'goes up'} from left to right and crosses the y-axis ${above ? 'above' : 'below'} the origin. Which of the following could be the equation of line ℓ?`,
+      right, Object.values(eqs).filter((e) => e !== right), `Write each as y = mx + b. ${down ? 'Going down needs a negative slope (x + y form)' : 'Going up needs a positive slope (x − y form)'}, and crossing ${above ? 'above' : 'below'} the origin needs b ${above ? '> 0' : '< 0'}. Only ${right} has both.`)
+  },
+  // 5. Values read from a graph, as statements.
+  form(CALC[24], function graphStatements() {
+    const xs = [-4, -3, 0, 1, 3, 7], ys = [0, r(2, 4), 0, r(-3, -1), r(1, 3), null]; ys[5] = ys[4]
+    const f = (x) => { for (let i = 0; i < 5; i++) if (x >= xs[i] && x <= xs[i + 1]) return ys[i] + ((ys[i + 1] - ys[i]) * (x - xs[i])) / (xs[i + 1] - xs[i]) }
+    const target = ys[4]
+    const picks = [pick([-2, -1, 2]), 1, pick([4.5, 5, 6.2])]
+    const st = [[`f(${num(picks[0])})`, f(picks[0])], [`|f(${picks[1]})|`, Math.abs(f(picks[1]))], [`f(${picks[2]})`, f(picks[2])]]
+    const truth = st.map(([, v]) => Math.abs(v - target) < 1e-9)
+    if (!truth.some(Boolean)) return graphStatements()
+    const right = romanLabel(truth)
+    return ask(`The graph of f is made of straight pieces joining ${xs.map((x, i) => pt(x, ys[i])).join(', ')}. Which of the following are equal to ${target}? I. ${st[0][0]} II. ${st[1][0]} III. ${st[2][0]}`,
+      right, romanWrong(right), `Reading the pieces: ${st.map(([s, v]) => `${s} = ${dec(v)}`).join(', ')}. So the ones equal to ${target} are ${right.replace(' only', '')}.`)
+  }),
+  // 6. Roots written as powers.
+  function rootsToPowers() {
+    const roots = { 2: '√', 3: '∛', 4: '∜' }, n1 = pick([3, 4]), n2 = pick([2, 3]), p = r(2, 6), q = r(2, 5), a = n1 * p, b = n2 * q
+    return ask(`If x is positive, which of the following is equal to (${roots[n1]}x${sup(a)})(${roots[n2]}x${sup(b)})?`, `x${sup(p + q)}`, [`x${sup(a + b)}`, `x${sup(p * q)}`, `x${sup(Math.round((a + b) / (n1 + n2)))}`].filter((v) => v !== `x${sup(p + q)}`),
+      `${roots[n1]}x${sup(a)} = x^(${a}/${n1}) = x${sup(p)} and ${roots[n2]}x${sup(b)} = x^(${b}/${n2}) = x${sup(q)}. Multiplying adds the powers: x${sup(p + q)}.`, [`x${sup(p + q + 1)}`])
+  },
+  // 7 and 8. Complete a two-way table.
+  form(T2_NOCALC[18], function completeTable() {
+    let J1, P, S2, T, statJ, juniors; do { J1 = 10 * r(4, 12); P = J1 + 10 * r(4, 12); S2 = 10 * r(3, 12); T = P + S2 + 10 * r(1, 8); statJ = T - P - S2; juniors = J1 + statJ } while (!Number.isInteger((100 * statJ) / juniors))
+    const pct = pick([true, false]), ans = pct ? (100 * statJ) / juniors : statJ
+    return ask(`At a school only juniors and seniors take Physics or Statistics (each student takes one). ${J1} juniors take Physics, ${P} students in all take Physics, ${S2} seniors take Statistics, and ${T} students take one of the two. ${pct ? 'What percent of juniors take Statistics?' : 'How many juniors take Statistics?'}`,
+      ans, pct ? [Math.round((100 * statJ) / T), Math.round((100 * statJ) / (T - P)), 100 - ans] : [T - P, P - J1, S2 - statJ].filter((x) => x > 0), `Statistics has ${T} ${M} ${P} = ${T - P} students; minus ${S2} seniors leaves ${statJ} juniors.${pct ? ` Juniors in all: ${J1} + ${statJ} = ${juniors}, so ${statJ}/${juniors} = ${ans}%.` : ''}`, [ans + 5, ans + 10])
+  }),
+  // 9. Which data set has the smallest spread.
+  function smallestSpread() {
+    const sd = (a) => { const m = a.reduce((x, y) => x + y, 0) / a.length; return Math.sqrt(a.reduce((t, v) => t + (v - m) ** 2, 0) / a.length) }
+    const v = r(1, 4), tight = [...Array(10)].map((_, i) => (i % 2 ? v : v + 1))
+    const sets = [tight, [0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5].slice(0, 10), [0, 1, 1, 2, 2, 2, 3, 3, 3, 5], [0, 1, 2, 2, 2, 3, 3, 3, 4, 5]]
+    const txt = (a) => [...a].sort((x, y) => x - y).join(', ')
+    if (Math.min(...sets.slice(1).map(sd)) <= sd(tight)) return smallestSpread()
+    return ask('Which of the following data sets has the smallest standard deviation?', txt(tight), sets.slice(1).map(txt),
+      `Standard deviation measures how far values sit from the mean. In ${txt(tight)} every value is ${v} or ${v + 1}, right next to the mean, so it is the smallest. The others spread from 0 to 5.`)
+  },
+  // 10. Square-root equation where one answer does not work.
+  form(T2_NOCALC[4], function rootEquationCheck() {
+    let d, v, w, c; do { d = r(1, 5); v = r(d + 1, d + 8); w = 2 * d + 1 - v; c = d * d - v * w } while (w >= d || c === 0)
+    const set = (...a) => `{${a.map(num).join(', ')}}`
+    return ask(`√(x ${c < 0 ? M : '+'} ${Math.abs(c)}) = x ${M} ${d}. What is the solution set of this equation?`, set(v), [set(w), set(w, v), 'No solution'],
+      `Square both sides: x ${c < 0 ? M : '+'} ${Math.abs(c)} = x² ${M} ${2 * d}x + ${d * d}, so x² ${M} ${2 * d + 1}x + ${d * d - c} = 0 and x = ${num(w)} or ${v}. Check: at x = ${num(w)}, x ${M} ${d} is negative, but a square root cannot be negative. Only ${v} works.`)
+  }),
+  // 11. Match coefficients against a product plus a line.
+  form(NO_CALC[12], function matchShift() {
+    const p = r(1, 4), q = r(1, 5), B = r(-6, 2), C = r(1, 9), a = B + p + q, b = C - p * q
+    const pair = (x, y) => `a = ${num(x)}, b = ${num(y)}`
+    return ask(`${poly([1, B, C])} = (x ${M} ${p})(x ${M} ${q}) + ax + b. If this is true for all x, what are a and b?`, pair(a, b), [pair(-a, b), pair(a, -b), pair(b, a)].filter((x) => x !== pair(a, b)),
+      `(x ${M} ${p})(x ${M} ${q}) = ${poly([1, -(p + q), p * q])}. Adding ax + b and matching: ${M}${p + q} + a = ${num(B)} gives a = ${num(a)}, and ${p * q} + b = ${C} gives b = ${num(b)}.`, [pair(a + 1, b), pair(a, b + 1), pair(a - 1, b - 1)])
+  }),
+  // 12. Difference of fourth powers.
+  form(NO_CALC[5], function fourthPowers() {
+    const n = r(2, 5), n2 = n * n
+    return ask(`Which of the following is equal to x⁴ ${M} 1/${n2 * n2}?`, `(x² + 1/${n2})(x + 1/${n})(x ${M} 1/${n})`, [`(x² ${M} 1/${n2})²`, `(x ${M} 1/${n})⁴`, `(x² + x + 1/${n2})²`],
+      `x⁴ ${M} 1/${n2 * n2} = (x² + 1/${n2})(x² ${M} 1/${n2}), and x² ${M} 1/${n2} = (x + 1/${n})(x ${M} 1/${n}).`)
+  }),
+  // 13. Sum of the solutions of a quadratic.
+  function sumOfSolutions() {
+    const k = r(2, 6), p = r(2, 12) * pick([1, -1]), c = k * r(1, 9)
+    return ask(`${k}(x² ${p < 0 ? '+' : M} ${Math.abs(p)}x) = ${c}. What is the sum of the solutions of this equation?`, num(p), [num(2 * p), num(-p), num(c / k)].filter((x) => x !== num(p)),
+      `Divide by ${k}: x² ${p < 0 ? '+' : M} ${Math.abs(p)}x ${M} ${c / k} = 0. For x² + bx + c = 0 the solutions add to ${M}b, so the sum is ${num(p)}.`, [num(p + 1)])
+  },
+  // 14 and 15. Rate and prediction from a line of best fit.
+  form(CALC[21], function bestFitPredict() {
+    const H = pick([7, 8, 10]), rate = pick([12, 14, 15, 16, 17.5, 18, 20]), D = rate * H, X = pick([20, 25, 30, 40])
+    return ask(`A scatterplot of students' pay against hours worked has a line of best fit through (0, 0) and (${H}, ${D}). Based on the line, about how much will a student be paid for ${X} hours of work, in dollars?`,
+      dec(rate * X), [dec(D), dec(rate * X * 1.5), dec(rate * X * 0.6)], `The line's slope is ${D}/${H} = ${dec(rate)} dollars an hour. For ${X} hours: ${dec(rate)} × ${X} ≈ ${dec(rate * X)}.`)
+  }),
+  // 16. How many times a horizontal line meets a W-shaped graph.
+  function countIntersections() {
+    const p = 2 * r(1, 4), c = r(1, 9), min = -c - (p * p) / 4
+    const cases = [[-c + r(1, 6), 2], [-c, 3], [min + 1 < -c ? r(min + 1, -c - 1) : null, 4], [min, 2], [min - r(1, 5), 0]].filter((x) => x[0] != null)
+    const [k, n] = pick(cases)
+    return ask(`f(x) = x⁴ ${M} ${p}x² ${M} ${c}. The graph is W-shaped: it has a high point at (0, ${M}${c}) between two low points at y = ${num(min)}. How many points does the line y = ${num(k)} share with the graph of f?`,
+      n, [0, 2, 3, 4].filter((x) => x !== n), `The line y = ${num(k)} ${k > -c ? `is above the middle high point, so it crosses each outer arm once: 2 points` : k === -c ? 'touches the middle high point and crosses each outer arm: 3 points' : k > min ? 'lies between the low points and the middle high point, so it crosses all 4 slopes: 4 points' : k === min ? 'touches the two low points: 2 points' : 'is below the lowest points: 0 points'}.`)
+  },
+  // 17. A constant from a function built on another.
+  form(T4_NOCALC[7], function composedConstant() {
+    const s = r(1, 5), n = r(1, 5), a = r(2, 5), b = a * n - s * s, v = r(-6, 3), k = s - v
+    return ask(`f(x) = g(x) ${M} k and g(x) = √(${a}x ${b < 0 ? '+' : M} ${Math.abs(b)}), where k is a constant. If f(${n}) = ${num(v)}, what is k?`, num(k), [num(-k), num(s), num(v)].filter((x) => x !== num(k)),
+      `g(${n}) = √(${a * n} ${b < 0 ? '+' : M} ${Math.abs(b)}) = √${s * s} = ${s}. f(${n}) = ${s} ${M} k = ${num(v)}, so k = ${num(k)}.`, [num(k + 1), num(k + 2)])
+  }),
+  // 18. Volume of a pipe (cylinder with a hole).
+  function pipeVolume() {
+    const rr = r(2, 10), t = r(1, 4), h = r(5, 15), V = t * (2 * rr + t) * h
+    return ask(`A pipe is a cylinder with a round hole through the middle. It is ${h} inches tall and its wall is ${t} inch${t === 1 ? '' : 'es'} thick. If the volume of the pipe material is ${V}π cubic inches, what is the radius r of the hole, in inches?`,
+      rr, [rr + t, 2 * rr, Math.round(V / (h * t))].filter((x) => x !== rr), `Volume = π(r + ${t})²(${h}) ${M} πr²(${h}) = ${h}π(${2 * t}r + ${t * t}). So ${2 * t}r + ${t * t} = ${V / h}, and r = ${rr}.`, [rr + 1, rr - 1])
+  },
+  // 19. A quadratic hiding inside a function.
+  function disguisedQuadratic() {
+    let p, q; do { p = r(1, 7); q = r(1, 7) } while (p === q)
+    const s = p + q, v = r(-5, 9), c = p * q + v, n = r(1, 5)
+    return ask(`f(x) = (g(x))² ${M} ${s}g(x) + ${c}. If f(${n}) = ${num(v)}, which of the following could be the value of g(${n})?`, p, [-p, s, p * q].filter((x) => x !== q && x !== p),
+      `Let u = g(${n}). Then u² ${M} ${s}u + ${c} = ${num(v)}, so u² ${M} ${s}u + ${p * q} = 0 = (u ${M} ${p})(u ${M} ${q}). So g(${n}) is ${p} or ${q}.`, [-q, s + 1])
+  },
+  // 20. Rectangle from the y-intercept of a parabola.
+  form(T3_NOCALC[5], function parabolaInterceptRectangle() {
+    const h = r(2, 6)
+    return ask(`P is where the graph of y = ${poly([1, -2 * h, h * h])} crosses the y-axis. Q is the other point on the graph at the same height as P, and R is straight below Q on the x-axis. What is the area of rectangle OPQR, where O is the origin?`,
+      2 * h ** 3, [h ** 3, h * h, 4 * h ** 3], `P = (0, ${h * h}). At height ${h * h}: x² ${M} ${2 * h}x = 0, so the other x is ${2 * h}. The rectangle is ${2 * h} by ${h * h}: area ${2 * h ** 3}.`)
+  }),
+]
+
+export const MAKERS = [...NO_CALC, ...CALC, ...T5_NOCALC, ...T2_NOCALC, ...T3_NOCALC, ...T4_NOCALC, ...T6_NOCALC]
 
 // Types: each one is a list of forms. A form made with form(name, ...) joins the type of the maker with that name.
 export const TYPES = (() => {

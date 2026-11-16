@@ -1,7 +1,7 @@
-// SAT-style math questions (no calculator), made fresh each time the test starts.
-// Each maker below copies the TYPE of one question from the owner's practice set (16 Nov), with new numbers and names,
+// SAT-style math questions (no calculator and calculator sections), made fresh each time the test starts.
+// Each maker below copies the TYPE of one question from the owner's practice test 1 (sections 3 and 4, 16 Nov), with new numbers and names,
 // so every attempt is different but tests the same skill. The wording is written for this site, not copied.
-// Questions 16 to 20 were grid-in (type the answer) in the source; here they are multiple choice like the rest of the test.
+// Grid-in (type the answer) questions in the source are multiple choice here, like the rest of the test.
 // Same file in the web app (src/data/satMath.js) and the phone app (mobile/src/lib/satMath.js): keep them identical.
 // Each maker returns { section, q, options: [4 strings], answer: index of the right one, why }.
 
@@ -51,7 +51,8 @@ const ask = (q, right, wrong, why, spare) => ({ section: 'Math', q, ...choices(S
 
 const NAMES = ['Ama', 'Kofi', 'Esi', 'Yaw', 'Abena', 'Kwame', 'Akosua', 'Kojo', 'Efua', 'Nana']
 
-export const MAKERS = [
+// Section 3 of the owner's practice test 1 (no calculator), questions 1 to 20.
+const NO_CALC = [
   // 1. Solve a linear equation with a fraction, then report 2x.
   function linearFraction() {
     const a = r(1, 9), b = r(1, 5), K = r(b + 1, b + 8)
@@ -232,6 +233,330 @@ export const MAKERS = [
       `y = √x means y² = x, so x² + x = ${N}, which is x² + x ${M} ${N} = 0 = (x ${M} ${x})(x + ${x + 1}). So x = ${x} or x = ${M}${x + 1}. A square root needs x ≥ 0, so x = ${x}.`, [x + 2])
   },
 ]
+
+// A decimal without trailing zeros: 181.250 -> "181.25", 2.0 -> "2"
+const dec = (x, d = 2) => num(Number(x.toFixed(d)))
+const pt = (x, y) => `(${num(x)}, ${num(y)})`
+
+// Section 4 of the owner's practice test 1 (calculator), questions 1 to 38. Questions with a graph give the graph's numbers in words.
+const CALC = [
+  // 1. Linear function from a table.
+  function linearTable() {
+    const s = r(2, 7), b = r(-5, 9), N = r(8, 15)
+    const ys = [1, 2, 3, 4, 5].map((x) => s * x + b), ans = s * N + b
+    return ask(`A linear function f has f(1) = ${num(ys[0])}, f(2) = ${num(ys[1])}, f(3) = ${num(ys[2])}, f(4) = ${num(ys[3])} and f(5) = ${num(ys[4])}. What is f(${N})?`,
+      num(ans), [num(s * N), num(ans - s), num(ans + s)], `f goes up by ${s} each step, so f(x) = ${s}x${tail(b)}. Then f(${N}) = ${s}(${N})${tail(b)} = ${num(ans)}.`)
+  },
+  // 2. Rearrange in terms of another letter.
+  function rearrangeTerms() {
+    const k = r(2, 6), m = r(2, 9)
+    return ask(`If ${k}(a + 2b ${M} c) = ${k * m}, what is the value of a + 2b in terms of c?`, `c + ${m}`, [`c ${M} ${m}`, `${k}c ${M} ${m}`, `c ${M} ${k * m}`],
+      `Divide both sides by ${k}: a + 2b ${M} c = ${m}. Add c: a + 2b = c + ${m}.`)
+  },
+  // 3. Parallel lines: an obtuse and an acute angle add to 180.
+  function parallelAngles() {
+    const t = pick([2, 3, 4, 5, 8]), small = 180 / (t + 1), big = 180 - small
+    return ask(`Two parallel lines are crossed by a third line. Angle 1 is one of the obtuse angles formed and angle 2 is one of the acute angles. If angle 1 is ${t} times angle 2, what is the measure of angle 1?`,
+      `${big}°`, [`${small}°`, `${big - 15}°`, `${Math.min(big + 10, 175)}°`],
+      `With parallel lines, every obtuse angle and every acute angle add to 180°. So ${t}x + x = 180, x = ${small}, and angle 1 = ${big}°.`)
+  },
+  // 4. Powers of 2.
+  function powersOfTwo() {
+    const [b1, e1] = pick([[4, 2], [8, 3], [16, 4]])
+    let b2, e2; do { [b2, e2] = pick([[2, 1], [4, 2], [8, 3]]) } while (b2 === b1)
+    const n = r(2, 5), k = r(1, 4), E = e1 * n + e2 * k
+    return ask(`If ${b1}ⁿ × ${b2}^${k} = 2^${E}, what is the value of n?`, n, [n + 1, n - 1, n + 2].filter((x) => x > 0),
+      `${b1}ⁿ = 2^(${e1}n) and ${b2}^${k} = 2^${e2 * k}. So ${e1}n + ${e2 * k} = ${E}, which gives n = ${n}.`, [n + 3])
+  },
+  // 5. Absolute value: sometimes no answer is possible.
+  function absoluteValue() {
+    const a = r(1, 9), b = r(1, 9), none = 'There is no such value of n.'
+    if (pick([true, false])) {
+      return ask(`For what value of n is |n + ${a}| + ${b} less than 0?`, none, [num(-a - 1), num(-a), num(b)],
+        `|n + ${a}| is never negative, so |n + ${a}| + ${b} is always at least ${b}. It can never be less than 0.`)
+    }
+    return ask(`For what value of n is |n + ${a}| ${M} ${b} equal to 0?`, num(b - a), [num(-a - b - 1), num(a + b), none].filter((x) => x !== num(-a - b)),
+      `|n + ${a}| = ${b}, so n + ${a} = ${b} or n + ${a} = ${M}${b}. That gives n = ${num(b - a)} or n = ${num(-a - b)}. Only ${num(b - a)} is offered.`)
+  },
+  // 6. Slope from the intercept and one point.
+  function slopeFromPoint() {
+    const c = r(3, 9), p = r(2, 6), q = r(0, c - 1)
+    return ask(`Line ℓ has the equation y = mx + ${c}, where m is a constant. If the line passes through the point ${pt(p, q)}, what is the value of m?`,
+      frac(q - c, p), [frac(c - q, p), frac(p, q - c), frac(q, p)].filter((x) => x !== frac(q - c, p)),
+      `Put x = ${p} and y = ${q}: ${q} = ${p}m + ${c}, so ${p}m = ${num(q - c)} and m = ${frac(q - c, p)}.`, [frac(q - c - 1, p), frac(q - c + 1, p)])
+  },
+  // 7. Inequalities that leave only one possibility.
+  function boysGirls() {
+    const t = pick([2, 3]), G = r(4, 9), B = t * G + 1, word = t === 2 ? 'twice' : 'three times'
+    return ask(`In a class, the number of boys is more than ${word} the number of girls. There are at least ${G} girls and no more than ${B} boys. How many students are in the class?`,
+      G + B, [G + B - 1, G + B + 1, G + t * G], `Girls ≥ ${G}, so boys > ${t} × ${G} = ${t * G}, which means boys ≥ ${B}. Boys ≤ ${B}, so there are ${B} boys and ${G} girls (more girls would need more than ${B} boys): ${G + B} students.`)
+  },
+  // 8. Mean from a frequency chart.
+  function frequencyMean() {
+    let scores, counts, N, mean
+    do {
+      scores = [...new Set([...Array(5)].map(() => 10 * r(3, 10)))]
+      counts = scores.map(() => r(1, 6)); N = counts.reduce((x, y) => x + y, 0)
+      mean = scores.reduce((t, s, i) => t + s * counts[i], 0) / N
+    } while (scores.length < 4 || !Number.isInteger(mean))
+    const plain = scores.reduce((x, y) => x + y, 0) / scores.length
+    return ask(`A chart shows the test scores of ${N} students: ${scores.map((s, i) => `${counts[i]} scored ${s}`).join(', ')}. What is the mean (average) score?`,
+      mean, [dec(plain, 1), mean + 3, mean - 5], `Total = ${scores.map((s, i) => `${counts[i]} × ${s}`).join(' + ')} = ${mean * N}. Mean = ${mean * N}/${N} = ${mean}.`, [mean + 5])
+  },
+  // 9 and 10. A ball's height: time to the top and time to the ground.
+  function ballPeak() {
+    let r1, r2; do { r1 = r(6, 12); r2 = r(1, 4) } while ((r1 - r2) % 2)
+    const B = 16 * (r1 - r2), C = 16 * r1 * r2, top = (r1 - r2) / 2
+    return ask(`A ball is launched from the top of a building. Its height in feet after t seconds is h(t) = ${M}16t² + ${B}t + ${C}. How many seconds does it take the ball to reach its highest point?`,
+      top, [r1 - r2, r1, top + 2].filter((x) => x !== top), `The highest point is at t = ${M}b/(2a) = ${B}/32 = ${top}.`, [top + 1])
+  },
+  function ballGround() {
+    let r1, r2; do { r1 = r(6, 12); r2 = r(1, 4) } while ((r1 - r2) % 2)
+    const B = 16 * (r1 - r2), C = 16 * r1 * r2
+    return ask(`A ball is launched from the top of a building. Its height in feet after t seconds is h(t) = ${M}16t² + ${B}t + ${C}. After how many seconds does the ball hit the ground?`,
+      r1, [(r1 - r2) / 2, r1 - r2, r1 + r2], `Set h(t) = 0 and divide by ${M}16: t² ${M} ${r1 - r2}t ${M} ${r1 * r2} = 0, so (t ${M} ${r1})(t + ${r2}) = 0. Time is positive, so t = ${r1}.`, [r1 + 1, r1 - 1])
+  },
+  // 11. Rectangle from its perimeter.
+  function rectangleArea() {
+    const W = r(5, 20) + pick([0, 0.5]), d = r(1, 6), L = W + d, P = 2 * (W + L)
+    return ask(`The perimeter of a rectangle is ${dec(P)} cm. The length is ${d} cm more than the width. What is the area of the rectangle, in square centimetres?`,
+      dec(W * L), [dec((P / 4) ** 2), dec(L * L), dec(W * (W + 2 * d))], `Width w and length w + ${d}: 2(w + w + ${d}) = ${dec(P)}, so w = ${dec(W)} and the length is ${dec(L)}. Area = ${dec(W)} × ${dec(L)} = ${dec(W * L)}.`, [dec(W * L + 10)])
+  },
+  // 12. Which point does NOT satisfy a system of inequalities.
+  function notASolution() {
+    const a1 = r(1, 4), c1 = r(-2, 2), a2 = r(1, 4), c2 = r(-2, 3)
+    const ok = (x, y) => a1 * x - y > c1 && a2 * x + y > c2
+    let yes, no
+    do {
+      const pts = [...Array(30)].map(() => [r(-6, 8), r(-9, 9)])
+      yes = pts.filter(([x, y]) => ok(x, y)); no = pts.filter(([x, y]) => !ok(x, y))
+    } while (new Set(yes.map(String)).size < 3 || !no.length)
+    const good = [...new Map(yes.map((p) => [String(p), p])).values()].slice(0, 3)
+    const [bx, by] = no[0]
+    const lhs = (a, s) => `${coef(a)}x ${s} y`
+    return ask(`${lhs(a1, M)} > ${num(c1)} and ${lhs(a2, '+')} > ${num(c2)}. Which of the following is NOT a solution of this system of inequalities?`,
+      pt(bx, by), good.map(([x, y]) => pt(x, y)),
+      `Test ${pt(bx, by)}: ${a1}(${num(bx)}) ${M} (${num(by)}) = ${num(a1 * bx - by)} and ${a2}(${num(bx)}) + (${num(by)}) = ${num(a2 * bx + by)}. At least one of these is not greater than the number it must beat, so this point fails. The other points pass both.`)
+  },
+  // 13. A point on a line given by a table with an unknown.
+  function lineTableUnknown() {
+    let s, k, y0, X
+    do { s = pick([1, 1.5, 2, 2.5, 3]); k = r(2, 8); y0 = r(0, 6); X = r(10, 20) } while (!Number.isInteger(s * k) || !Number.isInteger(s * X))
+    const y1 = y0 + s * k, y2 = y1 + 2 * s, m = y0 + s * X
+    return ask(`A straight line passes through the points (0, ${y0}), (k, ${y1}) and (k + 2, ${y2}). If the point (${X}, m) is on the same line, what is m?`,
+      m, [s * X, m - 2 * s, m + 4], `From (k, ${y1}) to (k + 2, ${y2}) the line rises ${2 * s} over 2, so the slope is ${s}. Then y = ${s}x + ${y0}, and m = ${s}(${X}) + ${y0} = ${m}.`, [m + 2])
+  },
+  // 14. Fractions spent one after another.
+  function fractionsSpent() {
+    const opts = [[3, 4, 2, 3], [1, 2, 2, 3], [2, 3, 1, 2], [3, 4, 1, 2], [1, 2, 3, 4], [4, 5, 1, 2], [2, 3, 3, 4], [1, 3, 1, 2], [3, 5, 1, 2]]
+    const [n1, d1, n2, d2] = pick(opts), f = (d1 * d2) / ((d1 - n1) * (d2 - n2)), name = pick(NAMES)
+    return ask(`${name} spent ${n1}/${d1} of an allowance on a book, then spent ${n2}/${d2} of what was left on lunch. This left P dollars. What was the allowance, in dollars?`,
+      `${f}P`, [`${f + 2}P`, `${f - 2 > 1 ? f - 2 : f + 4}P`, `${f + 6}P`],
+      `After the book, ${d1 - n1}/${d1} is left. After lunch, ${d2 - n2}/${d2} of that is left: ${frac((d1 - n1) * (d2 - n2), d1 * d2)} of the allowance = P. So the allowance is ${f}P.`)
+  },
+  // 15 and 16. Half-life.
+  function halfLifeModel() {
+    const A = pick([400, 600, 800, 1000, 1200]), H = pick([5, 10, 20, 25, 50])
+    return ask(`A radioactive material loses half of its amount every ${H} years. There are ${A} grams now. Which equation gives the amount y, in grams, after t years?`,
+      `y = ${A}(1/2)^(t/${H})`, [`y = ${A} ${M} ${A / 2}t`, `y = ${A}(1/2)^t`, `y = ${A}(1 ${M} 0.5t)`],
+      `The amount halves once every ${H} years, so after t years it has halved t/${H} times: y = ${A}(1/2)^(t/${H}).`)
+  },
+  function halfLifeAmount() {
+    const k = r(2, 5), H = pick([5, 10, 20, 25, 50]), A = pick([800, 1600, 640, 960, 3200])
+    return ask(`A radioactive material loses half of its amount every ${H} years. If there are ${A} grams now, how many grams will be left after ${k * H} years?`,
+      A / 2 ** k, [A / 2 ** (k - 1), A / 2 ** (k + 1), A / (2 * k)], `${k * H} years is ${k} half-lives. ${A} ÷ 2^${k} = ${A / 2 ** k}.`, [A / 2 ** k + 10])
+  },
+  // 17. Area of a triangle with a corner on each axis.
+  function triangleArea() {
+    let k, b; do { k = r(2, 6); b = r(1, 4) } while ((k * (k + b)) % 2)
+    const A = (k * (k + b)) / 2, a = r(1, 5)
+    return ask(`In the xy-plane, triangle OPQ has corners O(0, 0), P(${M}${a}, k) and Q(k + ${b}, 0), where k > 0. The area of the triangle is ${A}. What is the value of k?`,
+      k, [k + 2, 2 * k, k + b].filter((x) => x !== k), `The base OQ lies on the x-axis and is k + ${b} long. The height is the y-value of P, which is k. So (1/2)k(k + ${b}) = ${A}, k² + ${b}k ${M} ${2 * A} = 0, and k = ${k}.`, [k + 1, k - 1])
+  },
+  // 18. Equation of a circle from its centre and one point.
+  function circleEquation() {
+    const [a, b] = pick([[3, 4], [4, 3], [5, 12], [6, 8], [1, 1], [2, 1]]), h = r(-6, 6) || 4, k = pick([0, 0, r(-5, 5)])
+    const R = a * a + b * b
+    const xs = (v) => (v === 0 ? 'x²' : `(x ${v > 0 ? M : '+'} ${Math.abs(v)})²`)
+    const ys = (v) => (v === 0 ? 'y²' : `(y ${v > 0 ? M : '+'} ${Math.abs(v)})²`)
+    const eq = (hh, kk, rr) => `${xs(hh)} + ${ys(kk)} = ${rr}`
+    return ask(`A circle in the xy-plane has its centre at ${pt(h, k)} and passes through the point ${pt(h + a, k + b)}. Which is the equation of the circle?`,
+      eq(h, k, R), [eq(h, k, a * a), eq(h, k, a + b), eq(-h, -k, R)],
+      `The radius squared is (${a})² + (${b})² = ${R}, the squared distance from the centre to the point. So the equation is ${eq(h, k, R)}.`, [eq(h, k, R + 1)])
+  },
+  // 19. Average rate of change from points on a graph.
+  function averageRate() {
+    const xs = [-3, 0, 1, 3, 6].map((x) => x + r(-1, 0)), ys = xs.map(() => r(-2, 6))
+    const dy = ys[4] - ys[0], dx = xs[4] - xs[0]
+    if (dy === 0) ys[4] += 2
+    const ans = frac(ys[4] - ys[0], dx)
+    return ask(`The graph of f is made of straight pieces joining the points ${xs.map((x, i) => pt(x, ys[i])).join(', ')}. What is the average rate of change of f from x = ${num(xs[0])} to x = ${num(xs[4])}?`,
+      ans, [frac(dx, ys[4] - ys[0]), frac(ys[4] - ys[3], xs[4] - xs[3]), 'It cannot be determined from the given information.'].filter((x) => x !== ans),
+      `Average rate of change = (f(${num(xs[4])}) ${M} f(${num(xs[0])}))/(${num(xs[4])} ${M} (${num(xs[0])})) = (${num(ys[4])} ${M} ${num(ys[0])})/${dx} = ${ans}. Only the end points matter.`, [frac(ys[4] - ys[0] + 1, dx)])
+  },
+  // 20. Average speed over two parts of a trip.
+  function averageSpeed() {
+    let vl, d, t1, t2, avg
+    do { vl = 5 * r(3, 8); d = 5 * r(2, 8); t1 = pick([0.5, 1, 1.5, 2]); t2 = pick([0.5, 0.8, 1, 1.5]); avg = ((vl + d) * t1 + vl * t2) / (t1 + t2) } while (!Number.isInteger(avg) || !Number.isInteger((vl + d) * t1) || !Number.isInteger(vl * t2))
+    const vh = vl + d, d1 = vh * t1, d2 = vl * t2, name = pick(NAMES)
+    return ask(`${name} drove ${d1} miles on the highway and ${d2} miles on local roads. On the highway ${name} drove ${d} miles per hour faster than on local roads. If the speed on local roads was ${vl} miles per hour, what was the average speed, in miles per hour, for the whole trip?`,
+      avg, [(vh + vl) / 2, vl + d / 2, avg + 6].filter((x) => Number.isInteger(x) && x !== avg), `Highway: ${d1} ÷ ${vh} = ${t1} h. Local: ${d2} ÷ ${vl} = ${t2} h. Average = ${d1 + d2} miles ÷ ${t1 + t2} h = ${avg}.`, [avg + 3, avg - 3])
+  },
+  // 21. Two prices with a known difference.
+  function ticketPrices() {
+    const x = r(3, 12), d = r(2, 8), a = r(2, 8), c = r(2, 12), T = a * (x + d) + c * x
+    return ask(`At a theatre, an adult ticket costs ${d} dollars more than a child ticket. A group of ${a} adults and ${c} children pays ${T} dollars in total. What is the cost, in dollars, of one adult ticket and one child ticket together?`,
+      2 * x + d, [x, x + d, 2 * x + d + 2], `Child ticket = c dollars: ${a}(c + ${d}) + ${c}c = ${T}, so ${a + c}c = ${T - a * d} and c = ${x}. Adult = ${x + d}. Together: ${2 * x + d}.`, [2 * x + d - 1])
+  },
+  // 22. Slope of a line of best fit read from two points.
+  function bestFitSpeed() {
+    const H = pick([5, 6, 8, 10]), v = 5 * r(8, 15), D = v * H
+    const near = v - 1, opts = [near, v - 6, v + 5, v + 8]
+    return ask(`A scatterplot shows distance travelled (miles) against hours for 10 drivers. Its line of best fit goes from (0, 0) to (${H}, ${D}). Which of the following is closest to the drivers' average speed, in miles per hour?`,
+      near, opts.slice(1), `The slope of the line is ${D} ÷ ${H} = ${v} miles per hour. Of the choices, ${near} is closest.`)
+  },
+  // 23. Factor theorem.
+  function factorTheorem() {
+    const c = pick([1, 2, 3, 4, 5, 6, 7].flatMap((x) => [x, -x]))
+    const f = (v) => `(x ${v > 0 ? M : '+'} ${Math.abs(v)})`
+    return ask(`For a polynomial p(x), p(${num(c)}) = 0. Which of the following must be true about p(x)?`,
+      `${f(c)} is a factor of p(x).`, [`${f(-c)} is a factor of p(x).`, 'x is a factor of p(x).', `When p(x) is divided by ${f(c)}, the remainder is ${num(c)}.`],
+      `If p(${num(c)}) = 0, then x = ${num(c)} is a root, so ${f(c)} is a factor. The remainder on dividing by ${f(c)} is p(${num(c)}) = 0.`)
+  },
+  // 24. Which quadrant holds solutions of a system of inequalities.
+  function quadrantOfSystem() {
+    let m1, b1, m2, b2, quads
+    do {
+      m1 = pick([1, 2, 3, 0.5]); b1 = pick([0.5, 1, 2, -1, -2]); m2 = pick([0.5, 1, 2, -1]); b2 = pick([2, 3, 4, -3])
+      quads = new Set()
+      for (let x = -40; x <= 40; x += 0.5) for (let y = -40; y <= 40; y += 0.5) {
+        if (x === 0 || y === 0 || y > m1 * x + b1 || y < m2 * x + b2) continue
+        quads.add(x > 0 ? (y > 0 ? 'I' : 'IV') : (y > 0 ? 'II' : 'III'))
+      }
+    } while (quads.size !== 1)
+    const q = [...quads][0], line = (m, b) => `${m === 0.5 ? '(1/2)' : coef(m)}x${tail(b).replace('0.5', '1/2')}`
+    return ask(`y ≤ ${line(m1, b1)} and y ≥ ${line(m2, b2)}. If this system of inequalities is graphed in the xy-plane, which quadrant contains solutions?`,
+      `Quadrant ${q}`, ['I', 'II', 'III', 'IV'].filter((x) => x !== q).map((x) => `Quadrant ${x}`),
+      `The solutions lie on or below y = ${line(m1, b1)} and on or above y = ${line(m2, b2)}. That region falls only in Quadrant ${q}.`)
+  },
+  // 25. Where a graph is below the x-axis: f(x) < |f(x)|.
+  function belowAxis() {
+    let xs, ys, f, cands, neg
+    do {
+      xs = [-4, -2, 0, 3, 5]; ys = [r(-1, 2), r(-2, 2), r(-3, -1), r(2, 5), r(-1, 1)]
+      f = (x) => { for (let i = 0; i < 4; i++) if (x >= xs[i] && x <= xs[i + 1]) return ys[i] + ((ys[i + 1] - ys[i]) * (x - xs[i])) / (xs[i + 1] - xs[i]) }
+      cands = [...new Set([...Array(12)].map(() => Math.round((r(-39, 49) / 10) * 10) / 10))]
+      neg = cands.filter((x) => f(x) < -0.2); cands = cands.filter((x) => f(x) > 0.2)
+    } while (!neg.length || cands.length < 3)
+    return ask(`The graph of f, for ${M}4 ≤ x ≤ 5, is made of straight pieces joining ${xs.map((x, i) => pt(x, ys[i])).join(', ')}. For which of these values of x is f(x) < |f(x)|?`,
+      num(neg[0]), cands.slice(0, 3).map(num), `f(x) < |f(x)| only when f(x) is negative, that is, where the graph is below the x-axis. f(${num(neg[0])}) ≈ ${dec(f(neg[0]), 1)}, which is negative. The other values give positive f(x).`)
+  },
+  // 26. Difference of squares with whole numbers.
+  function squaresDiffSmallest() {
+    let N, as
+    do {
+      N = r(15, 96); as = []
+      for (let d = 1; d * d < N; d++) if (N % d === 0 && (d + N / d) % 2 === 0) as.push((d + N / d) / 2)
+    } while (as.length < 2)
+    const small = Math.min(...as), others = as.filter((x) => x !== small)
+    return ask(`If a and b are positive integers and a² ${M} b² = ${N}, what is the smallest possible value of a?`,
+      small, [...others, Math.ceil(Math.sqrt(N))].filter((x) => x !== small),
+      `a² ${M} b² = (a ${M} b)(a + b) = ${N}. Both factors must be even or both odd. Possible values of a are ${as.sort((x, y) => x - y).join(', ')}, and the smallest is ${small}.`, [small - 1, small + 1])
+  },
+  // 27. Vertex of a parabola given in factored form.
+  function parabolaVertex() {
+    let k, h; do { k = pick([2, 3, 4]); h = r(1, 6) } while (!Number.isInteger((2 * h * h) / k))
+    const yv = -(h * h) / k
+    return ask(`The graph of y = (1/${k})x(x ${M} ${2 * h}) crosses the x-axis at x = 0 and x = ${2 * h}. What are the coordinates of its vertex?`,
+      pt(h, yv).replace(/\.5/, '.5'), [pt(h, -h), pt(h, (2 * yv)), pt(h - 1, yv)].filter((x) => x !== pt(h, yv)),
+      `The vertex is halfway between the x-intercepts: x = ${h}. Then y = (1/${k})(${h})(${h} ${M} ${2 * h}) = ${num(yv)}.`, [pt(h, yv - 1), pt(h, yv + 1), pt(h + 1, yv), pt(2 * h, yv)])
+  },
+  // 28. Perimeter of a 30-60-90 triangle.
+  function triangle306090() {
+    const H = 2 * r(2, 10), s = H / 2, l = (H * Math.sqrt(3)) / 2
+    return ask(`In right triangle ABC, the right angle is at A, the hypotenuse BC is ${H}, and angle C is 30°. What is the approximate perimeter of the triangle?`,
+      dec(H + s + l, 1), [dec(2 * H, 1), dec(H + 2 * s, 1), dec(H + s + (H * Math.SQRT2) / 2, 1)],
+      `Opposite 30° is half the hypotenuse: AB = ${s}. The other leg is ${s}√3 ≈ ${dec(l, 2)}. Perimeter ≈ ${H} + ${s} + ${dec(l, 2)} ≈ ${dec(H + s + l, 1)}.`)
+  },
+  // 29. Volume from the areas of three faces.
+  function boxVolume() {
+    const x = r(2, 9), y = r(2, 9), z = r(1, 9), V = x * y * z
+    return ask(`A box has width x, length y and height z. If xy = ${x * y}, yz = ${y * z} and xz = ${x * z}, what is the volume of the box?`,
+      V, [x * y + y * z + x * z, 2 * V, V + 10].filter((p) => p !== V),
+      `(xy)(yz)(xz) = (xyz)² = ${x * y} × ${y * z} × ${x * z} = ${V * V}. The volume is √${V * V} = ${V}.`, [V - 10])
+  },
+  // 30. Perimeter of a sector from its area.
+  function sectorPerimeter() {
+    const [deg, words] = pick([[270, 'a circle with a quarter (90°) slice cut out'], [180, 'a half circle'], [90, 'a quarter circle']]), rad = r(2, 6)
+    const areaK = (deg * rad * rad) / 360, arc = (deg / 360) * 2 * Math.PI * rad
+    const areaText = Number.isInteger(areaK) ? `${areaK}π` : `${frac(deg * rad * rad, 360)}π`
+    return ask(`A sector with centre O and radius r is ${words} (${deg}°). If its area is ${areaText}, what is the approximate perimeter of the sector, including the two radii?`,
+      dec(2 * rad + arc, 1), [dec(arc, 1), dec(rad + arc, 1), dec(2 * rad + 2 * Math.PI * rad, 1)],
+      `Area = (${deg}/360)πr² = ${areaText}, so r = ${rad}. Arc = (${deg}/360) × 2π(${rad}) ≈ ${dec(arc, 2)}. Perimeter = 2(${rad}) + ${dec(arc, 2)} ≈ ${dec(2 * rad + arc, 1)}.`)
+  },
+  // 31. Two people working together.
+  function workTogether() {
+    let A, T, P; do { A = r(2, 8); T = r(1, A - 1); P = (A * T) / (A - T) } while (!Number.isInteger(P * 2))
+    const n1 = pick(NAMES); let n2; do { n2 = pick(NAMES) } while (n2 === n1)
+    return ask(`${n1} needs ${A} hours to paint a fence alone. With ${n2} helping, the job takes ${T} hour${T === 1 ? '' : 's'}. How many hours would ${n2} take to do the job alone?`,
+      dec(P, 1), [A - T, A + T, dec(A / T, 1)].map(String).filter((x) => x !== dec(P, 1)),
+      `Per hour: 1/${A} + 1/p = 1/${T}. So 1/p = 1/${T} ${M} 1/${A} = ${frac(A - T, A * T)}, and p = ${dec(P, 1)} hours.`, [dec(P + 1, 1)])
+  },
+  // 32. Sharing costs.
+  function shareCosts() {
+    let M2, S, B, k, each; do { M2 = pick([10, 12, 15, 20, 25]); S = pick([5, 8, 10, 12, 15]); k = r(1, 3); B = 50 * r(4, 12); each = S + (B + k * S) / M2 } while (!Number.isInteger(each))
+    return ask(`${M2} club members are going on a trip to a park where entry costs $${S} per person. The members share the $${B} cost of a bus and the entry for ${k} adult supervisor${k > 1 ? 's' : ''} who go with them, and each pays their own entry. What is the cost, in dollars, for each member?`,
+      each, [S + B / M2, (B + k * S) / M2, each + S].filter((x) => Number.isInteger(x) && x !== each),
+      `Shared cost: $${B} + ${k} × $${S} = $${B + k * S}, which is $${(B + k * S) / M2} each. Add each member's own entry of $${S}: $${each}.`, [each + 2, each - 2])
+  },
+  // 33. Use a linear function twice.
+  function linearTwice() {
+    const s = pick([-3, -2, 2, 3, -1]), b = r(-4, 5), k = pick([1, 2, -1, 3]), v = s * k + b, m = pick([-2, 2, 3])
+    const ans = s * m * k + b
+    return ask(`The graph of a linear function f passes through (0, ${num(b)}) and (3, ${num(3 * s + b)}). If f(k) = ${num(v)}, what is the value of f(${m === -2 ? `${M}2k` : `${m}k`})?`,
+      num(ans), [num(v), num(m * v), num(ans + s)], `Slope = (${num(3 * s + b)} ${M} ${num(b)})/3 = ${num(s)}, so f(x) = ${coef(s)}x${tail(b)}. f(k) = ${num(v)} gives k = ${num(k)}. Then f(${num(m * k)}) = ${num(ans)}.`, [num(ans - 1)])
+  },
+  // 34. Average equals a percent: find a ratio.
+  function averagePercent() {
+    let m, P, n, top, bot
+    do { m = pick([2, 3, 4]); P = pick([25, 50, 75, 100]); n = pick([2, 4, 6, 8]); top = (2 * P * n) / 100 - 1; bot = m } while (top <= 0 || !Number.isInteger(top * 2))
+    const ans = frac(Math.round(top * 2), bot * 2)
+    return ask(`If the average of ${m}a and b is equal to ${P}% of ${n}b, what is the value of a/b?`, ans,
+      [frac(Math.round(top * 2) + 2, bot * 2), frac(bot * 2, Math.round(top * 2)), frac((2 * P * n) / 100, m)].filter((x) => x !== ans),
+      `(${m}a + b)/2 = ${P / 100} × ${n}b = ${(P * n) / 100}b. So ${m}a + b = ${(2 * P * n) / 100}b, ${m}a = ${dec(top, 2)}b, and a/b = ${ans}.`, [frac(Math.round(top * 2) + 4, bot * 2)])
+  },
+  // 35. Two cylinders with the same volume.
+  function cylinderHeight() {
+    const k = pick([2, 3]), H = pick([9, 10, 12, 16, 18, 20, 36]), h = H / (k * k)
+    return ask(`Two cylinders have the same volume. Cylinder II has ${k === 2 ? 'twice' : 'three times'} the radius of cylinder I. Cylinder I is ${H} tall. How tall is cylinder II?`,
+      dec(h, 2), [dec(H / k, 2), dec(H * k, 2), dec(H * k * k, 2)], `πr²(${H}) = π(${k}r)²h = ${k * k}πr²h, so h = ${H}/${k * k} = ${dec(h, 2)}.`)
+  },
+  // 36. A rational function is undefined where its denominator is 0.
+  function undefinedPoint() {
+    const a = r(1, 6) * pick([1, -1])
+    let p, q; do { p = r(-5, 5); q = r(-5, 5) } while (p === a || q === a || p === -a || q === -a)
+    const B = -(p + q), C = p * q, A = Math.abs(a)
+    const num2 = `x²${B === 0 ? '' : `${B < 0 ? ` ${M} ` : ' + '}${Math.abs(B) === 1 ? '' : Math.abs(B)}x`}${C === 0 ? '' : tail(C)}`
+    const den2 = a > 0 ? `(x + ${A})² ${M} ${4 * A}x` : `(x ${M} ${A})² + ${4 * A}x`
+    return ask(`g(x) = (${num2})/(${den2}). For what value of x is g undefined?`, num(a), [num(-a), num(p), '0'].filter((x) => x !== num(a)),
+      `The denominator is ${den2} = x² ${a > 0 ? M : '+'} ${2 * A}x + ${A * A} = (x ${a > 0 ? M : '+'} ${A})². It is 0 only at x = ${num(a)}, so g is undefined there.`, [num(q)])
+  },
+  // 37 and 38. Compound interest.
+  function interestAnnual() {
+    const P = pick([1000, 2000, 2500, 4000, 5000]), rate = r(2, 8), I = (P * rate) / 100
+    return ask(`Money in a bank account grows by R(t) = P(1 + r/n)^(nt). If $${P.toLocaleString('en-US')} is deposited at ${rate}% annual interest compounded once a year, how many dollars of interest are earned after one year?`,
+      dec(I), [dec(P + I), dec(P * rate), dec(I / 2)], `Interest = P × r = ${P} × ${rate / 100} = ${dec(I)}.`)
+  },
+  function interestQuarterly() {
+    const P = pick([1000, 2000, 2500, 4000, 5000]), rate = r(2, 8), t = pick([1, 2])
+    const q = Math.round(P * (1 + rate / 400) ** (4 * t)), yr = Math.round(P * (1 + rate / 100) ** t), simple = Math.round(P * (1 + (rate * t) / 100))
+    return ask(`Money in a bank account grows by R(t) = P(1 + r/n)^(nt). If $${P.toLocaleString('en-US')} is deposited at ${rate}% annual interest compounded quarterly (4 times a year), what is the balance after ${t} year${t > 1 ? 's' : ''}, to the nearest dollar?`,
+      q, [yr, simple, Math.round(P * (1 + rate / 400) ** t)].filter((x) => x !== q),
+      `n = 4, r = ${rate / 100}: R = ${P}(1 + ${rate / 100}/4)^(4 × ${t}) = ${P}(${1 + rate / 400})^${4 * t} ≈ ${q}.`, [q + 1, q - 1])
+  },
+]
+
+export const MAKERS = [...NO_CALC, ...CALC]
 
 // One new question of every type, in the order of the owner's set.
 export const makeMathQuestions = () => MAKERS.map((make, n) => ({ id: `m${n + 1}-${Math.random().toString(36).slice(2, 7)}`, ...make() }))

@@ -3,23 +3,26 @@ import { Link } from 'react-router-dom'
 import { PageTitle } from '../components/ui'
 import { useAuth } from '../context/AuthContext'
 import { SAT_SAMPLE } from '../data/satSample'
+import { makeSatTest } from '../data/satMath'
 
 // A short practice test. The score is a practice score on the 400 to 1600 scale, worked out from the share of answers right.
-// It is NOT an official SAT score. The questions are samples until the client supplies hers (see src/data/satSample.js).
+// It is NOT an official SAT score. Math questions are made fresh for each test (src/data/satMath.js); reading and writing come from src/data/satSample.js.
 const practiceScore = (right, total) => 400 + Math.round(((right / total) * 1200) / 10) * 10
 
 export default function SatTest() {
   const { user } = useAuth()
+  const [qs, setQs] = useState(() => makeSatTest(SAT_SAMPLE))
   const [i, setI] = useState(0)
   const [picked, setPicked] = useState([])
   const [done, setDone] = useState(false)
-  const total = SAT_SAMPLE.length
-  const q = SAT_SAMPLE[i]
-  const right = picked.filter((a, n) => a === SAT_SAMPLE[n].answer).length
+  const total = qs.length
+  const q = qs[i]
+  const right = picked.filter((a, n) => a === qs[n].answer).length
 
   const choose = (n) => setPicked((p) => { const c = [...p]; c[i] = n; return c })
   const next = () => (i + 1 < total ? setI(i + 1) : setDone(true))
-  const restart = () => { setI(0); setPicked([]); setDone(false) }
+  // A new attempt gets new questions.
+  const restart = () => { setQs(makeSatTest(SAT_SAMPLE)); setI(0); setPicked([]); setDone(false) }
 
   if (done) {
     const score = practiceScore(right, total)
@@ -44,7 +47,7 @@ export default function SatTest() {
           <Link to="/international/sat-classes" className="btn !bg-neutral-900 !text-white">Get SAT training</Link>
         </div>
         <ol className="space-y-3">
-          {SAT_SAMPLE.map((s, n) => (
+          {qs.map((s, n) => (
             <li key={s.id} className="card">
               <p className="text-xs text-neutral-600">{s.section}</p>
               <p className="font-semibold">{s.q}</p>

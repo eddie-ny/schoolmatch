@@ -1,5 +1,5 @@
 // SAT-style math questions (no calculator and calculator sections), made fresh each time the test starts.
-// Each maker below copies the TYPE of one question from the owner's practice tests (test 1 sections 3 and 4, tests 5 and 2 section 3), with new numbers and names,
+// Each maker below copies the TYPE of one question from the owner's practice tests (test 1 sections 3 and 4, tests 2, 3 and 5 section 3), with new numbers and names,
 // so every attempt is different but tests the same skill. The wording is written for this site, not copied.
 // Grid-in (type the answer) questions in the source are multiple choice here, like the rest of the test.
 // Same file in the web app (src/data/satMath.js) and the phone app (mobile/src/lib/satMath.js): keep them identical.
@@ -848,7 +848,154 @@ T2_NOCALC.push(form(T5_NOCALC[8], function solveRatioFormula() {
     'Multiply by m₁: Rm₁ = m₁ + m₂. Then Rm₁ − m₁ = m₂, m₁(R − 1) = m₂, and m₁ = m₂/(R − 1).')
 }))
 
-export const MAKERS = [...NO_CALC, ...CALC, ...T5_NOCALC, ...T2_NOCALC]
+// Practice test 3, section 3 (no calculator), questions 1 to 20.
+const T3_NOCALC = [
+  // 1. Pie chart where a straight line makes two equal angles.
+  function pieChart() {
+    let N, m; do { N = pick([20, 40, 60, 80, 100]); m = 5 * r(1, 4) } while (!Number.isInteger((N * (25 + m)) / 100) || !Number.isInteger((N * m) / 100))
+    const math = (N * (25 + m)) / 100
+    return ask(`${N} students voted for their favourite subject, shown in a pie chart. The Art and Music slices together make a right angle (90°), and Music is ${m}% of the votes. The edge between Art and Music is a straight line through the centre; on the far side it is the edge between Math and Science. Math sits next to Art, opposite Music. How many students voted for Math?`,
+      math, [(N * 25) / 100, (N * (50 - m)) / 100, (N * (25 - m)) / 100].filter((v) => v !== math && v > 0), `The straight line makes equal opposite angles, so the part of Math past the 90° mark matches Music: ${m}%. Math = 25% + ${m}% = ${25 + m}% of ${N} = ${math}.`, [math + 2, math - 2])
+  },
+  // 2. Find an expression without solving for the letter.
+  function expressionWithoutSolving() {
+    const a = r(2, 7), b = r(1, 9), v = r(2, 12), c = v + b, k = r(2, 4), d = r(1, 9)
+    return ask(`If ${a}r + ${b} = ${c}, what is the value of ${k * a}r + ${d}?`, k * v + d, [k * c + d, v + d, k * v].filter((x) => x !== k * v + d),
+      `${a}r = ${c} ${M} ${b} = ${v}. ${k * a}r is ${k} times that: ${k * v}. Add ${d}: ${k * v + d}. There is no need to find r itself.`, [k * v + d + 1])
+  },
+  // 3. Negative exponent.
+  function negativeExponent() {
+    const m = r(2, 9), k = pick([m, r(2, 6)])
+    return ask(`If a⁻² = 1/${m}, what is the value of ${k}a²?`, k * m, [frac(k, m), m, k * k].filter((x) => String(x) !== String(k * m)),
+      `a⁻² = 1/a², so 1/a² = 1/${m} and a² = ${m}. Then ${k}a² = ${k * m}.`, [k * m + 1, k + m])
+  },
+  // 4. Quotient and remainder.
+  function quotientRemainder() {
+    const d = pick([5, 7, 8, 10, 12])
+    return ask(`When a number p is divided by ${d}, the quotient is k and the remainder is r. Which expression gives r?`, `r = p ${M} ${d}k`, [`r = ${d}p ${M} k`, `r = ${d}(k ${M} p)`, `r = ${d}k ${M} p`],
+      `p = ${d}k + r: ${d} goes into p k times, with r left over. So r = p ${M} ${d}k.`)
+  },
+  // 5. Sum of reciprocals with a known product.
+  function reciprocalSum() {
+    let a, b; do { a = r(2, 9); b = r(2, 12) } while (a === b)
+    const P = a * b, S = a + b
+    return ask(`If ${frac(S, P)} = 1/a + 1/b and ab = ${P}, what is the value of a + b?`, S, [P, S + 3, P - S].filter((x) => x !== S && x > 0),
+      `1/a + 1/b = (a + b)/(ab) = (a + b)/${P}. So (a + b)/${P} = ${frac(S, P)} and a + b = ${S}.`, [S + 1, S - 1])
+  },
+  // 6. Width of a rectangle under a parabola.
+  function parabolaRectangle() {
+    const c = r(3, 6), x0 = r(1, c - 1), h = c * c - x0 * x0
+    return ask(`f(x) = ${M}x² + ${c * c}. Rectangle MATH has M and H on the x-axis and A and T on the graph of f. If the side MA is ${h} tall, how long is side AT?`,
+      2 * x0, [x0, c, 2 * c].filter((x) => x !== 2 * x0), `A and T are on the graph at height ${h}: ${M}x² + ${c * c} = ${h}, so x² = ${x0 * x0} and x = ±${x0}. AT goes from x = ${M}${x0} to x = ${x0}: ${2 * x0} long.`, [2 * x0 + 1, 2 * x0 + 2])
+  },
+  // 7. Shaded area under a line through two rectangles.
+  form(T2_NOCALC[14], function areaUnderLineRectangles() {
+    let w, h, L, H, A; do { w = r(2, 6); h = r(1, 4); L = r(4, 12); H = (h * (w + L)) / w; A = ((h + H) / 2) * L } while (!Number.isInteger(H) || !Number.isInteger(A))
+    return ask(`A small rectangle ABED has AB = ${w} along the ground and height AD = ${h}. A large rectangle stands next to it on BC = ${L}. A straight line from A passes through the top of side BE and reaches the top-right corner of the large rectangle. What is the area of the part of the large rectangle below this line?`,
+      A, [L * H, L * h, (L * H) / 2].filter((x) => x !== A), `The line rises ${h} for every ${w} across, so at C (${w + L} from A) it is ${H} high. The region under it is a trapezoid with heights ${h} and ${H} and width ${L}: (${h} + ${H})/2 × ${L} = ${A}.`, [A + 4, A - 4])
+  }),
+  // 8. Infinitely many solutions, another form.
+  form(T5_NOCALC[18], function infinitelyManySum() {
+    const p = r(1, 5), k = r(2, 5), C2 = r(1, 9)
+    return ask(`ax ${M} by = ${k * C2} and ${coef(p)}x + y = ${C2}. If this system has infinitely many solutions, what is a + b?`,
+      num(k * p - k), [num(k * p + k), num(k), num(-(k * p - k))].filter((x) => x !== num(k * p - k)), `The first equation must be ${k} times the second: a = ${k * p} and ${M}b = ${k}, so b = ${M}${k}. a + b = ${num(k * p - k)}.`, [num(k * p - k + 1)])
+  }),
+  // 9. Factors read from a table of values.
+  form(CALC[22], function factorsFromTable() {
+    const xs = [-3, -2, 0, 2, 3, 4], zeros = [...xs].sort(() => Math.random() - 0.5).slice(0, 2)
+    const vals = xs.map((x) => (zeros.includes(x) ? 0 : pick([1, -1]) * r(1, 8)))
+    const f = (v) => `(x ${v > 0 ? M : '+'} ${Math.abs(v)})`, fz = (v) => (v === 0 ? 'x' : f(v))
+    const others = xs.filter((x) => !zeros.includes(x))
+    const stmts = [zeros[0], zeros[1], pick(others)].sort(() => Math.random() - 0.5)
+    const truth = stmts.map((v) => zeros.includes(v))
+    const label = (t) => { const on = ['I', 'II', 'III'].filter((_, i) => t[i]); return on.length === 3 ? 'I, II and III' : `${on.join(' and ')} only` }
+    const right = label(truth)
+    const all = [[1, 0, 0], [0, 1, 0], [0, 0, 1], [1, 1, 0], [1, 0, 1], [0, 1, 1], [1, 1, 1]].map((t) => label(t.map(Boolean)))
+    return ask(`A polynomial g has these values: ${xs.map((x, i) => `g(${num(x)}) = ${num(vals[i])}`).join(', ')}. Which of these must be true? I. ${fz(stmts[0])} is a factor of g(x). II. ${fz(stmts[1])} is a factor of g(x). III. ${fz(stmts[2])} is a factor of g(x).`,
+      right, all.filter((x) => x !== right).sort(() => Math.random() - 0.5).slice(0, 3), `(x ${M} c) is a factor exactly when g(c) = 0. g is 0 at x = ${num(zeros[0])} and x = ${num(zeros[1])} only, so the true statements are ${right.replace(' only', '')}.`)
+  }),
+  // 10. Inverse variation.
+  function inverseVariation() {
+    const n = pick([1, 2]), x1 = r(1, 4), y1 = r(2, 12), k = y1 * x1 ** n, x2 = x1 * r(2, 5), y2 = frac(k, x2 ** n)
+    const what = n === 1 ? 'x' : 'x²'
+    return ask(`y is inversely proportional to ${what}, and y = ${y1} when x = ${x1}. What is y when x = ${x2}?`, y2,
+      [String(y1 * (x2 / x1) ** n), frac(k, x2), String(k)].filter((v) => v !== y2), `Inversely proportional means y × ${what} stays the same: ${y1} × ${x1 ** n} = ${k}. At x = ${x2}: y = ${k}/${x2 ** n} = ${y2}.`, [frac(k + 1, x2 ** n), frac(k, x2 ** n + 1)])
+  },
+  // 12. Isosceles right triangle on a grid.
+  function isoscelesRightTriangle() {
+    const x1 = r(-4, 2), y1 = r(-4, 2), x2 = x1 + r(3, 9), k = y1 + (x2 - x1)
+    return ask(`Triangle PQR has P(${num(x1)}, ${num(y1)}), R(${num(x2)}, ${num(y1)}) and Q(${num(x2)}, k), with k > ${num(y1)}. It is an isosceles right triangle with the right angle at R. What is k?`,
+      num(k), [num(x2 - x1), num(x2), num(k + 1)].filter((v) => v !== num(k)), `PR is flat and ${x2 - x1} long. The right angle is at R, so the two equal sides are PR and RQ: RQ = ${x2 - x1}, so k = ${num(y1)} + ${x2 - x1} = ${num(k)}.`, [num(k - 1), num(k + 2)])
+  },
+  // 13. Divide complex numbers.
+  form(NO_CALC[1], function complexDivide() {
+    const n = 2 * r(1, 5), plus = pick([true, false]), askA = pick([true, false])
+    const a = plus ? n / 2 : -n / 2, b = n / 2
+    return ask(`${n}i/(1 ${plus ? '+' : M} i) = a + bi. If i = √${M}1 and a and b are real constants, what is the value of ${askA ? 'a' : 'b'}?`,
+      num(askA ? a : b), [num(askA ? -a : -b), num(n), num(askA ? b : a)].filter((v) => v !== num(askA ? a : b)),
+      `Multiply top and bottom by (1 ${plus ? M : '+'} i): ${n}i(1 ${plus ? M : '+'} i)/2 = (${n}i ${plus ? '+' : M} ${n})/2 = ${num(a)} + ${b}i. So a = ${num(a)} and b = ${b}.`, [num((askA ? a : b) + 1), num((askA ? a : b) + 2)])
+  }),
+  // 14. A fraction equation that becomes a quadratic.
+  function fractionQuadratic() {
+    let h, b, D; do { h = r(1, 3); b = r(1, 6); D = h * h + b } while (Number.isInteger(Math.sqrt(D)))
+    const sol = (p, d) => `x = ${p} ± √${d}`
+    return ask(`1/x = x/(${coef(2 * h)}x + ${b}). What are the solutions to this equation?`, sol(h, D),
+      [sol(num(-h), D), sol(h, D + 1), `x = (${h} ± √${D})/2`],
+      `Cross-multiply: x² = ${2 * h}x + ${b}, so x² ${M} ${2 * h}x ${M} ${b} = 0. Complete the square: (x ${M} ${h})² = ${D}, so x = ${h} ± √${D}.`)
+  },
+  // 15. What changes when one variable changes, as statements.
+  form(NO_CALC[17], function formulaStatements() {
+    const v = pick([2, 3, 4]), u = pick([3, 5, 7, 9, 11].filter((x) => gcd(x, v) === 1)), c = r(10, 60)
+    const options = [[`When K goes up by 1, P goes up by ${c}.`, false], [`When K goes up by ${v}, P goes up by ${u}.`, true], [`When K goes up by ${2 * v}, P goes up by ${2 * u}.`, true],
+      [`When K goes up by 1, P goes up by ${u}.`, false], [`When K goes up by ${u}, P goes up by ${v}.`, false]]
+    let st; do { st = [...options].sort(() => Math.random() - 0.5).slice(0, 3) } while (!st.some((s) => s[1]))
+    const label = (t) => { const on = ['I', 'II', 'III'].filter((_, i) => t[i]); return on.length === 3 ? 'I, II and III' : `${on.join(' and ')} only` }
+    const right = label(st.map((s) => s[1]))
+    const all = [[1, 0, 0], [0, 1, 0], [0, 0, 1], [1, 1, 0], [1, 0, 1], [0, 1, 1], [1, 1, 1]].map((t) => label(t.map(Boolean)))
+    return ask(`P = (${u}/${v})K + ${c}. Which of these must be true? I. ${st[0][0]} II. ${st[1][0]} III. ${st[2][0]}`,
+      right, all.filter((x) => x !== right).sort(() => Math.random() - 0.5).slice(0, 3), `P changes by ${u}/${v} of the change in K, so K up by ${v} gives P up by ${u}, and K up by ${2 * v} gives P up by ${2 * u}. The ${c} never changes anything. True: ${right.replace(' only', '')}.`)
+  }),
+  // 16. The other solution of a quadratic, another form.
+  form(T2_NOCALC[11], function otherSolution() {
+    let s, t; do { s = r(2, 9); t = r(1, 9) } while (s === t)
+    return ask(`x² ${M} ax = ${M}${s * t}. This equation has two real solutions. If one of them is ${s} and a is a constant, what is the other solution?`,
+      t, [num(-t), s + t, s * t], `Put x = ${s}: ${s * s} ${M} ${s}a = ${M}${s * t}, so a = ${s + t}. Then x² ${M} ${s + t}x + ${s * t} = (x ${M} ${s})(x ${M} ${t}), and the other solution is ${t}.`, [t + 1])
+  }),
+  // 17. A fraction equation with a whole-number answer.
+  function fractionLinear() {
+    const p = r(1, 3), s = r(1, 6), c = r(2, 9), d = r(1, 9), tot = (c + d) * s, A = r(1, tot - 1), B = tot - A, x = p + s
+    return ask(`${A}/(x ${M} ${p}) ${M} ${c} = ${d} ${M} ${B}/(x ${M} ${p}). If x > ${p}, what is the solution?`, x, [s, x + 1, tot].filter((v) => v !== x),
+      `Collect the fractions: ${tot}/(x ${M} ${p}) = ${c + d}. So x ${M} ${p} = ${s} and x = ${x}.`, [x + 2])
+  },
+  // 18. Parallel lines and a triangle between them.
+  form(CALC[2], function parallelTriangle() {
+    const t = 2 * r(20, 50), a = (180 - t) / 2, b = 180 - a
+    return ask(`Lines ℓ and m are parallel. A triangle has its top corner on ℓ and its other two corners on m. At the top corner, the angle inside the triangle and the angle between the right side and line ℓ are equal; call each a°. The inside angle at the bottom-left corner is ${t}°. What is b, the angle outside the triangle at the bottom-right corner, between the right side and line m?`,
+      b, [a, t, 180 - t].filter((x) => x !== b), `The angle between the left side and ℓ equals the ${t}° angle (alternate angles). The three angles on ℓ add to 180: ${t} + 2a = 180, so a = ${a}. The inside bottom-right angle is 180 ${M} ${t} ${M} ${a} = ${a}, so b = 180 ${M} ${a} = ${b}.`, [b + 10, b - 10])
+  }),
+  // 19. Sharing items among guests.
+  function partyShare() {
+    const sets = [[8, 4, 6], [2, 3, 4], [3, 4, 6], [4, 5, 10], [2, 5, 10], [3, 6, 9]]
+    const [a, b, c] = pick(sets), L = [a, b, c].reduce((x, y) => (x * y) / gcd(x, y)), P = L * r(2, 8), T = P / a + P / b + P / c
+    return ask(`At a party there was one drink for every ${a} people, one bag of snacks for every ${b} people and one cake for every ${c} people. There were ${T} drinks, bags and cakes in all. How many people were at the party?`,
+      P, [T * 2, Math.round((T * (a + b + c)) / 3), P + L].filter((v) => v !== P), `With P people: P/${a} + P/${b} + P/${c} = ${T}. Over ${L}: (${L / a} + ${L / b} + ${L / c})P/${L} = ${T}, so P = ${T} × ${L}/${L / a + L / b + L / c} = ${P}.`, [P - L])
+  },
+  // 20. A triangle inside a trapezoid.
+  function trapezoidTriangle() {
+    const k = r(2, 5)
+    return ask(`In trapezoid ABCD, BC is the short top side and AD the long bottom side, with AD = ${k} × BC. M is the midpoint of AD. What fraction of the trapezoid's area is triangle BMC?`,
+      `1/${k + 1}`, [`1/${k}`, `1/${2 * (k + 1)}`, `1/${k + 2}`], `With height h: triangle BMC = (1/2) × BC × h. Trapezoid = (1/2)(BC + ${k}BC)h = ${frac(k + 1, 2)} × BC × h. The fraction is (1/2)/(${frac(k + 1, 2)}) = 1/${k + 1}.`)
+  },
+]
+// 11. Vertex of a parabola from its factors. (Added here because it uses CALC, after the list above.)
+T3_NOCALC.push(form(CALC[26], function vertexFromFactors() {
+  let p, q; do { p = r(1, 8); q = r(1, 8) } while ((p - q) % 2)
+  const k = pick([1, 2, 3, -1, -2])
+  return ask(`y = ${coef(k)}(x ${M} ${p})(x + ${q}). The graph of this equation, where the number in front is a constant, has its vertex at (a, b). What is a?`,
+    num((p - q) / 2), [num((p + q) / 2), num((q - p) / 2), num(p - q)].filter((v) => v !== num((p - q) / 2)), `The graph crosses the x-axis at x = ${p} and x = ${M}${q}. The vertex is halfway: a = (${p} + (${M}${q}))/2 = ${num((p - q) / 2)}.`, [num((p - q) / 2 + 1)])
+}))
+
+export const MAKERS = [...NO_CALC, ...CALC, ...T5_NOCALC, ...T2_NOCALC, ...T3_NOCALC]
 
 // Types: each one is a list of forms. A form made with form(name, ...) joins the type of the maker with that name.
 export const TYPES = (() => {

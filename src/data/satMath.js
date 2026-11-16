@@ -1,5 +1,5 @@
 // SAT-style math questions (no calculator and calculator sections), made fresh each time the test starts.
-// Each maker below copies the TYPE of one question from the owner's practice tests (test 1 sections 3 and 4, test 5 section 3), with new numbers and names,
+// Each maker below copies the TYPE of one question from the owner's practice tests (test 1 sections 3 and 4, tests 5 and 2 section 3), with new numbers and names,
 // so every attempt is different but tests the same skill. The wording is written for this site, not copied.
 // Grid-in (type the answer) questions in the source are multiple choice here, like the rest of the test.
 // Same file in the web app (src/data/satMath.js) and the phone app (mobile/src/lib/satMath.js): keep them identical.
@@ -47,7 +47,9 @@ function choices(right, wrong, spare = []) {
   const order = [0, 1, 2, 3].sort(() => Math.random() - 0.5)
   return { options: order.map((i) => out[i]), answer: order.indexOf(0) }
 }
-const ask = (q, right, wrong, why, spare) => ({ section: 'Math', q, ...choices(String(right), wrong.map(String), (spare || []).map(String)), why })
+// Numbers are shown with a real minus sign, like the rest of the text.
+const show = (v) => (typeof v === 'number' ? num(v) : String(v))
+const ask = (q, right, wrong, why, spare) => ({ section: 'Math', q, ...choices(show(right), wrong.map(show), (spare || []).map(show)), why })
 
 const NAMES = ['Ama', 'Kofi', 'Esi', 'Yaw', 'Abena', 'Kwame', 'Akosua', 'Kojo', 'Efua', 'Nana']
 
@@ -703,17 +705,171 @@ const T5_NOCALC = [
   },
 ]
 
-export const MAKERS = [...NO_CALC, ...CALC, ...T5_NOCALC]
+// Another form (different story or different thing asked) of a type that is already in the list. sameAs is that type's
+// first maker itself, not its name: the live build shortens function names, so names cannot be matched there.
+// Forms of one type are grouped, so a test never asks the same skill twice and students do not learn one sentence by heart.
+const form = (sameAs, make) => Object.assign(make, { sameAs })
+
+// Practice test 2, section 3 (no calculator), questions 1 to 20.
+const T2_NOCALC = [
+  // 1. Substitute step by step.
+  function substitutionChain() {
+    const a = r(2, 5), c = r(2, 15), d = r(1, 6), e = r(1, 6), y = e + d, x = c + a * y
+    return ask(`If x ${M} ${a}y = ${c}, y = z + ${d} and z = ${e}, what is the value of x?`, x, [c + a * e, c - a * y, x - a].filter((v) => v !== x),
+      `z = ${e}, so y = ${e} + ${d} = ${y}. Then x = ${c} + ${a}(${y}) = ${x}.`, [x + 2])
+  },
+  // 2. A system with exactly one solution.
+  form(NO_CALC[8], function oneSolutionSystem() {
+    const p = r(1, 4), q = p * r(2, 4), C1 = r(2, 9), C2 = r(2, 9)
+    const pair = (a, b) => `a = ${a} and b = ${b}`, ks = [1, 2, 3, 4].sort(() => Math.random() - 0.5)
+    let a, b; do { a = r(1, 6); b = r(1, 12) } while (a * q === b * p)
+    return ask(`${coef(p)}x + ${q}y = ${C1} and ax + by = ${C2}. If this system has exactly one solution, which could be the values of a and b?`,
+      pair(a, b), ks.slice(0, 3).map((k) => pair(k * p, k * q)), `The system has exactly one solution unless the lines are parallel, which happens when a/b = ${p}/${q}. The pairs with b = ${q / p}a are parallel. Only ${pair(a, b)} breaks that pattern.`)
+  }),
+  // 3. Break even: cost equals revenue.
+  form(T5_NOCALC[11], function breakEven() {
+    const c = 10 * r(5, 30), price = c + 10 * r(5, 30), p = 10 * r(20, 200), F = (price - c) * p
+    return ask(`A company makes and sells p phones. Making them costs ${F.toLocaleString('en-US')} + ${c}p dollars, and selling them brings in ${price}p dollars. For what value of p does the money brought in equal the cost?`,
+      p, [Math.round(F / price), Math.round(F / c), p + 100].filter((v) => v !== p), `${price}p = ${F} + ${c}p, so ${price - c}p = ${F} and p = ${p}.`, [p - 50])
+  }),
+  // 4. Square with a reciprocal, the other way round.
+  form(T5_NOCALC[2], function reciprocalSquareMinus() {
+    const k = r(1, 3), kx = k === 1 ? '1/a' : `${k}/a`, k2 = k === 1 ? '1/a²' : `${k * k}/a²`
+    return ask(`Which of the following is equal to (a + ${kx})² ${M} ${2 * k}?`, `a² + ${k2}`, [`a² + ${k2} ${M} ${2 * k}`, `a² ${M} ${2 * k}a + ${k2}`, `a² + ${2 * k} + ${k2}`],
+      `(a + ${kx})² = a² + ${2 * k} + ${k2}. Taking away ${2 * k} leaves a² + ${k2}.`)
+  }),
+  // 5. Square-root equation.
+  function rootEquation() {
+    const p = r(1, 9), k = r(2, 6)
+    return ask(`√(a² ${M} ${coef(p)}a + ${k * k}) = ${k}. If a is a positive number, what is the value of a?`, p, [k, k * k, p + k].filter((v) => v !== p),
+      `Square both sides: a² ${M} ${coef(p)}a + ${k * k} = ${k * k}, so a² ${M} ${coef(p)}a = 0 and a(a ${M} ${p}) = 0. a is positive, so a = ${p}.`, [p + 1, p + 2])
+  },
+  // 6. A point on the line perpendicular to another.
+  form(NO_CALC[14], function perpendicularPoint() {
+    let y0, x0, p, k; do { y0 = r(2, 8); x0 = r(2, 9); p = r(1, 6); k = (-p * x0) / y0 } while (!Number.isInteger(k * 2) || x0 === y0)
+    return ask(`In the xy-plane, line m passes through (0, ${y0}) and (${x0}, 0). Line ℓ passes through the origin and is perpendicular to line m. The point (${M}${p}, k) is on line ℓ. What is the value of k?`,
+      num(k), [num((-p * y0) / x0 % 1 === 0 ? (-p * y0) / x0 : -p), num(-k), num(-p)].filter((v) => v !== num(k)),
+      `Line m has slope ${M}${y0}/${x0}, so line ℓ has slope ${x0}/${y0}: y = (${x0}/${y0})x. At x = ${M}${p}, k = ${num(k)}.`, [num(k - 1), num(k + 1)])
+  }),
+  // 7. A chain of equal expressions, then an average.
+  function chainAverage() {
+    const n = pick([1, 2, 3]), m = n * r(2, 4), sum = n + m + n * m
+    const avg = (() => { const g = gcd(sum, 3 * n); const t = sum / g, b = (3 * n) / g; return b === 1 ? `${t}a` : `${t}a/${b}` })()
+    const wrong = (s, d) => { const g = gcd(s, d); return d / g === 1 ? `${s / g}a` : `${s / g}a/${d / g}` }
+    return ask(`If ${m}a = ${n === 1 ? '' : n}b = c, what is the average (arithmetic mean) of a, b and c in terms of a?`, avg,
+      [wrong(n + m + m, 3 * n), wrong(m, 1), wrong(sum, n)].filter((v) => v !== avg), `b = ${frac(m, n)}a and c = ${m}a. Their sum is a + ${frac(m, n)}a + ${m}a = ${frac(sum, n)}a. Dividing by 3 gives ${avg}.`, [wrong(sum + 3, 3 * n), wrong(sum + 6, 3 * n), `${m + n}a`, `${sum}a`, wrong(sum - 3, 3 * n)])
+  },
+  // 8. Area of a regular hexagon.
+  function hexagonArea() {
+    const s = 2 * r(1, 5), k = (3 * s * s) / 2
+    return ask(`A regular hexagon has sides of length ${s}. What is its area?`, `${k}√3`, [String(k), `${s * s}√3`, `${(3 * s * s) / 4}√3`],
+      `A regular hexagon is 6 equilateral triangles of side ${s}. Each has area (√3/4)(${s * s}) = ${(s * s) / 4}√3, so the hexagon has area ${k}√3.`)
+  },
+  // 9. A line through the point where a parabola crosses the x-axis.
+  function lineThroughRoot() {
+    const c = r(1, 5), m = r(1, 4)
+    return ask(`The graphs of y = x² ${M} ${c * c} and y = ${coef(m)}x + b meet at two points. One of them is where the parabola crosses the negative x-axis. What is the value of b?`,
+      m * c, [c, m, c * c].filter((v) => v !== m * c), `The parabola crosses the negative x-axis at x = ${M}${c}, the point (${M}${c}, 0). It is on the line: 0 = ${m}(${M}${c}) + b, so b = ${m * c}.`, [m * c + 1, m * c + 2])
+  },
+  // 10. Combine two fractions.
+  function combineFractions() {
+    const a = r(1, 4), half = a === 1 ? '1/2' : `1/${2 * a}`, d = `x² ${M} ${a * a}`
+    return ask(`Which of the following is equal to (${half})(1/(x ${M} ${a}) ${M} 1/(x + ${a}))?`, `1/(${d})`, [`(${half})(1/(${d}))`, `${M}2/(${d})`, `${M}2x/(${d})`],
+      `1/(x ${M} ${a}) ${M} 1/(x + ${a}) = ((x + ${a}) ${M} (x ${M} ${a}))/(${d}) = ${2 * a}/(${d}). Times ${half} gives 1/(${d}).`)
+  },
+  // 11. Solve a formula that turns into a quadratic.
+  function cylinderSurface() {
+    const rr = r(1, 6), h = r(1, 8), S = 2 * rr * rr + 2 * rr * h
+    return ask(`The surface area of a cylinder with radius r and height h is S = 2πr² + 2πrh. If the surface area is ${S}π and the height is ${h}, what is r?`,
+      rr, [rr + 1, h, Math.round(S / (2 * h))].filter((v) => v !== rr), `2πr² + ${2 * h}πr = ${S}π. Divide by 2π: r² + ${h}r ${M} ${S / 2} = 0, which is (r ${M} ${rr})(r + ${rr + h}) = 0. r is positive, so r = ${rr}.`, [rr + 2])
+  },
+  // 13. Knowing one root gives the other.
+  function otherRoot() {
+    let p, q; do { p = pick([1, 2, 3, 4, 5]); q = r(-7, 7) } while (q === 0 || q === p || q === -p)
+    const c = p * q
+    return ask(`f(x) = x² + ax${tail(c)}. If f(${p}) = 0, which of the following must be true?`, `f(${num(q)}) = 0`, [`f(${num(-q)}) = 0`, `f(${num(-p)}) = 0`, 'f(0) = 0'],
+      `f(${p}) = 0 gives ${p * p} + ${p}a${tail(c)} = 0, so a = ${num(-(p + q))}. Then f(x) = (x ${M} ${p})(x ${q < 0 ? '+' : M} ${Math.abs(q)}), so f(${num(q)}) = 0 too.`)
+  },
+  // 14. Two complex numbers that are equal.
+  form(NO_CALC[1], function equalComplex() {
+    let p, q, s, t, a; do { p = r(2, 5); q = r(2, 5); s = r(-6, 6); a = r(-5, 5); t = q * a + s } while (a === 0 || t === 0 || s === 0)
+    const b = p * a
+    return ask(`${p}a + (${q}a${tail(s)})i = b ${t < 0 ? M : '+'} ${Math.abs(t)}i. If i = √${M}1 and a and b are real constants, what is the value of b?`,
+      num(b), [num(a), num(-b), num(t)].filter((v) => v !== num(b)), `The imaginary parts match: ${q}a${tail(s)} = ${num(t)}, so a = ${num(a)}. The real parts match: b = ${p}a = ${num(b)}.`, [num(b + p)])
+  }),
+  // 15. Turn a story about a mistake into an equation.
+  function mistakeEquation() {
+    const n = r(8, 12), m = n - r(1, 3), d = r(2, 9), name = pick(NAMES)
+    return ask(`${name} wanted the average of ${n} test scores but divided their correct total S by ${m} by mistake. The result was ${d} more than it should have been. Which equation can be used to find S?`,
+      `S/${m} = S/${n} + ${d}`, [`S/${n} = S/${m} + ${d}`, `${n}S = ${m}S + ${d}`, `(S + ${d})/${n} = S/${m}`],
+      `The correct average is S/${n}. The wrong one is S/${m}, which is ${d} bigger: S/${m} = S/${n} + ${d}.`)
+  },
+  // 16. Area of a trapezoid under a line.
+  function areaUnderLine() {
+    const q = pick([2, 3, 4]), p = 1, b = r(2, 8), X = q * r(2, 5), top = b + (p * X) / q, A = ((b + top) / 2) * X
+    return ask(`Line m has slope 1/${q} and crosses the y-axis at E(0, ${b}). D is the point (${X}, 0), and C is the point on line m straight above D. What is the area of the four-sided shape OECD, where O is the origin?`,
+      dec(A), [dec(b * X), dec(top * X), dec(A / 2)].filter((v) => v !== dec(A)), `C is at x = ${X}, so its y is ${b} + ${X}/${q} = ${top}. OECD is a trapezoid with parallel sides ${b} and ${top} and width ${X}: area = (${b} + ${top})/2 × ${X} = ${dec(A)}.`, [dec(A + 6)])
+  },
+  // 17. Two savings plans meet.
+  form(T5_NOCALC[11], function savingsEqual() {
+    const n1 = pick(NAMES); let n2; do { n2 = pick(NAMES) } while (n2 === n1)
+    const w = r(5, 30), s1 = r(3, 10), s2 = s1 + r(1, 6), b2 = 5 * r(1, 10), b1 = b2 + (s2 - s1) * w
+    return ask(`${n1} has saved ${b1} dollars and saves ${s1} dollars a week. ${n2} has saved ${b2} dollars and saves ${s2} dollars a week. After how many weeks will they have saved the same amount?`,
+      w, [b1 - b2, Math.round((b1 + b2) / (s1 + s2)), w + 5].filter((v) => v !== w), `${b1} + ${s1}w = ${b2} + ${s2}w, so ${s2 - s1}w = ${b1 - b2} and w = ${w}.`, [w + 2, w - 2])
+  }),
+  // 18. True for all x, another form.
+  form(T5_NOCALC[17], function zeroCoefficientsPlus() {
+    const p = r(2, 9), q = r(2, 9), s = r(1, 6)
+    return ask(`(a ${M} ${p})x² + (b ${M} ${q})x + c + ${s} = 0. In this equation a, b and c are constants. If it is true for all values of x, what is a + b + c?`,
+      p + q - s, [p + q + s, p + q, p - q - s].filter((v) => v !== p + q - s), `Each part must be 0: a = ${p}, b = ${q}, c = ${M}${s}. So a + b + c = ${p + q - s}.`, [p + q - s + 1])
+  }),
+  // 19. Arc length in radians.
+  function arcLength() {
+    const d = pick([2, 3, 4, 5, 6, 8, 10, 12]), n = pick([1, 1, 2, 3].filter((x) => gcd(x, d) === 1)), rad = r(2, 12)
+    const L = frac(rad * n, d), angle = n === 1 ? `π/${d}` : `${n}π/${d}`
+    return ask(`In a circle with centre O and radius r, the angle AOB measures ${angle} radians. If the minor arc AB is ${L === '1' ? '' : L.includes('/') ? `(${L})` : L}π long, what is r?`,
+      rad, [Math.round((rad * n) / d) || rad + 3, rad * 2, d].filter((v) => v !== rad), `Arc = r × angle, so ${L}π = r × ${angle}, and r = ${rad}.`, [rad + 1, rad - 1])
+  },
+  // 20. A two-way table from fractions and a ratio.
+  function twoWayTable() {
+    let T, B, G, O, gy, go, bo, fb, p, q, g
+    do {
+      T = 10 * r(4, 12); fb = pick([[1, 2], [2, 5], [3, 5], [4, 7], [3, 7], [1, 3], [2, 3]]); [p, q] = pick([[1, 2], [2, 3], [1, 3], [3, 2], [2, 5]]); g = pick([[1, 2], [2, 3], [1, 3], [3, 4]])
+      B = (T * fb[0]) / fb[1]; G = T - B; O = (T * p) / (p + q); gy = (G * g[0]) / g[1]; go = G - gy; bo = O - go
+    } while (![B, O, gy].every(Number.isInteger) || bo < 1 || bo > B)
+    return ask(`A class has ${T} students. ${fb[0]}/${fb[1]} of them are boys, and the ratio of students aged 10 or older to students under 10 is ${p}:${q}. If ${g[0]}/${g[1]} of the girls are under 10, how many boys are 10 or older?`,
+      bo, [O, go, B - bo].filter((v) => v !== bo), `Boys: ${B}, girls: ${G}. Aged 10 or older: ${T} × ${p}/${p + q} = ${O}. Girls under 10: ${gy}, so girls 10 or older: ${go}. Boys 10 or older: ${O} ${M} ${go} = ${bo}.`, [bo + 2, bo - 1])
+  },
+]
+// 12. Solve a formula for one letter, another form. (Kept apart because the list above is in question order.)
+T2_NOCALC.push(form(T5_NOCALC[8], function solveRatioFormula() {
+  return ask('R = (m₁ + m₂)/m₁. Which of the following gives m₁ in terms of R and m₂?', 'm₁ = m₂/(R − 1)',
+    ['m₁ = m₂/R', 'm₁ = (R − 1)/m₂', 'm₁ = (m₂ − R)/R'],
+    'Multiply by m₁: Rm₁ = m₁ + m₂. Then Rm₁ − m₁ = m₂, m₁(R − 1) = m₂, and m₁ = m₂/(R − 1).')
+}))
+
+export const MAKERS = [...NO_CALC, ...CALC, ...T5_NOCALC, ...T2_NOCALC]
+
+// Types: each one is a list of forms. A form made with form(name, ...) joins the type of the maker with that name.
+export const TYPES = (() => {
+  const groups = new Map()
+  for (const m of MAKERS) if (!m.sameAs) groups.set(m, [m])
+  for (const m of MAKERS) if (m.sameAs) {
+    if (!groups.has(m.sameAs)) throw new Error('A form points at a maker that is not a type')
+    groups.get(m.sameAs).push(m)
+  }
+  return [...groups.values()]
+})()
 
 // One new question of every type, in the order of the owner's set.
-export const makeMathQuestions = () => MAKERS.map((make, n) => ({ id: `m${n + 1}-${Math.random().toString(36).slice(2, 7)}`, ...make() }))
+export const makeMathQuestions = () => TYPES.map((forms, n) => ({ id: `m${n + 1}-${Math.random().toString(36).slice(2, 7)}`, ...pick(forms)() }))
 
-// How many math questions one test asks. Each test picks this many different types at random, each with new numbers.
+// How many math questions one test asks. Each test picks this many different types at random, then one form of each, with new numbers.
 export const MATH_PER_TEST = 10
 
 // A full short test: random math types (kept in the source order), then the reading and writing questions from the sample set.
 export function makeSatTest(sample) {
-  const types = [...MAKERS.keys()].sort(() => Math.random() - 0.5).slice(0, MATH_PER_TEST).sort((a, b) => a - b)
-  const math = types.map((n) => ({ id: `m${n + 1}-${Math.random().toString(36).slice(2, 7)}`, ...MAKERS[n]() }))
+  const types = [...TYPES.keys()].sort(() => Math.random() - 0.5).slice(0, MATH_PER_TEST).sort((a, b) => a - b)
+  const math = types.map((n) => ({ id: `m${n + 1}-${Math.random().toString(36).slice(2, 7)}`, ...pick(TYPES[n])() }))
   return [...math, ...sample.filter((q) => q.section !== 'Math')]
 }

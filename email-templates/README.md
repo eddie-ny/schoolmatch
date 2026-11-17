@@ -15,6 +15,6 @@ For each: set the subject, open the Source tab, delete what is there, paste the 
 Keep the `{{ .Token }}` and `{{ .ConfirmationURL }}` parts exactly as written. Supabase fills them in.
 Then send yourself a test (sign up with a spare email, and use "Forgot password").
 
-## Zoho Mail signature
-Zoho Mail > Settings > Signatures > New signature > Insert HTML (the `</>` button).
-Paste zoho-signature.html, change YOUR NAME and YOUR ROLE, Save, and set it as the default for the mailbox.
+## Email signature (team mailboxes)
+email-signature.html works in any mail app that accepts an HTML signature (Gmail, Outlook, Apple Mail and others).
+Change YOUR NAME and YOUR ROLE before using it.

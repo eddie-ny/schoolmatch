@@ -103,12 +103,15 @@ export default function Layout() {
       <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:bg-white focus:p-3 focus:m-2 focus:rounded-lg focus:font-semibold">Skip to content</a>
       <header className="border-b border-neutral-200/70 bg-white/90 backdrop-blur sticky top-0 z-20">
         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-          <Link to="/" className="inline-flex flex-col justify-center min-h-11 leading-none" aria-label={side ? `${APP_NAME} ${side}, back to the start page` : `${APP_NAME} home`}>
-            <span className="font-heading font-bold text-xl">
-  <span className="text-brand-orange">Jam</span>
-  <span className="text-brand-green">ba</span>
-</span>
-            {side && <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500 mt-0.5">{side === 'local' ? 'Local' : 'International'}</span>}
+          <Link to="/" className="inline-flex items-center gap-2 min-h-11 leading-none" aria-label={side ? `${APP_NAME} ${side}, back to the start page` : `${APP_NAME} home`}>
+            <img src="/favicon.svg" alt="" width="32" height="32" className="w-8 h-8 rounded-lg shrink-0" />
+            <span className="inline-flex flex-col justify-center">
+              <span className="font-heading font-bold text-xl">
+                <span className="text-brand-orange">Jam</span>
+                <span className="text-brand-green">ba</span>
+              </span>
+              {side && <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500 mt-0.5">{side === 'local' ? 'Local' : 'International'}</span>}
+            </span>
           </Link>
 
           <nav className="hidden lg:flex items-center gap-6 text-sm font-medium whitespace-nowrap mx-6">

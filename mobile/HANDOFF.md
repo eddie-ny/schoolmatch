@@ -121,3 +121,10 @@ Rebuild for free in about a minute: `pip install "graphifyy[sql]" --break-system
 
 ## 15. Commit rules
 Commit messages end with: `Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>` and the `Claude-Session:` line given for the session. Web fixes go through a worktree on `main` (`git push origin HEAD:main`); mobile work goes to `mobile`.
+
+## Canada (2026-11-16/17)
+- step210 (applied): 78 Canadian public universities (federated colleges, UQ network office and private members left out).
+- step211 (applied): 8,255 programs from each school's official site (4,619 bachelor's, 3,121 master's, 515 graduate certificates/diplomas), verified=false, intl_source_url set, cities set. Université de Montréal has 0 programs (its list needs a real browser).
+- step212 (OWNER TO RUN): admission_info for 78 schools, English/SAT/WASSCE minimums on undergraduate programs (only fills empty fields), 241 scholarships (1 Full: U of T Pearson; rest Partial or Not stated). Past deadlines dropped; day-month-only deadlines kept in award_note, not given a year.
+- Weak spots: degree types inferred from faculty at ~15 schools (Waterloo, Lakehead, Regina, UVic, Carleton, UPEI...); thin admission info for UQAC, TÉLUQ, UNBC; RMC is military-only (Canadian citizens/PR).
+- Owner rule from now: hand SQL files to the owner to run; run only when asked.

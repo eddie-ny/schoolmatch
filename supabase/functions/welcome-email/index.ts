@@ -38,18 +38,21 @@ function html(first: string, trial: boolean, minor: boolean) {
 <td style="vertical-align:middle;padding-left:12px;font-family:Poppins,Inter,Segoe UI,Helvetica,Arial,sans-serif;font-size:24px;font-weight:700"><span style="color:#FFB02E">Jam</span><span style="color:#8DB51A">ba</span></td>
 </tr></table></td></tr>
 <tr><td style="padding:16px 32px 28px;font-size:16px;line-height:1.6">
-<h1 style="margin:0 0 12px;font-family:Poppins,Segoe UI,Helvetica,Arial,sans-serif;font-size:22px;color:#1F1F1F">Welcome to Jamba${first ? `, ${esc(first)}` : ''}!</h1>
-<p style="margin:0 0 12px">Thank you for joining. Your account is ready.</p>
-<p style="margin:0 0 8px">Here is how to get the most from it:</p>
+<h1 style="margin:0 0 18px;font-family:Poppins,Segoe UI,Helvetica,Arial,sans-serif;font-size:30px;line-height:1.25;color:#1F1F1F">Welcome to Jamba${first ? `, ${esc(first)}` : ''}! &#127881;</h1>
+<p style="margin:0 0 14px">Hi ${first ? esc(first) : 'there'},</p>
+<p style="margin:0 0 14px">I'm Lordina, and I'm so happy you're here.</p>
+<p style="margin:0 0 14px">Choosing where to study is one of the biggest decisions you will make, and you should not have to guess. Jamba shows you the schools, programmes and scholarships your results can really reach, in Ghana and around the world.</p>
+<p style="margin:0 0 8px">Getting started takes a few minutes:</p>
 <ol style="margin:0 0 4px;padding-left:20px">
 <li style="margin-bottom:6px"><b>Add your results</b> (WASSCE, SAT or English test) on your profile.</li>
-<li style="margin-bottom:6px"><b>See your matches:</b> schools and programmes your results can reach, each with a label such as Strong match or Good chance.</li>
-<li><b>Check scholarships</b> you may qualify for, in Ghana and abroad.</li>
+<li style="margin-bottom:6px"><b>See your matches</b>, from Strong match to Worth a try.</li>
+<li><b>Find scholarships</b> you may qualify for.</li>
 </ol>
-${btn(`${SITE}/profile`, 'Go to my profile')}
-${trial ? `<p style="margin:0 0 12px">Your 24-hour free trial has started. After it ends you can keep full access with a plan on the <a href="${SITE}/pricing" style="color:#6B8E0A;font-weight:600">Pricing page</a>.</p>` : ''}
-${minor ? `<p style="margin:0 0 12px;padding:12px;background:#F1FAD3;border-radius:10px">You are under 18, so a parent or guardian must confirm your account. It stays limited until they do.</p>` : ''}
-<p style="margin:0">Questions? Reply to this email or reach us on WhatsApp. We are happy to help.</p>
+${btn(`${SITE}/profile`, 'Get started now')}
+${trial ? `<p style="margin:0 0 14px">Your 24-hour free trial has already started, so now is a great time to explore. When it ends, you can keep full access with a plan on the <a href="${SITE}/pricing" style="color:#6B8E0A;font-weight:600">Pricing page</a>.</p>` : ''}
+${minor ? `<p style="margin:0 0 14px;padding:12px;background:#F1FAD3;border-radius:10px">You are under 18, so a parent or guardian must confirm your account. It stays limited until they do.</p>` : ''}
+<p style="margin:0 0 14px">If you have any questions, just reply to this email or message us on WhatsApp. My team and I are here to help you every step of the way.</p>
+<p style="margin:0">Wishing you every success,<br><b>Lordina</b><br>Jamba</p>
 </td></tr>
 <tr><td style="background:#F1FAD3;padding:22px 32px;font-size:13px;line-height:1.6;color:#4A4A4A">
 <p style="margin:0 0 6px;font-weight:700;color:#333333">Jamba: find the schools, programmes and scholarships your results can reach.</p>
@@ -68,17 +71,25 @@ function text(first: string, trial: boolean, minor: boolean) {
   return [
     `Welcome to Jamba${first ? `, ${first}` : ''}!`,
     '',
-    'Thank you for joining. Your account is ready.',
+    `Hi ${first || 'there'},`,
+    '',
+    "I'm Lordina, and I'm so happy you're here.",
+    '',
+    'Choosing where to study is one of the biggest decisions you will make, and you should not have to guess. Jamba shows you the schools, programmes and scholarships your results can really reach, in Ghana and around the world.',
     '',
     '1. Add your results (WASSCE, SAT or English test) on your profile.',
-    '2. See the schools and programmes your results can reach.',
-    '3. Check scholarships you may qualify for, in Ghana and abroad.',
+    '2. See your matches, from Strong match to Worth a try.',
+    '3. Find scholarships you may qualify for.',
     '',
-    `Go to your profile: ${SITE}/profile`,
-    trial ? `\nYour 24-hour free trial has started. Plans: ${SITE}/pricing` : '',
+    `Get started: ${SITE}/profile`,
+    trial ? `\nYour 24-hour free trial has already started. Plans: ${SITE}/pricing` : '',
     minor ? '\nYou are under 18, so a parent or guardian must confirm your account. It stays limited until they do.' : '',
     '',
-    'Questions? Reply to this email, or call or WhatsApp +233 20 565 8716.',
+    'If you have any questions, just reply to this email or message us on WhatsApp (+233 20 565 8716). My team and I are here to help you every step of the way.',
+    '',
+    'Wishing you every success,',
+    'Lordina',
+    'Jamba',
   ].join('\n')
 }
 

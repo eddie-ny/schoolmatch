@@ -84,6 +84,8 @@ export async function signUp(form) {
 export async function verifySignupCode(email, code) {
   const { error } = await supabase.auth.verifyOtp({ email: email.trim(), token: code.replace(/\s+/g, ''), type: 'signup' })
   fail(error, 'Could not check that code.')
+  // Welcome email. Sent once by the server; never blocks or breaks sign-up if it fails.
+  supabase.functions.invoke('welcome-email').catch(() => {})
 }
 
 export async function resendConfirmation(email) {

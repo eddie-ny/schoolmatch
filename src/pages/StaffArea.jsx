@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import NotFound from './NotFound'
 import { Link, NavLink, Route, Routes } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { clearCatalogCache } from '../hooks/useCatalog'
@@ -88,10 +89,9 @@ function Overview({ base, isAdmin, users, pending, log, canSeeAll, canRate }) {
   )
 }
 
-// One shell for both staff areas. base is /admin or /support. Each section is its own page so nothing becomes one long page.
-export default function StaffArea({ base }) {
+// One shell for both staff areas. base is ADMIN_PATH or SUPPORT_PATH (lib/staffPaths.js). Each section is its own page so nothing becomes one long page.
+export default function StaffArea({ base, isAdminArea }) {
   const { user, loading, mfa } = useAuth()
-  const isAdminArea = base === '/admin'
   const [users, setUsers] = useState([])
   const [target, setTarget] = useState(null) // account waiting to be disabled or reactivated
   const [err, setErr] = useState('')
@@ -111,16 +111,8 @@ export default function StaffArea({ base }) {
 
   const label = isAdminArea ? 'Admin' : 'Support'
   if (loading) return <Spinner />
-  if (!user) {
-    return (
-      <div className="max-w-xl card space-y-3">
-        <h1 className="text-xl font-bold">{label} staff only</h1>
-        <p>Sign in with your staff account to continue.</p>
-        <Link to="/login" className="btn btn-orange">Sign in</Link>
-      </div>
-    )
-  }
-  if (!allowed) return <div className="max-w-xl card"><h1 className="text-xl font-bold">{label} staff only</h1><p className="mt-2">This account does not have access to this page.</p></div>
+  // Anyone who is not signed in as staff sees the normal "Page not found", so the page gives away nothing.
+  if (!user || !allowed) return <NotFound />
   if (mfa.current !== 'aal2') return <NeedMfa what={label} />
 
   const owner = user.staffRole === 'owner'

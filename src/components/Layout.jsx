@@ -1,4 +1,5 @@
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { ADMIN_PATH, SUPPORT_PATH } from '../lib/staffPaths'
 import { Suspense, useEffect, useRef, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { timeLeft } from '../lib/access'
@@ -57,8 +58,8 @@ function UserMenu({ user, onSignOut }) {
           <Link role="menuitem" to="/invite" className={item}>Invite friends</Link>
           <Link role="menuitem" to="/contact" className={item}>Contact us</Link>
           <Link role="menuitem" to="/settings" className={item}>Account Settings</Link>
-          {user.role === 'admin' && <Link role="menuitem" to="/admin" className={item}>Admin</Link>}
-          {user.role === 'support' && <Link role="menuitem" to="/support" className={item}>Support</Link>}
+          {user.role === 'admin' && <Link role="menuitem" to={ADMIN_PATH} className={item}>Admin</Link>}
+          {user.role === 'support' && <Link role="menuitem" to={SUPPORT_PATH} className={item}>Support</Link>}
           <button role="menuitem" onClick={onSignOut} className={`${item} text-red-700 border-t border-neutral-200`}>Sign out</button>
         </div>
       )}
@@ -75,14 +76,14 @@ export default function Layout() {
   const side = scopeOf(pathname)
   const navLinks = side ? sideLinks(side) : []
 
-  // Staff go straight to their own page once per sign-in: support to /support, admins to /admin.
+  // Staff go straight to their own page once per sign-in: support and admins to their own private address.
   useEffect(() => {
     try {
       if (!user) { sessionStorage.removeItem('staffRouted'); return }
       if (user.mfaPending || mfaNeeded) return
       if ((user.role === 'admin' || user.role === 'support') && !sessionStorage.getItem('staffRouted')) {
         sessionStorage.setItem('staffRouted', '1')
-        if (pathname === '/' || pathname === '/login') nav(user.role === 'support' ? '/support' : '/admin', { replace: true })
+        if (pathname === '/' || pathname === '/login') nav(user.role === 'support' ? SUPPORT_PATH : ADMIN_PATH, { replace: true })
       }
     } catch { /* storage blocked: staff can still use the menu */ }
   }, [user, mfaNeeded, pathname, nav])
@@ -152,8 +153,8 @@ export default function Layout() {
                 <Link to="/pricing" className="py-3 font-medium">Pricing</Link>
                 <Link to="/contact" className="py-3 font-medium">Contact us</Link>
                 <Link to="/settings" className="py-3 font-medium">Account Settings</Link>
-                {user.role === 'admin' && <Link to="/admin" className="py-3 font-medium">Admin</Link>}
-                {user.role === 'support' && <Link to="/support" className="py-3 font-medium">Support</Link>}
+                {user.role === 'admin' && <Link to={ADMIN_PATH} className="py-3 font-medium">Admin</Link>}
+                {user.role === 'support' && <Link to={SUPPORT_PATH} className="py-3 font-medium">Support</Link>}
                 <button onClick={() => setConfirmOut(true)} className="py-3 text-left font-medium">Sign out</button>
               </>
             ) : (
@@ -227,8 +228,8 @@ export default function Layout() {
             <Link to="/cookies" className="underline inline-flex items-center min-h-11">Cookies</Link>
             <Link to="/contact" className="underline inline-flex items-center min-h-11">Contact us</Link>
             <Link to="/complaints" className="underline inline-flex items-center min-h-11">Complaints</Link>
-            {user?.role === 'admin' && <Link to="/admin" className="underline inline-flex items-center min-h-11">Admin</Link>}
-            {user?.role === 'support' && <Link to="/support" className="underline inline-flex items-center min-h-11">Support</Link>}
+            {user?.role === 'admin' && <Link to={ADMIN_PATH} className="underline inline-flex items-center min-h-11">Admin</Link>}
+            {user?.role === 'support' && <Link to={SUPPORT_PATH} className="underline inline-flex items-center min-h-11">Support</Link>}
           </div>
         </div>
       </footer>

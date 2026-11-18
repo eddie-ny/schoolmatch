@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import { SHOW_INTERNATIONAL } from './constants'
+import { ADMIN_PATH, SUPPORT_PATH } from './staffPaths'
 
 // The public address of the site. Used for canonical links. Override with VITE_SITE_URL if the domain changes.
 export const SITE_URL = (import.meta.env.VITE_SITE_URL || 'https://jambaconsult.com').replace(/\/$/, '')
@@ -12,7 +13,7 @@ export const DEFAULT_DESCRIPTION = 'Discover where your results can take you! Ch
 // and add them to the sitemap.
 export const INDEX_DETAIL_PAGES = false
 
-const PRIVATE_PREFIXES = ['/login', '/signup', '/forgot-password', '/reset-password', '/profile', '/settings', '/admin', '/support', '/complaints', '/interested', '/invite', '/parent-confirm']
+const PRIVATE_PREFIXES = ['/login', '/signup', '/forgot-password', '/reset-password', '/profile', '/settings', ADMIN_PATH, SUPPORT_PATH, '/complaints', '/interested', '/invite', '/parent-confirm']
 const DETAIL = /^\/(local|international)\/(schools|programs|scholarships)\/[^/]+$/
 
 function startsWithAny(path, list) {

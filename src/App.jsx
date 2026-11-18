@@ -1,4 +1,5 @@
 import { lazy as reactLazy, Suspense, useEffect, useState } from 'react'
+import { ADMIN_PATH, SUPPORT_PATH } from './lib/staffPaths'
 import { Routes, Route, useLocation, Navigate } from 'react-router-dom'
 import { Analytics } from '@vercel/analytics/react'
 import Layout from './components/Layout'
@@ -55,7 +56,11 @@ const ParentConfirm = lazy(() => import('./pages/ParentConfirm'))
 const NotFound = lazy(() => import('./pages/NotFound'))
 
 // Visitor counts for the Vercel dashboard. Staff pages and the parent link page (which carries a token) are not counted.
-const skipAnalytics = (event) => (/\/(admin|support|parent-confirm|reset-password)(\/|\?|$)/.test(event.url) ? null : event)
+const skipAnalytics = (event) => {
+  const path = new URL(event.url, window.location.origin).pathname
+  if (path.startsWith(ADMIN_PATH) || path.startsWith(SUPPORT_PATH)) return null
+  return /\/(parent-confirm|reset-password)(\/|\?|$)/.test(event.url) ? null : event
+}
 
 // Every move to another page starts at the top. Changing a filter on the same page does not scroll.
 // The next page loads in pieces (the page code, then the catalogue), and the page grows as it fills in, so the top is
@@ -128,8 +133,8 @@ export default function App() {
         <Route path="/profile" element={<Profile />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/pricing" element={<Pricing />} />
-        <Route path="/admin/*" element={<Admin />} />
-        <Route path="/support/*" element={<Support />} />
+        <Route path={`${ADMIN_PATH}/*`} element={<Admin />} />
+        <Route path={`${SUPPORT_PATH}/*`} element={<Support />} />
         <Route path="/complaints" element={<Complaints />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/interested" element={<Interested />} />

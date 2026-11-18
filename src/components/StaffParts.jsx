@@ -1,5 +1,6 @@
 // Pieces shared by the Admin page and the Support page.
 import { useEffect, useState } from 'react'
+import { SUPPORT_PATH } from '../lib/staffPaths'
 import { Link } from 'react-router-dom'
 import { activateAccount, acceptParent, createParentLink, cancelInvite, deleteAccount, listArchive, listPlans, getRate, ownerSetRate, ownerGrantPlan, ownerEndPlan, getAccessBreakdown, getStudyInterest, getAdminStats, getAdminChart, getAdminInterest, inviteStaff, listInvites, listStaff, setStaffRole, staffCreateStudent, staffUpdateProfile } from '../lib/api'
 import { Badge, ConfirmDialog, Field, Spinner } from './ui'
@@ -906,8 +907,8 @@ export function TeamSection() {
       <div className="card !p-4 space-y-2">
         <p className="font-semibold">Support team page</p>
         <p className="text-sm text-neutral-600">Give this link to your support staff. They sign in with their own account, finish two-step verification, and land on it.</p>
-        <input className="input text-sm" readOnly value={`${window.location.origin}/support`} onFocus={(e) => e.target.select()} aria-label="Support page link" />
-        <button className="btn btn-outline !min-h-11 !py-1" onClick={() => navigator.clipboard?.writeText(`${window.location.origin}/support`)}>Copy link</button>
+        <input className="input text-sm" readOnly value={`${window.location.origin}${SUPPORT_PATH}`} onFocus={(e) => e.target.select()} aria-label="Support page link" />
+        <button className="btn btn-outline !min-h-11 !py-1" onClick={() => navigator.clipboard?.writeText(`${window.location.origin}${SUPPORT_PATH}`)}>Copy link</button>
       </div>
       <ul className="space-y-2" aria-label="Team">
         {team.map((m) => (

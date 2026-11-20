@@ -149,7 +149,6 @@ export function ProgramBody({ p, variants = [p], school }) {
         <section key={v.id} className="rounded-xl border border-neutral-200 p-3 space-y-2">
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="font-semibold">{variantLabel(v)}</h3>
-            {v.verified === false && !v.demo && <Badge>Unverified</Badge>}
           </div>
           <dl className="text-sm grid grid-cols-2 gap-x-4 gap-y-1">
             {v.entryQualification && (<><dt className="text-neutral-500">You need</dt><dd className="break-words">{v.entryQualification}</dd></>)}

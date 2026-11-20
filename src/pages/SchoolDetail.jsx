@@ -85,7 +85,6 @@ export default function SchoolDetail() {
             <div className="flex flex-wrap gap-2">
               <Badge>{schoolCategoryLabel(school)}</Badge>
               {school.type && <Badge>{school.type}</Badge>}
-              {school.verified === false && <Badge>Unverified</Badge>}
               {schoolScholarships.length > 0 && (
                 <a href="#scholarships" className={`inline-block text-xs font-semibold px-2.5 py-1 rounded-full hover:underline text-neutral-900 shadow-sm ${schoolScholarships.some((x) => x.fundingType === 'Full') ? 'bg-brand-green' : 'bg-brand-orange'}`}>
                   {schoolScholarships.some((x) => x.fundingType === 'Full') ? 'Fully funded scholarship available' : schoolScholarships.length > 1 ? `${schoolScholarships.length} scholarships available` : 'Scholarship available'}

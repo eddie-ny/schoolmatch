@@ -16,7 +16,6 @@ export function VerifiedBadges({ item }) {
   return (
     <div className="flex flex-wrap gap-2">
       {item.demo && <Badge tone="orange">Sample data</Badge>}
-      {!item.verified && !item.demo && <Badge>Unverified</Badge>}
       {item.verified && <Badge tone="green">Verified</Badge>}
     </div>
   )

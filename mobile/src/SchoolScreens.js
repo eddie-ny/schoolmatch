@@ -163,7 +163,6 @@ export function SchoolDetail({ id, q: q0 = '', field: field0 = '', onBack, onOpe
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
             <Badge>{schoolCategoryLabel(school)}</Badge>
             {!!school.type && <Badge>{school.type}</Badge>}
-            {school.verified === false && <Badge>Unverified</Badge>}
           </View>
           {!!school.website && <Button label="Visit university website" onPress={() => Linking.openURL(school.website)} />}
         </View>

@@ -1,10 +1,8 @@
 import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { useCatalog } from '../hooks/useCatalog'
 import { useSaved } from '../hooks/useSaved'
 import { PageTitle, Segmented, Spinner } from '../components/ui'
-import { ScholarshipCard } from '../components/Cards'
 import { ProgramResult, SearchBar, useProgramSearch } from '../components/Browse'
 import IntlArt from '../components/IntlArt'
 
@@ -17,13 +15,11 @@ const tiles = [
 
 // Home of the International path: bachelors and masters abroad, with the SAT call on top.
 export default function International() {
-  const { access } = useAuth()
-  const { intl, loading } = useCatalog()
+  useAuth()
   const saved = useSaved()
   const nav = useNavigate()
   const [level, setLevel] = useState('Undergraduate')
   const [study, setStudy] = useState('')
-  const full = access.level === 'full'
   const found = useProgramSearch({ scope: 'international', q: study, field: '', level, page: 1, size: 6 })
   const go = () => nav(`/international/programs?${new URLSearchParams({ ...(study ? { q: study } : {}), level }).toString()}`)
 
@@ -72,15 +68,6 @@ export default function International() {
         )}
         {found.total > found.rows.length && <button type="button" className="btn btn-outline" onClick={go}>See all {found.total.toLocaleString()} programs</button>}
       </section>
-
-      {intl.scholarships.length > 0 && (
-        <section>
-          <h2 className="text-xl font-bold mb-3">International scholarships</h2>
-          <div className="grid sm:grid-cols-2 gap-4">
-            {intl.scholarships.map((s) => <ScholarshipCard key={s.id} s={s} full={full} />)}
-          </div>
-        </section>
-      )}
     </div>
   )
 }

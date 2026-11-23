@@ -1,11 +1,9 @@
 import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { isLocal } from '../hooks/useCatalog'
 import { useScope, useScopedCatalog } from '../hooks/useScope'
 import { Gate, PageTitle, Pagination, Segmented, Spinner } from '../components/ui'
 import { ScholarshipCard } from '../components/Cards'
-import { SHOW_INTERNATIONAL } from '../lib/constants'
 
 const PAGE = 12
 const RANK = ['Full', 'Partial', 'Not stated']
@@ -16,7 +14,6 @@ export default function Scholarships() {
   const { international } = useScope()
   const [params] = useSearchParams()
   const [funding, setFunding] = useState(params.get('funding') || 'all')
-  const [where, setWhere] = useState('all')
   const [page, setPage] = useState(1)
   const full = access.level === 'full'
 
@@ -24,10 +21,9 @@ export default function Scholarships() {
     () =>
       scholarships
         .filter((s) => funding === 'all' || s.fundingType.toLowerCase() === funding)
-        .filter((s) => where === 'all' || (where === 'local' ? isLocal(s.country) : !isLocal(s.country)))
         // Fully funded first, then partial, then the rest. Array.sort is stable, so the existing order holds inside each group.
         .sort((a, b) => RANK.indexOf(a.fundingType) - RANK.indexOf(b.fundingType)),
-    [scholarships, funding, where, user]
+    [scholarships, funding, user]
   )
 
   return (
@@ -35,7 +31,6 @@ export default function Scholarships() {
       <PageTitle title="Scholarships" sub={international ? 'Funding for study abroad.' : 'Funding for study in Ghana.'} />
       <div className="space-y-3 mb-6">
         <Segmented value={funding} onChange={(v) => { setFunding(v); setPage(1) }} options={[{ value: 'all', label: 'Any funding' }, { value: 'partial', label: 'Partial' }, { value: 'full', label: 'Fully funded' }]} />
-        {SHOW_INTERNATIONAL && <div><Segmented value={where} onChange={(v) => { setWhere(v); setPage(1) }} options={[{ value: 'all', label: 'All' }, { value: 'local', label: 'Local' }, { value: 'intl', label: 'International' }]} /></div>}
       </div>
       {!full && <div className="mb-5"><Gate /></div>}
       {loading ? <Spinner /> : (

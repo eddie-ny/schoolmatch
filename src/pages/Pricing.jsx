@@ -9,6 +9,17 @@ const digits = (minor) => (minor % 100 ? 2 : 0)
 const usd = (cents) => `USD ${(cents / 100).toLocaleString(undefined, { minimumFractionDigits: digits(cents), maximumFractionDigits: 2 })}`
 const money = (minor, currency) => `${currency} ${(minor / 100).toLocaleString(undefined, { minimumFractionDigits: digits(minor), maximumFractionDigits: 2 })}`
 
+// Premium is a separate 5-month plan with personal help (supabase/step215_premium_plan.sql). It is shown on its own card,
+// not in the grid, so the "Best value" and "Save %" figures compare only the normal plans.
+const PREMIUM = 'premium5'
+const WHATSAPP = '233205658716' // same number as on the Contact page
+const PERKS = [
+  'Full access to everything on Jamba for 5 months',
+  'We help you apply to up to 5 fully funded scholarships',
+  '1-on-1 counselling and guidance consultation',
+  'Message your Jamba counsellor on WhatsApp at any time',
+]
+
 export default function Pricing() {
   const { user, access, refresh } = useAuth()
   const [params, setParams] = useSearchParams()
@@ -40,6 +51,9 @@ export default function Pricing() {
     return () => { live = false }
   }, [reference, user?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  const regular = plans.filter((p) => p.id !== PREMIUM)
+  const premium = plans.find((p) => p.id === PREMIUM)
+  const isPremium = user?.subscription?.plan === PREMIUM && access.level === 'full' && !access.trial
   const chosen = plans.find((p) => p.id === plan)
   const [agreed, setAgreed] = useState(false)
 
@@ -59,14 +73,14 @@ export default function Pricing() {
     <div className="max-w-4xl">
       <PageTitle title="Pricing" sub="Start with the 24-hour free trial. Subscribe for full details." />
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
-        {plans.map((p) => {
-          const base = plans.find((x) => x.months === 1)
+        {regular.map((p) => {
+          const base = regular.find((x) => x.months === 1)
           const hasUsd = p.price_usd_cents > 0
           const main = hasUsd ? p.price_usd_cents : p.price_minor
           const baseMain = hasUsd ? base?.price_usd_cents : base?.price_minor
           const perMonth = main / p.months
           const save = baseMain && p.months > 1 ? Math.round((1 - perMonth / baseMain) * 100) : 0
-          const best = p.months === Math.max(...plans.map((x) => x.months))
+          const best = p.months === Math.max(...regular.map((x) => x.months))
           const on = plan === p.id
           return (
             <button
@@ -87,6 +101,40 @@ export default function Pricing() {
           )
         })}
       </div>
+
+      {premium && (
+        <button
+          type="button"
+          onClick={() => setPlan(premium.id)}
+          aria-pressed={plan === premium.id}
+          className={`relative card w-full text-left border-2 mb-5 pt-6 transition ${plan === premium.id ? 'border-brand-orange bg-brand-orange-soft shadow-md' : 'border-neutral-200 bg-white hover:border-brand-orange/60'}`}
+        >
+          <span className="absolute -top-3 left-4 rounded-full bg-neutral-900 px-3 py-0.5 text-xs font-bold text-white">Premium</span>
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+            <div>
+              <p className="font-heading font-bold text-lg">{premium.label}</p>
+              <p className="text-sm text-neutral-700">Personal help from the Jamba team, for 5 months.</p>
+              <ul className="mt-3 space-y-1 text-sm">
+                {PERKS.map((t) => <li key={t} className="flex gap-2"><span aria-hidden="true" className="font-bold text-brand-orange">✓</span>{t}</li>)}
+              </ul>
+            </div>
+            <div className="sm:text-right shrink-0">
+              <p className="text-3xl font-bold leading-tight">{premium.price_usd_cents > 0 ? usd(premium.price_usd_cents) : premium.price_minor ? money(premium.price_minor, premium.currency) : 'Price to be set'}</p>
+              {premium.price_minor > 0 && <p className="text-xs font-semibold text-neutral-700">Includes 20% VAT and levies</p>}
+              {premium.price_usd_cents > 0 && premium.price_minor > 0 && <p className="text-sm text-neutral-600">{money(premium.price_minor, premium.currency)} at checkout</p>}
+            </div>
+          </div>
+          <p className="mt-3 text-xs text-neutral-600">Premium lasts 5 months. We help with your applications, but no one can promise that a scholarship will be awarded: the funder decides.</p>
+        </button>
+      )}
+
+      {isPremium && (
+        <div className="card mb-5 bg-brand-green-soft space-y-2">
+          <p className="font-heading font-bold">You are on Premium until {new Date(access.expiresAt).toLocaleDateString()}</p>
+          <p className="text-sm">For counselling, guidance and help with your 5 scholarship applications, message the Jamba team on WhatsApp.</p>
+          <a href={`https://wa.me/${WHATSAPP}?text=${encodeURIComponent('Hello Jamba, I am a Premium member and would like counselling.')}`} target="_blank" rel="noreferrer" className="btn btn-orange inline-flex">Chat on WhatsApp</a>
+        </div>
+      )}
 
       <div className="card space-y-4 bg-white">
         {msg && <p className="font-semibold">{msg}</p>}

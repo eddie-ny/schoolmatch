@@ -12,6 +12,16 @@ const digits = (minor) => (minor % 100 ? 2 : 0)
 const usd = (cents) => `USD ${(cents / 100).toLocaleString(undefined, { minimumFractionDigits: digits(cents), maximumFractionDigits: 2 })}`
 const money = (minor, currency) => `${currency} ${(minor / 100).toLocaleString(undefined, { minimumFractionDigits: digits(minor), maximumFractionDigits: 2 })}`
 
+// Premium is a separate 5-month plan with personal help, shown on its own card like the website (src/pages/Pricing.jsx).
+const PREMIUM = 'premium5'
+const WHATSAPP = '233205658716'
+const PERKS = [
+  'Full access to everything on Jamba for 5 months',
+  'We help you apply to up to 5 fully funded scholarships',
+  '1-on-1 counselling and guidance consultation',
+  'Message your Jamba counsellor on WhatsApp at any time',
+]
+
 // ---------- Pricing: same plans, prices and Paystack checkout as the website's Pricing page ----------
 export function PricingPage({ onBack }) {
   const { user, refresh } = useAuth()
@@ -57,15 +67,18 @@ export function PricingPage({ onBack }) {
       await Linking.openURL(url)
     } catch (e) { setError(e.message) } finally { setBusy(false) }
   }
-  const base = plans.find((x) => x.months === 1)
-  const longest = Math.max(0, ...plans.map((x) => x.months))
+  const regular = plans.filter((p) => p.id !== PREMIUM)
+  const premium = plans.find((p) => p.id === PREMIUM)
+  const isPremium = user?.subscription?.plan === PREMIUM && access.level === 'full' && !access.trial
+  const base = regular.find((x) => x.months === 1)
+  const longest = Math.max(0, ...regular.map((x) => x.months))
 
   return (
     <Screen>
       <BackLink label="Back" onPress={onBack} />
       <Title title="Pricing" sub="Start with the 24-hour free trial. Subscribe for full details." />
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginBottom: 16 }}>
-        {plans.map((p) => {
+        {regular.map((p) => {
           const hasUsd = p.price_usd_cents > 0
           const main = hasUsd ? p.price_usd_cents : p.price_minor
           const baseMain = hasUsd ? base?.price_usd_cents : base?.price_minor
@@ -90,6 +103,33 @@ export function PricingPage({ onBack }) {
           )
         })}
       </View>
+      {premium && (
+        <Pressable onPress={() => setPlan(premium.id)} accessibilityRole="radio" accessibilityState={{ checked: plan === premium.id }}
+          style={{ backgroundColor: plan === premium.id ? colors.orangeSoft : '#fff', borderRadius: 18, borderWidth: 2, borderColor: plan === premium.id ? colors.orange : colors.line, padding: 14, paddingTop: 20, gap: 4, marginBottom: 16 }}>
+          <View style={{ position: 'absolute', top: -11, left: 12, backgroundColor: '#171717', borderRadius: 999, paddingHorizontal: 10, paddingVertical: 2 }}>
+            <Text style={{ fontSize: 11, fontWeight: '800', color: '#fff' }}>Premium</Text>
+          </View>
+          <Text style={{ fontSize: 16, fontWeight: '700', color: colors.ink }}>{premium.label}</Text>
+          <Text style={styles.hint}>Personal help from the Jamba team, for 5 months.</Text>
+          {PERKS.map((t) => (
+            <View key={t} style={{ flexDirection: 'row', gap: 8 }}>
+              <Text style={{ color: colors.orange, fontWeight: '800' }}>✓</Text>
+              <Text style={[styles.body, { flex: 1 }]}>{t}</Text>
+            </View>
+          ))}
+          <Text style={{ fontSize: 22, fontWeight: '800', color: colors.ink, marginTop: 6 }}>{premium.price_usd_cents > 0 ? usd(premium.price_usd_cents) : premium.price_minor ? money(premium.price_minor, premium.currency) : 'Price to be set'}</Text>
+          {premium.price_minor > 0 && <Text style={{ fontSize: 11, fontWeight: '600', color: '#444' }}>Includes 20% VAT and levies</Text>}
+          {premium.price_usd_cents > 0 && premium.price_minor > 0 && <Text style={styles.hint}>{money(premium.price_minor, premium.currency)} at checkout</Text>}
+          <Text style={styles.hint}>Premium lasts 5 months. We help with your applications, but no one can promise that a scholarship will be awarded: the funder decides.</Text>
+        </Pressable>
+      )}
+      {isPremium && (
+        <Card>
+          <Text style={{ fontSize: 16, fontWeight: '700', color: colors.ink }}>You are on Premium until {new Date(access.expiresAt).toLocaleDateString()}</Text>
+          <Text style={styles.body}>For counselling, guidance and help with your 5 scholarship applications, message the Jamba team on WhatsApp.</Text>
+          <Button label="Chat on WhatsApp" onPress={() => Linking.openURL(`https://wa.me/${WHATSAPP}?text=${encodeURIComponent('Hello Jamba, I am a Premium member and would like counselling.')}`)} />
+        </Card>
+      )}
       <Card>
         {!!msg && <Notice>{msg}</Notice>}
         <ErrorText>{error}</ErrorText>

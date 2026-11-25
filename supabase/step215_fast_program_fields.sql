@@ -1,4 +1,4 @@
--- step215: make program_fields (the field dropdown on Programs pages) instant. NEEDS OWNER APPROVAL (schema change).
+-- step215: make program_fields (the field dropdown on Programs pages) instant. APPLIED 2026-11-25 with owner approval: same output (md5 of all 106 rows matched before and after), 1.4 ms instead of about 1 s.
 -- Why: on 24 Nov 2026, 14:30-15:21 UTC, program_fields hit the 3 s statement timeout several times (Sentry SCHOOLMATCH-D,
 -- edge logs: POST /rpc/program_fields 500). It counts all 87,361 rows of program_groups on every page load
 -- (mean about 1 s, worst 7.4 s). When it failed, the dropdown had only "All fields", so picking a field showed everything.

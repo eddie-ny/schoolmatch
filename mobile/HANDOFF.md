@@ -144,3 +144,6 @@ Commit messages end with: `Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.
 - Premium members still get the "Chat on WhatsApp" button, now on the Profile access card.
 - Locking: `AuthContext` rechecks the account when the app returns to the foreground (`AppState` active) and at the moment full access ends while the app is open. When a plan ends the app falls back to the summary view; the database rule `has_full_access()` enforces it anyway.
 - Store risk still open: Apple 3.1.3(b) says an app may unlock a website-bought subscription only if the same subscription is also offered as In-App Purchase. The client accepts this risk or adds IAP for iOS later. Google Play wording for a login-only app was not rechecked. Not legal advice.
+
+## App icon (2026-11-25)
+- `mobile/assets/` icon.png (1024, no transparency, full orange square for iOS), android-icon-foreground/background/monochrome (adaptive, glyph inside the safe zone), splash-icon.png and favicon.png now use the new Jamba logo (orange #FFB02E, white j, lime #B2DE2B dot), drawn from the web `public/favicon.svg`. Adaptive backgroundColor #FFB02E. Expo Go shows its own icon; the new icon appears only in a real build (APK or store).

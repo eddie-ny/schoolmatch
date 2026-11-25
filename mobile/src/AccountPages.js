@@ -80,7 +80,12 @@ export function ProfilePage({ onBack }) {
         <Card>
           <Section>Access</Section>
           <Text style={styles.body}>{access.detail}{access.expiresAt ? `, ${timeLeft(access.expiresAt)} left` : ''}</Text>
-          <Button label="See pricing" onPress={() => openPage('pricing')} />
+          {user.subscription?.plan === 'premium5' && access.level === 'full' && !access.trial && (
+            <>
+              <Text style={styles.body}>Premium: for counselling, guidance and help with your 5 scholarship applications, message the Jamba team on WhatsApp.</Text>
+              <Button label="Chat on WhatsApp" onPress={() => Linking.openURL(`https://wa.me/233205658716?text=${encodeURIComponent('Hello Jamba, I am a Premium member and would like counselling.')}`)} />
+            </>
+          )}
           <Text style={styles.hint}>Password, two-step verification and closing your account are in Account Settings. Documents upload comes later in the app; use the website for now.</Text>
         </Card>
       </View>

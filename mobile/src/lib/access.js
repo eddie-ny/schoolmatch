@@ -22,9 +22,9 @@ export function getAccess(user, now = Date.now()) {
   }
 
   if (!user.trialEndsAt) {
-    return { level: 'summary', detail: 'No free trial on this account. Subscribe for full details.', noTrial: true }
+    return { level: 'summary', detail: 'No free trial on this account. Summary view only.', noTrial: true }
   }
-  return { level: 'summary', detail: 'Trial ended. Subscribe for full details.' }
+  return { level: 'summary', detail: 'Trial ended. Summary view only.' }
 }
 
 export const hasFull = (user) => getAccess(user).level === 'full'

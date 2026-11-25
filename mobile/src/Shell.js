@@ -6,7 +6,7 @@ import HomeScreen from './HomeScreen'
 import { colors } from './lib/constants'
 import EligibilityTab from './IntlEligibilityScreen'
 import { InterestedPage, ProfilePage, SettingsPage } from './AccountPages'
-import { InvitePage, PricingPage } from './MorePages'
+import { InvitePage } from './MorePages'
 import { ComingSoon, ContactPage } from './Pages'
 import { SavedProvider } from './SavedContext'
 import { ScholarshipProvider } from './ScholarshipContext'
@@ -16,7 +16,7 @@ import { ScholarshipDetail, ScholarshipsList } from './ScholarshipScreens'
 import { SchoolDetail, SchoolsList } from './SchoolScreens'
 import { InShell, ShellActions, ScopeContext } from './ui'
 
-const PAGES = { profile: 'Profile', interested: 'Interested', pricing: 'Pricing', invite: 'Invite friends', contact: 'Contact us', settings: 'Account Settings' }
+const PAGES = { profile: 'Profile', interested: 'Interested', invite: 'Invite friends', contact: 'Contact us', settings: 'Account Settings' }
 
 // Five tabs along the bottom. Each tab keeps its own stack of screens, and every screen stays alive under the one on top,
 // so going back finds the search, filters and page as they were left. The Android back button pops one screen,
@@ -67,7 +67,6 @@ export default function Shell() {
       if (s.name === 'profile') return <ProfilePage onBack={back} />
       if (s.name === 'interested') return <InterestedPage onBack={back} onOpenProgram={openProgram} onOpenSchool={openSchool} />
       if (s.name === 'settings') return <SettingsPage onBack={back} />
-      if (s.name === 'pricing') return <PricingPage onBack={back} />
       if (s.name === 'invite') return <InvitePage onBack={back} />
       if (s.name === 'contact') return <ContactPage onBack={back} />
       return <ComingSoon title={PAGES[s.name]} onBack={back} />
@@ -88,7 +87,7 @@ export default function Shell() {
       <ShellActions.Provider value={{ openPage, goTab, openSchool, openScholarship }}>
       <View style={{ flex: 1, backgroundColor: colors.page }}>
         <Header user={user} scope={scope} onScope={() => setScope((s) => (s === 'local' ? 'intl' : 'local'))} onHome={() => { toRoot('home'); show('home') }} onPage={openPage} onSignOut={() => setConfirmOut(true)} />
-        <TrialBanner user={user} onPricing={() => openPage('pricing')} />
+        <TrialBanner user={user} />
         <View style={{ flex: 1 }}>
           {TABS.filter((t) => seen[t.key]).map((t) => (
             <View key={t.key} style={t.key === tab ? { flex: 1 } : { display: 'none' }}>

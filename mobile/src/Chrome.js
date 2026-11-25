@@ -14,7 +14,7 @@ export const TABS = [
   { key: 'eligibility', label: 'Eligibility', icon: 'checkmark-circle' },
 ]
 
-const MENU = [['profile', 'Profile'], ['interested', 'Interested'], ['pricing', 'Pricing'], ['invite', 'Invite friends'], ['contact', 'Contact us'], ['settings', 'Account Settings']]
+const MENU = [['profile', 'Profile'], ['interested', 'Interested'], ['invite', 'Invite friends'], ['contact', 'Contact us'], ['settings', 'Account Settings']]
 const HEADER_H = 56
 
 // Top bar: the Jamba name on the left, the profile button (with its drop-down menu) on the right.
@@ -67,7 +67,7 @@ export function Header({ user, scope = 'local', onScope, onHome, onPage, onSignO
 }
 
 // Strip under the header, same words as the website: green during the free trial, orange when only summaries are allowed.
-export function TrialBanner({ user, onPricing }) {
+export function TrialBanner({ user }) {
   const [, tick] = useState(0)
   useEffect(() => { const t = setInterval(() => tick((n) => n + 1), 60000); return () => clearInterval(t) }, [])
   const a = getAccess(user)
@@ -78,8 +78,7 @@ export function TrialBanner({ user, onPricing }) {
     return (
       <View style={{ backgroundColor: 'rgba(255,176,46,0.25)', paddingVertical: 8, paddingHorizontal: 16, alignItems: 'center' }}>
         <Text style={{ fontSize: 13, color: colors.ink, textAlign: 'center' }}>
-          {text}{' '}
-          {!a.needsParent && <Text onPress={onPricing} style={{ fontWeight: '700', textDecorationLine: 'underline' }}>Subscribe</Text>}
+          {text}
         </Text>
       </View>
     )
@@ -88,8 +87,7 @@ export function TrialBanner({ user, onPricing }) {
   return (
     <View style={{ backgroundColor: 'rgba(178,222,43,0.25)', paddingVertical: 8, paddingHorizontal: 16, alignItems: 'center' }}>
       <Text style={{ fontSize: 13, color: colors.ink, textAlign: 'center' }}>
-        Free trial: {timeLeft(user.trialEndsAt)} left.{' '}
-        <Text onPress={onPricing} style={{ fontWeight: '700', textDecorationLine: 'underline' }}>See pricing</Text>
+        Free trial: {timeLeft(user.trialEndsAt)} left.
       </Text>
     </View>
   )

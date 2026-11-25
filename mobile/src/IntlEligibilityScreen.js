@@ -250,7 +250,7 @@ function IntlEligibility({ initialSat = '', onOpenProgram, scopeSwitch }) {
     <Screen>
       <Title title="Check My Eligibility" sub="International. Bachelors use your WASSCE grades, SAT score and English proof. Masters use your first degree class." />
       {scopeSwitch}
-      {!full ? <Gate text="Subscribe to check your eligibility for international universities." /> : (
+      {!full ? <Gate text="The international eligibility check is for accounts with full access." /> : (
         <View style={{ gap: 16 }}>
           <Card>
             <Chips value={level} onChange={(v) => { setLevel(v); setGo(false) }} options={[{ value: 'Undergraduate', label: 'Bachelors' }, { value: 'Masters', label: 'Masters' }]} />

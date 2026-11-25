@@ -178,34 +178,6 @@ export async function saveSat(userId, sat) {
   else fail((await supabase.from('results').insert({ student_id: userId, exam: 'WASSCE', kind: 'final', sat_score: val })).error, 'Could not save your SAT score.')
 }
 
-// ---------- Plans and payments (Paystack, through the same server function as the website) ----------
-export async function listPlans() {
-  const { data, error } = await supabase.from('plans').select('id, label, months, price_minor, currency, price_usd_cents').order('sort')
-  fail(error, 'Could not load plans.')
-  return data || []
-}
-export async function getRate() {
-  const { data } = await supabase.from('fx_rates').select('per_usd, updated_at').eq('currency', 'GHS').maybeSingle()
-  return data ? { perUsd: Number(data.per_usd), updatedAt: data.updated_at } : null
-}
-// The server looks up the price itself; the app only says which plan. The server sends Paystack back to the website's
-// pricing page, so the app passes the website as its origin. Paystack also tells the server directly (webhook), so the plan
-// starts even if the person never goes back to the website.
-export async function startCheckout(plan) {
-  const { data, error } = await supabase.functions.invoke('paystack/init', { body: { plan }, headers: { Origin: SITE } })
-  if (error) {
-    let msg = ''
-    try { msg = (await error.context.json()).error } catch { /* not JSON */ }
-    throw new Error(msg || 'Could not start the payment. Please try again.')
-  }
-  return data // { url, reference }
-}
-export async function verifyPayment(reference) {
-  const { data, error } = await supabase.functions.invoke('paystack/verify', { body: { reference } })
-  if (error) throw new Error('Could not confirm the payment yet. If you were charged, it will appear shortly.')
-  return data.status // activated | already_activated | not_paid | rejected
-}
-
 // ---------- Scholarships ----------
 // Every scholarship with its entry rules (gender, SAT, aggregate, course, deadline, level), for "Scholarships you may qualify for".
 // The full table is only open to accounts with full access.

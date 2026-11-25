@@ -214,7 +214,7 @@ export function ProgramDetail({ id, onBack, onOpenSchool, onCheck }) {
       </View>
 
       <View style={{ marginTop: 24, gap: 12 }}>
-        {!full ? <Gate text="Subscribe to see entry requirements, fees and chances for this program." /> : (
+        {!full ? <Gate text="Entry requirements, fees and chances for this program are for accounts with full access." /> : (
           <>
             <Text style={H2}>Key information</Text>
             {keyFacts(p, masters).map(([h, t]) => (

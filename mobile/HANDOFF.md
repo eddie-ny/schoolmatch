@@ -137,3 +137,10 @@ Commit messages end with: `Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.
 - Email: Zoho is no longer used. Mail runs on Resend. The Resend inbox forwards to the owner's personal mailbox, and that mailbox sends as the Jamba address through Resend SMTP. Supabase auth emails also go through Resend.
 - `email-templates/` (web repo): confirm-signup.html (code email, `{{ .Token }}`), reset-password.html (`{{ .ConfirmationURL }}`), email-signature.html (team signature; fill in YOUR NAME and YOUR ROLE), README.md with steps. The app sends only these two auth emails (sign-up uses a code, CONFIRM_BY_CODE = true). Owner pastes the two templates into Supabase > Authentication > Emails, and adds the signature in the mail app (open the HTML in a browser, copy, paste into the signature box, set it as default for the Jamba send-as address). The email logo loads from the site's android-chrome-192x192.png.
 - Mobile app icon not yet switched to the new logo (the pack has the sizes).
+
+## Payments: website only (2026-11-25)
+- Client decision: people pay for plans on the website. The app is for use only; it never sells anything.
+- Removed from the app: Pricing page and menu item, Paystack checkout and verify calls (`api.listPlans`, `getRate`, `startCheckout`, `verifyPayment`), every "Subscribe" / "See pricing" link or button. `Gate` (ui.js) is now a plain note with no button or link; the trial strip has no link. No mention of prices or the website as a place to pay (app store anti-steering rules).
+- Premium members still get the "Chat on WhatsApp" button, now on the Profile access card.
+- Locking: `AuthContext` rechecks the account when the app returns to the foreground (`AppState` active) and at the moment full access ends while the app is open. When a plan ends the app falls back to the summary view; the database rule `has_full_access()` enforces it anyway.
+- Store risk still open: Apple 3.1.3(b) says an app may unlock a website-bought subscription only if the same subscription is also offered as In-App Purchase. The client accepts this risk or adds IAP for iOS later. Google Play wording for a login-only app was not rechecked. Not legal advice.

@@ -6,7 +6,7 @@ import { colors } from './lib/constants'
 const topPad = Platform.OS === 'android' ? (StatusBar.currentHeight || 24) + 16 : 60
 
 export const InShell = createContext(false)
-// Lets any screen open a menu page (for example Pricing) or switch tab without passing functions down.
+// Lets any screen open a menu page (for example Profile) or switch tab without passing functions down.
 export const ShellActions = createContext({ openPage: () => {}, goTab: () => {}, openSchool: () => {}, openScholarship: () => {} })
 
 export function Screen({ children, onRefresh, refreshing = false }) {
@@ -138,13 +138,12 @@ export function CodeBoxes({ value, onChange, length = 6, autoFocus }) {
   )
 }
 
-// Shown where the website says "Subscribe to see the full details".
+// Shown where the website says "Subscribe to see the full details". Payment happens on the website only,
+// so the app shows a plain note with no price, button or link (app store payment rules).
 export function Gate({ text }) {
-  const { openPage } = useContext(ShellActions)
   return (
     <View style={{ borderWidth: 1, borderStyle: 'dashed', borderColor: colors.orange, backgroundColor: 'rgba(255,176,46,0.1)', borderRadius: 12, padding: 16, gap: 12 }}>
-      <Text style={styles.body}>{text || 'Subscribe to see the full details.'}</Text>
-      <Button label="See pricing" onPress={() => openPage('pricing')} />
+      <Text style={styles.body}>{text || 'Full details are for accounts with full access.'}</Text>
     </View>
   )
 }

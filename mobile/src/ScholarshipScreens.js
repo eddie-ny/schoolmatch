@@ -134,7 +134,7 @@ export function ScholarshipDetail({ id, onBack, onOpenSchool }) {
       )}
 
       <View style={{ marginTop: 16, gap: 12 }}>
-        {!full ? <Gate text="Subscribe to see who can apply, the deadline and the link for this scholarship." /> : sections.length === 0 ? (
+        {!full ? <Gate text="Who can apply, the deadline and the link for this scholarship are for accounts with full access." /> : sections.length === 0 ? (
           <Text style={styles.body}>The provider has not published detailed requirements. Use the official page to check with them.</Text>
         ) : sections.map((sec) => (
           <View key={sec.key} style={cardStyle}>

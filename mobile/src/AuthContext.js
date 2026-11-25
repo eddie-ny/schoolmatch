@@ -1,6 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
+import { AppState } from 'react-native'
 import * as api from './lib/api'
 import { supabase } from './lib/supabase'
+import { getAccess } from './lib/access'
 
 const AuthContext = createContext(null)
 export const useAuth = () => useContext(AuthContext)
@@ -45,6 +47,23 @@ export function AuthProvider({ children }) {
     })
     return () => data.subscription.unsubscribe()
   }, [refresh])
+
+  // A plan or trial can end, or be bought on the website, while the app is open. Recheck the account each time the
+  // app comes back to the screen, so it locks (or unlocks) without a restart. The database enforces the same rule anyway.
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (s) => { if (s === 'active' && user) refresh() })
+    return () => sub.remove()
+  }, [user, refresh])
+
+  // If full access ends while the app stays open on screen, recheck at that moment (plus a second) so the screens lock.
+  useEffect(() => {
+    const end = getAccess(user).expiresAt
+    if (!end) return undefined
+    const wait = new Date(end).getTime() - Date.now() + 1000
+    if (wait <= 0 || wait > 2 ** 31 - 1) return undefined // setTimeout cannot wait longer than about 24.8 days
+    const t = setTimeout(refresh, wait)
+    return () => clearTimeout(t)
+  }, [user, refresh])
 
   const signOut = useCallback(async () => {
     generation.current += 1

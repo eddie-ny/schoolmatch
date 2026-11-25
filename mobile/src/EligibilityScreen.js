@@ -293,7 +293,7 @@ export default function EligibilityScreen({ initialProgram = '', onOpenProgram, 
         <View style={{ gap: 12, marginTop: 24 }}>
           <Text style={H2}>Results</Text>
           <Text style={styles.body}>{output.fieldOnly ? `We found ${fieldIds ? fieldIds.size : 0} program${fieldIds && fieldIds.size === 1 ? '' : 's'} in ${output.fieldOnly}.` : `We found ${output.targetCount} school${output.targetCount === 1 ? '' : 's'} offering this program and ${output.otherCount} other option${output.otherCount === 1 ? '' : 's'}.`}</Text>
-          <Gate text="Subscribe to see your aggregate, your match labels and how you rank." />
+          <Gate text="Your aggregate, match labels and rank are for accounts with full access." />
         </View>
       )}
 

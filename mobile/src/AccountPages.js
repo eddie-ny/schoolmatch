@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ActivityIndicator, Linking, Text, View } from 'react-native'
+import { ActivityIndicator, Linking, Pressable, Text, View } from 'react-native'
+import * as DocumentPicker from 'expo-document-picker'
 import { useAuth } from './AuthContext'
 import { ConfirmDialog } from './Chrome'
 import { useSaved } from './SavedContext'
@@ -77,6 +78,9 @@ export function ProfilePage({ onBack }) {
         <Button label={busy ? 'Saving...' : 'Save changes'} busy={busy} onPress={save} />
       </Card>
       <View style={{ marginTop: 12 }}>
+        <DocumentsCard />
+      </View>
+      <View style={{ marginTop: 12 }}>
         <Card>
           <Section>Access</Section>
           <Text style={styles.body}>{access.detail}{access.expiresAt ? `, ${timeLeft(access.expiresAt)} left` : ''}</Text>
@@ -86,10 +90,52 @@ export function ProfilePage({ onBack }) {
               <Button label="Chat on WhatsApp" onPress={() => Linking.openURL(`https://wa.me/233205658716?text=${encodeURIComponent('Hello Jamba, I am a Premium member and would like counselling.')}`)} />
             </>
           )}
-          <Text style={styles.hint}>Password, two-step verification and closing your account are in Account Settings. Documents upload comes later in the app; use the website for now.</Text>
+          <Text style={styles.hint}>Password, two-step verification and closing your account are in Account Settings.</Text>
         </Card>
       </View>
     </Screen>
+  )
+}
+
+// ---------- Documents: same bucket, file types and size limit as the website's Profile page ----------
+const MAX_MB = 5
+const ALLOWED = ['application/pdf', 'image/jpeg', 'image/png']
+function DocumentsCard() {
+  const [docs, setDocs] = useState(null)
+  const [busy, setBusy] = useState(false)
+  const [err, setErr] = useState('')
+  const load = () => api.listDocuments().then(setDocs).catch((e) => { setDocs([]); setErr(e.message) })
+  useEffect(() => { load() }, [])
+  const pick = async () => {
+    setErr('')
+    const res = await DocumentPicker.getDocumentAsync({ type: ALLOWED, copyToCacheDirectory: true })
+    if (res.canceled || !res.assets?.[0]) return
+    const f = res.assets[0]
+    const type = f.mimeType || (/\.pdf$/i.test(f.name) ? 'application/pdf' : /\.png$/i.test(f.name) ? 'image/png' : /\.jpe?g$/i.test(f.name) ? 'image/jpeg' : '')
+    if (!ALLOWED.includes(type)) return setErr('Only PDF, JPG or PNG files are allowed.')
+    if (f.size && f.size > MAX_MB * 1024 * 1024) return setErr(`File is too large. Maximum is ${MAX_MB} MB.`)
+    setBusy(true)
+    try { await api.uploadDocument({ uri: f.uri, name: f.name, mimeType: type }); await load() } catch (e) { setErr(e.message) } finally { setBusy(false) }
+  }
+  const remove = async (d) => {
+    setErr('')
+    try { await api.removeDocument(d); await load() } catch (e) { setErr(e.message) }
+  }
+  return (
+    <Card>
+      <Section>Documents</Section>
+      <Text style={styles.hint}>PDF, JPG or PNG, up to {MAX_MB} MB each. Only you can see these files.</Text>
+      <Button label={busy ? 'Uploading...' : 'Upload a document'} busy={busy} onPress={pick} />
+      <ErrorText>{err}</ErrorText>
+      {docs === null ? <ActivityIndicator color={colors.orange} /> : docs.length === 0 ? <Text style={styles.hint}>No documents uploaded yet.</Text> : docs.map((d) => (
+        <View key={d.id} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10, borderWidth: 1, borderColor: colors.line, borderRadius: 10, paddingHorizontal: 12, minHeight: 48 }}>
+          <Text numberOfLines={1} style={[styles.body, { flex: 1 }]}>{d.name.replace(/^\d+-/, '')}</Text>
+          <Pressable onPress={() => remove(d)} accessibilityRole="button" accessibilityLabel={`Remove ${d.name.replace(/^\d+-/, '')}`} style={{ minHeight: 44, justifyContent: 'center', paddingHorizontal: 6 }}>
+            <Text style={styles.link}>Remove</Text>
+          </Pressable>
+        </View>
+      ))}
+    </Card>
   )
 }
 

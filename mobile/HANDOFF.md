@@ -152,3 +152,7 @@ Commit messages end with: `Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.
 - No push notifications. Instead the edge function `plan-reminders` (code on main: supabase/functions/plan-reminders) emails paid users through Resend: once when 3 days or less are left, once after the plan ends (within 7 days). Each is marked in app_metadata.plan_notices (keyed by expires_at), so a renewed plan gets its own two emails and repeat runs send nothing. `?dry=1` lists without sending.
 - pg_net enabled; pg_cron job 2 `plan-reminder-emails` runs it daily at 08:00 UTC (step214). Verified with a dry call from the database (HTTP 200).
 - Owner rejected scholarship deadline emails (too many emails, uses Resend credits). Do not add them.
+
+## Documents upload and security check (2026-11-25)
+- Profile now has a Documents card like the web: expo-document-picker picks a PDF, JPG or PNG (max 5 MB), expo-file-system File.arrayBuffer reads it, upload to the private `documents` bucket at `<user id>/<time>-<name>` plus a `documents` row; Remove deletes both. Both packages run in Expo Go.
+- `npm audit` (mobile): 3 moderate, all minimatch inside @expo/fingerprint (build tool, not in the phone bundle: checked the exported bundle). The only offered fix downgrades Expo to SDK 52, so it was NOT applied.

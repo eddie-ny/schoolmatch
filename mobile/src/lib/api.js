@@ -1,6 +1,7 @@
 // DATA LAYER for the phone app. Same server calls as the web app (src/lib/api.js in the web repo).
 // Search and eligibility rules live in the database, so the app gets the same answers as the website.
 
+import { File } from 'expo-file-system'
 import { supabase } from './supabase'
 import { PASSWORD_RULE, isMinorFromDob } from './validation'
 import { CORE_SUBJECTS, SITE } from './constants'
@@ -176,6 +177,38 @@ export async function saveSat(userId, sat) {
   fail(error, 'Could not save your SAT score.')
   if (row) fail((await supabase.from('results').update({ sat_score: val }).eq('id', row.id)).error, 'Could not save your SAT score.')
   else fail((await supabase.from('results').insert({ student_id: userId, exam: 'WASSCE', kind: 'final', sat_score: val })).error, 'Could not save your SAT score.')
+}
+
+// ---------- Documents (private Storage bucket, one folder per student; same as the website's Profile page) ----------
+export async function listDocuments() {
+  const { data: sess } = await supabase.auth.getSession()
+  const uid = sess?.session?.user?.id
+  if (!uid) return []
+  const { data, error } = await supabase.from('documents').select('id, doc_type, file_path, uploaded_at').eq('student_id', uid).order('uploaded_at')
+  fail(error, 'Could not load your documents.')
+  return (data || []).map((d) => ({ id: d.id, name: d.file_path.split('/').pop(), path: d.file_path, uploadedAt: d.uploaded_at }))
+}
+// file is a picked document: { uri, name, mimeType }.
+export async function uploadDocument(file) {
+  const { data: sess } = await supabase.auth.getSession()
+  const uid = sess?.session?.user?.id
+  if (!uid) throw new Error('Please sign in first.')
+  const safe = file.name.replace(/[^\w.\- ]+/g, '_')
+  const path = `${uid}/${Date.now()}-${safe}`
+  const bytes = await new File(file.uri).arrayBuffer()
+  const up = await supabase.storage.from('documents').upload(path, bytes, { contentType: file.mimeType })
+  fail(up.error, 'Upload failed.')
+  const ins = await supabase.from('documents').insert({ student_id: uid, file_path: path })
+  if (ins.error) {
+    await supabase.storage.from('documents').remove([path])
+    fail(ins.error, 'Could not record the document.')
+  }
+}
+export async function removeDocument(doc) {
+  const a = await supabase.storage.from('documents').remove([doc.path])
+  fail(a.error, 'Could not delete the file.')
+  const b = await supabase.from('documents').delete().eq('id', doc.id)
+  fail(b.error, 'Could not delete the record.')
 }
 
 // ---------- Scholarships ----------

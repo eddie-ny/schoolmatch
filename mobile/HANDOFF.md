@@ -160,3 +160,5 @@ Commit messages end with: `Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.
 ## Field list time-outs (2026-11-25)
 - 24 Nov 14:30-15:21 UTC: program_fields hit the 3 s anon statement timeout (Sentry SCHOOLMATCH-D), so the field dropdown showed only "All fields". Web (useFields) and app (api.listFields) now retry twice and fall back to the last good list saved on the device.
 - step215 APPLIED with owner approval: materialized view program_field_counts (refreshed by cron job 1 after program_groups); program_fields reads it, same output, about 1.4 ms.
+- step216 APPLIED (owner approved): program_field_counts is now per scope, country, level and field; search_programs_c takes totals from it when there are no search words or school; index program_groups_field_idx. Same results (md5 of 22 searches). Field searches 10-67 ms.
+- anon statement_timeout raised from 3s to 8s (owner approved), same as signed-in users.

@@ -147,3 +147,8 @@ Commit messages end with: `Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.
 
 ## App icon (2026-11-25)
 - `mobile/assets/` icon.png (1024, no transparency, full orange square for iOS), android-icon-foreground/background/monochrome (adaptive, glyph inside the safe zone), splash-icon.png and favicon.png now use the new Jamba logo (orange #FFB02E, white j, lime #B2DE2B dot), drawn from the web `public/favicon.svg`. Adaptive backgroundColor #FFB02E. Expo Go shows its own icon; the new icon appears only in a real build (APK or store).
+
+## Plan reminder emails (2026-11-25, owner approved)
+- No push notifications. Instead the edge function `plan-reminders` (code on main: supabase/functions/plan-reminders) emails paid users through Resend: once when 3 days or less are left, once after the plan ends (within 7 days). Each is marked in app_metadata.plan_notices (keyed by expires_at), so a renewed plan gets its own two emails and repeat runs send nothing. `?dry=1` lists without sending.
+- pg_net enabled; pg_cron job 2 `plan-reminder-emails` runs it daily at 08:00 UTC (step214). Verified with a dry call from the database (HTTP 200).
+- Owner rejected scholarship deadline emails (too many emails, uses Resend credits). Do not add them.

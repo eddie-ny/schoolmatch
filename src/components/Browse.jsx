@@ -32,13 +32,25 @@ export function useProgramSearch({ scope, q, field, level, school = null, countr
 }
 
 // The fields that exist for this side of the site, with how many programmes each has.
+// If the database is slow and the call times out, the dropdown would only offer "All fields" (24 Nov 2026), so:
+// show the last good list kept in this browser at once, and retry a failed call twice before giving up.
 export function useFields(scope) {
-  const [fields, setFields] = useState([])
+  const key = `wemk.fields.${scope === 'international' ? 'intl' : 'local'}`
+  const cached = () => { try { return JSON.parse(localStorage.getItem(key)) || [] } catch { return [] } }
+  const [fields, setFields] = useState(cached)
   useEffect(() => {
     let live = true
-    supabase.rpc('program_fields', { p_scope: scope === 'international' ? 'intl' : 'local' }).then(({ data }) => live && setFields(data || []))
+    setFields(cached())
+    const load = (tries) => supabase.rpc('program_fields', { p_scope: scope === 'international' ? 'intl' : 'local' }).then(({ data, error }) => {
+      if (!live) return
+      if (!error && data?.length) {
+        setFields(data)
+        try { localStorage.setItem(key, JSON.stringify(data)) } catch { /* storage blocked */ }
+      } else if (tries > 0) setTimeout(() => live && load(tries - 1), 1500)
+    })
+    load(2)
     return () => { live = false }
-  }, [scope])
+  }, [scope]) // eslint-disable-line react-hooks/exhaustive-deps
   return fields
 }
 

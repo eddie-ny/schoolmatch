@@ -156,3 +156,7 @@ Commit messages end with: `Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.
 ## Documents upload and security check (2026-11-25)
 - Profile now has a Documents card like the web: expo-document-picker picks a PDF, JPG or PNG (max 5 MB), expo-file-system File.arrayBuffer reads it, upload to the private `documents` bucket at `<user id>/<time>-<name>` plus a `documents` row; Remove deletes both. Both packages run in Expo Go.
 - `npm audit` (mobile): 3 moderate, all minimatch inside @expo/fingerprint (build tool, not in the phone bundle: checked the exported bundle). The only offered fix downgrades Expo to SDK 52, so it was NOT applied.
+
+## Field list time-outs (2026-11-25)
+- 24 Nov 14:30-15:21 UTC: program_fields hit the 3 s anon statement timeout (Sentry SCHOOLMATCH-D), so the field dropdown showed only "All fields". Web (useFields) and app (api.listFields) now retry twice and fall back to the last good list saved on the device.
+- step215 APPLIED with owner approval: materialized view program_field_counts (refreshed by cron job 1 after program_groups); program_fields reads it, same output, about 1.4 ms.

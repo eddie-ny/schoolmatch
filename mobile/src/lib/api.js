@@ -2,6 +2,7 @@
 // Search and eligibility rules live in the database, so the app gets the same answers as the website.
 
 import { File } from 'expo-file-system'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import { supabase } from './supabase'
 import { PASSWORD_RULE, isMinorFromDob } from './validation'
 import { CORE_SUBJECTS, SITE } from './constants'
@@ -393,9 +394,19 @@ export async function listCountries(scope = 'intl') {
 }
 
 // The fields of study that have programs on this side of the site.
+// If the database is slow and the call times out, the picker would only offer "All fields" (seen on the web 24 Nov 2026),
+// so retry twice, keep the last good list on the phone, and use it when the call still fails.
 export async function listFields(scope = 'local') {
-  const { data } = await supabase.rpc('program_fields', { p_scope: toScope(scope) })
-  return data || []
+  const key = `wemk.fields.${toScope(scope)}`
+  for (let tries = 0; tries < 3; tries++) {
+    const { data, error } = await supabase.rpc('program_fields', { p_scope: toScope(scope) })
+    if (!error && data?.length) {
+      AsyncStorage.setItem(key, JSON.stringify(data)).catch(() => {})
+      return data
+    }
+    if (tries < 2) await new Promise((r) => setTimeout(r, 1500))
+  }
+  try { return JSON.parse(await AsyncStorage.getItem(key)) || [] } catch { return [] }
 }
 
 const isLocalCountry = (c) => (c || '').toLowerCase() === 'ghana'

@@ -162,3 +162,7 @@ Commit messages end with: `Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.
 - step215 APPLIED with owner approval: materialized view program_field_counts (refreshed by cron job 1 after program_groups); program_fields reads it, same output, about 1.4 ms.
 - step216 APPLIED (owner approved): program_field_counts is now per scope, country, level and field; search_programs_c takes totals from it when there are no search words or school; index program_groups_field_idx. Same results (md5 of 22 searches). Field searches 10-67 ms.
 - anon statement_timeout raised from 3s to 8s (owner approved), same as signed-in users.
+
+## Scholarships split by side (2026-11-26)
+- Scholarships tab: All/Local/International chips removed. It now follows the app-wide Local/International switch (`useScope`, `ScopeSwitch` shown at the top, like Schools): Local = country Ghana only, International = every other country. Same rule as the web (`src/hooks/useScope.js`, afa223d, 23 Nov). Syntax checked with esbuild only; not run on a phone.
+- Note: SQL step numbers 214 and 215 are each used by two files (see project doc claude/handoff-2026-11-03.md). Next free number: step217. Always name the full file.

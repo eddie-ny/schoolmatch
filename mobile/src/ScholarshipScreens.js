@@ -7,7 +7,7 @@ import { colors } from './lib/constants'
 import { buildSections, fundingRank, officialLink } from './lib/scholarshipSections'
 import { Monogram, cardStyle, usePull } from './SchoolParts'
 import { useScholarships } from './ScholarshipContext'
-import { Badge, BackLink, Button, Chips, ErrorText, Gate, Pager, Screen, Title, styles } from './ui'
+import { Badge, BackLink, Button, Chips, ErrorText, Gate, Pager, Screen, ScopeSwitch, Title, styles, useScope } from './ui'
 
 const PAGE = 12
 const isLocal = (c) => (c || '').toLowerCase() === 'ghana'
@@ -39,7 +39,9 @@ export function ScholarshipsList({ initialFunding = 'all', onOpen }) {
   const { user } = useAuth()
   const { rows, loading: sLoading, error: sError, reload } = useScholarships()
   const st = { rows, loading: sLoading, error: sError }
-  const [f, setF] = useState({ funding: initialFunding, where: 'all', page: 1 })
+  const { scope } = useScope()
+  const [f, setF] = useState({ funding: initialFunding, page: 1 })
+  useEffect(() => { setF((c) => ({ ...c, page: 1 })) }, [scope])
   const full = getAccess(user).level === 'full'
   const pull = usePull(reload, st.loading)
   const set = (k) => (v) => setF((c) => ({ ...c, [k]: v, page: 1 }))
@@ -47,17 +49,18 @@ export function ScholarshipsList({ initialFunding = 'all', onOpen }) {
   // Fully funded first, then partial, then the rest. The sort is stable, so the database order holds inside each group.
   const list = useMemo(() => st.rows
     .filter((s) => f.funding === 'all' || s.fundingType.toLowerCase() === f.funding)
-    .filter((s) => f.where === 'all' || (f.where === 'local' ? isLocal(s.country) : !isLocal(s.country)))
-    .sort((a, b) => fundingRank(a.fundingType) - fundingRank(b.fundingType)), [st.rows, f.funding, f.where])
+    // Same split as the web (useScope.js, 23 Nov): Local = Ghana only, International = every other country.
+    .filter((s) => (scope === 'local' ? isLocal(s.country) : !isLocal(s.country)))
+    .sort((a, b) => fundingRank(a.fundingType) - fundingRank(b.fundingType)), [st.rows, f.funding, scope])
   const pages = Math.ceil(list.length / PAGE)
   const page = Math.min(f.page, pages || 1)
 
   return (
     <Screen onRefresh={pull.onRefresh} refreshing={pull.refreshing}>
-      <Title title="Scholarships" sub="Funding for study in Ghana and abroad." />
+      <Title title="Scholarships" sub={scope === 'local' ? 'Funding for study in Ghana.' : 'Funding for study abroad.'} />
       <View style={{ gap: 12, marginBottom: 16 }}>
+        <ScopeSwitch />
         <Chips value={f.funding} onChange={set('funding')} options={[{ value: 'all', label: 'Any funding' }, { value: 'partial', label: 'Partial' }, { value: 'full', label: 'Fully funded' }]} />
-        <Chips value={f.where} onChange={set('where')} options={[{ value: 'all', label: 'All' }, { value: 'local', label: 'Local' }, { value: 'intl', label: 'International' }]} />
         <Text style={styles.hint}>{st.loading ? 'Loading...' : `${list.length.toLocaleString()} scholarship${list.length === 1 ? '' : 's'}${pages > 1 ? `, page ${page} of ${pages}` : ''}`}</Text>
       </View>
       {!full && <View style={{ marginBottom: 16 }}><Gate /></View>}

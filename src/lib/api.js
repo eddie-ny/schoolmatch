@@ -718,6 +718,20 @@ export async function deleteAccount(userId) {
   }
   return data
 }
+// Super admin: move an account to the trash (step220). It is blocked and hidden, and erased for good after 7 days.
+export async function trashAccount(userId) {
+  const { error } = await supabase.rpc('admin_trash_account', { p_user: userId })
+  fail(error, 'Could not delete this account.')
+}
+export async function restoreAccount(userId) {
+  const { error } = await supabase.rpc('admin_restore_account', { p_user: userId })
+  fail(error, 'Could not restore this account.')
+}
+export async function listTrash() {
+  const { data, error } = await supabase.rpc('admin_list_trash')
+  fail(error, 'Could not load the trash.')
+  return (data || []).map((x) => ({ userId: x.user_id, email: x.email, fullName: x.full_name, phone: x.phone, staffRole: x.staff_role, trashedAt: x.trashed_at, trashedBy: x.trashed_by_name, purgeAfter: x.purge_after }))
+}
 export async function activateAccount(userId) {
   // Staff confirm the email for someone whose confirmation link failed. Goes through an edge function.
   const { data, error } = await supabase.functions.invoke('staff-users/activate-account', { body: { userId } })
@@ -793,7 +807,7 @@ export async function listAuditLog(limit = 200) {
 
 export async function listUsers() {
   const [p, s, r, un] = await Promise.all([
-    supabase.from('profiles').select('id, full_name, email, phone, is_minor, trial_ends_at, created_at, profile_complete, disabled_at').order('created_at', { ascending: false }),
+    supabase.from('profiles').select('id, full_name, email, phone, is_minor, trial_ends_at, created_at, profile_complete, disabled_at').is('trashed_at', null).order('created_at', { ascending: false }),
     supabase.from('subscriptions').select('user_id, plan, status, expires_at'),
     supabase.rpc('list_staff_roles'),
     supabase.rpc('list_unconfirmed_users'),

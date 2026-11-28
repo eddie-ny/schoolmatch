@@ -1,4 +1,4 @@
--- step220: 7-day trash for deleted accounts. NOT YET APPLIED. Needs the owner's approval first.
+-- step223 (first sent as step220): 7-day trash for deleted accounts. Applied by the owner on 2026-11-28.
 --
 -- What changes
 --  * Delete in the staff area now moves the person to the Trash instead of erasing them.

@@ -1,4 +1,4 @@
-// Empties the trash: erases accounts that have been in the trash for 7 days or more (see supabase/step220_user_trash.sql).
+// Empties the trash: erases accounts that have been in the trash for 7 days or more (see supabase/step223_user_trash.sql).
 // Run every hour by the pg_cron job "purge-trash".
 //   POST /purge-trash           erases what is due
 //   POST /purge-trash?dry=1     lists what is due, erases nothing

@@ -86,6 +86,8 @@ export async function verifySignupCode(email, code) {
   fail(error, 'Could not check that code.')
   // Welcome email. Sent once by the server; never blocks or breaks sign-up if it fails.
   supabase.functions.invoke('welcome-email').catch(() => {})
+  // Under 18: email the parent or guardian a confirmation link. The server checks the age and sends it only once.
+  supabase.functions.invoke('parent-confirm/auto').catch(() => {})
 }
 
 export async function resendConfirmation(email) {
@@ -671,6 +673,16 @@ export async function confirmParentLink(token) {
   const { data, error } = await supabase.functions.invoke('parent-confirm/confirm', { body: { token } })
   if (error) throw new Error('Could not record your confirmation. Please try again.')
   return data.state // confirmed | invalid | used | expired
+}
+// Staff only. Emails the parent a new one-time link from Jamba's address (any older link stops working).
+export async function emailParentLink(studentId) {
+  const { data, error } = await supabase.functions.invoke('parent-confirm/email', { body: { studentId } })
+  if (error) {
+    let msg = ''
+    try { msg = (await error.context.json()).error } catch { /* not JSON */ }
+    throw new Error(msg || 'Could not send the email.')
+  }
+  return data.to
 }
 // Staff only. Returns a one-time link to give to the parent after checking who they are.
 export async function createParentLink(studentId) {

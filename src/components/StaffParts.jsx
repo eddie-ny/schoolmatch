@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react'
 import { SUPPORT_PATH } from '../lib/staffPaths'
 import { Link } from 'react-router-dom'
-import { acceptParent, createParentLink, cancelInvite, deleteAccount, listArchive, listPlans, getRate, ownerSetRate, ownerGrantPlan, ownerEndPlan, getAccessBreakdown, getStudyInterest, getAdminStats, getAdminChart, getAdminInterest, inviteStaff, listInvites, listStaff, setStaffRole, staffCreateStudent, staffUpdateProfile } from '../lib/api'
+import { acceptParent, createParentLink, emailParentLink, cancelInvite, deleteAccount, listArchive, listPlans, getRate, ownerSetRate, ownerGrantPlan, ownerEndPlan, getAccessBreakdown, getStudyInterest, getAdminStats, getAdminChart, getAdminInterest, inviteStaff, listInvites, listStaff, setStaffRole, staffCreateStudent, staffUpdateProfile } from '../lib/api'
 import { Badge, ConfirmDialog, Field, Spinner } from './ui'
 
 export const ROLE_LABEL = { owner: 'Super admin', admin: 'Admin', support: 'Support' }
@@ -544,6 +544,14 @@ export function ParentsSection({ pending: allPending, canAccept, reload }) {
   const [link, setLink] = useState(null) // { name, url, phone, email }
   const [err, setErr] = useState('')
   const [acceptTarget, setAcceptTarget] = useState(null)
+  const [emailTarget, setEmailTarget] = useState(null)
+  const [sentTo, setSentTo] = useState('')
+
+  const sendEmail = async () => {
+    const t = emailTarget
+    setEmailTarget(null); setErr(''); setSentTo('')
+    try { const to = await emailParentLink(t.studentId); setSentTo(`Email sent to ${to} for ${t.studentName}. Any older link has stopped working.`); setLink(null); reload() } catch (e) { setErr(e.message) }
+  }
 
   const makeLink = async (x) => {
     setErr('')
@@ -566,7 +574,8 @@ export function ParentsSection({ pending: allPending, canAccept, reload }) {
 
   const Buttons = ({ x, full }) => (
     <div className={`flex flex-wrap gap-2 ${full ? '' : 'justify-start'}`}>
-      <button className={`btn btn-orange !min-h-11 !py-1 ${full ? 'flex-1' : '!w-32'}`} onClick={() => makeLink(x)}>Create link</button>
+      {x.parentEmail && <button className={`btn btn-orange !min-h-11 !py-1 ${full ? 'flex-1' : '!w-32'}`} onClick={() => setEmailTarget(x)}>Email parent</button>}
+      <button className={`btn btn-outline !min-h-11 !py-1 ${full ? 'flex-1' : '!w-32'}`} onClick={() => makeLink(x)}>Create link</button>
       {canAccept && <button className={`btn btn-green !min-h-11 !py-1 ${full ? 'flex-1' : '!w-32'}`} onClick={() => setAcceptTarget(x)}>Accept</button>}
     </div>
   )
@@ -575,11 +584,21 @@ export function ParentsSection({ pending: allPending, canAccept, reload }) {
     <section className="space-y-3">
       <h2 className="text-xl font-bold">Waiting for a parent or guardian ({pending.length})</h2>
       <p className="text-sm text-neutral-600">
-        Phone the parent on the number below and make sure you are speaking to them. Press Create link, then Send link to email it to that parent only. It works once and expires in 7 days.
+        Phone the parent on the number below and make sure you are speaking to them. Email parent sends them an email from Jamba that explains why they got it and asks them to press a confirm link. Create link gives you the link to send yourself by WhatsApp or SMS. A link works once and expires in 7 days.
+        Under-18 students' parents also get this email automatically when the student finishes signing up, so check the parent email is not the student's own before trusting it.
         Creating a new link cancels the old one, so you can make another if the parent says it did not arrive. Every link is recorded in the activity log.
         {canAccept && ' Accept opens the student\'s account right away. Use it only after you have spoken to the parent.'}
       </p>
       {err && <p className="text-red-700 text-sm" role="alert">{err}</p>}
+      {sentTo && <p className="text-sm text-green-800" role="status">{sentTo}</p>}
+      <ConfirmDialog
+        open={!!emailTarget}
+        title="Email the parent?"
+        text={emailTarget ? `Jamba will email ${emailTarget.parentName || 'the parent'} at ${emailTarget.parentEmail}, explain that ${emailTarget.studentName} signed up and is under 18, and ask them to confirm with a new link. Any older link stops working. This is recorded in the activity log.` : ''}
+        confirmLabel="Send email"
+        onConfirm={sendEmail}
+        onCancel={() => setEmailTarget(null)}
+      />
       <ConfirmDialog
         open={!!acceptTarget}
         title="Accept this confirmation?"
@@ -598,7 +617,7 @@ export function ParentsSection({ pending: allPending, canAccept, reload }) {
               : <p className="text-sm text-red-700">No parent email on file, so the link cannot be sent. Copy it from the box above.</p>}
             <button className="btn btn-outline !min-h-11 !py-1" onClick={() => setLink(null)}>Hide</button>
           </div>
-          <p className="text-xs text-neutral-600">Send link opens your email app with the message to the parent ready. Press send there. The site cannot send the email by itself until we connect our own email service. This link is shown only now. Do not post it anywhere public.</p>
+          <p className="text-xs text-neutral-600">Send link opens your email app with the message ready. To send from Jamba's address instead, use Email parent. This link is shown only now. Do not post it anywhere public.</p>
         </div>
       )}
       <ul className="md:hidden space-y-3" aria-label="Waiting for a parent or guardian">

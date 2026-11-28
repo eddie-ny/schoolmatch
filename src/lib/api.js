@@ -695,10 +695,14 @@ export async function createParentLink(studentId) {
   return data.url
 }
 export async function listPendingParents() {
-  const [c, p] = await Promise.all([
-    supabase.from('parent_contacts').select('*').is('confirmed_at', null),
+  // Column grants: staff can read only listed columns (select('*') is refused). rejected_at needs step226's grant;
+  // until then, fall back to the list without it so the page never goes empty.
+  const cols = 'student_id, name, phone, email, confirmed_at'
+  const [c0, p] = await Promise.all([
+    supabase.from('parent_contacts').select(cols + ', rejected_at').is('confirmed_at', null),
     supabase.from('profiles').select('id, full_name, email'),
   ])
+  const c = c0.error ? await supabase.from('parent_contacts').select(cols).is('confirmed_at', null) : c0
   fail(c.error, 'Could not load parent confirmations.')
   const byId = Object.fromEntries((p.data || []).map((x) => [x.id, x]))
   // rejected_at comes from step224; rows staff rejected leave the waiting list.

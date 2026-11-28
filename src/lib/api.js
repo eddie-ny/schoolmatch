@@ -696,14 +696,20 @@ export async function createParentLink(studentId) {
 }
 export async function listPendingParents() {
   const [c, p] = await Promise.all([
-    supabase.from('parent_contacts').select('student_id, name, phone, email, confirmed_at').is('confirmed_at', null),
+    supabase.from('parent_contacts').select('*').is('confirmed_at', null),
     supabase.from('profiles').select('id, full_name, email'),
   ])
   fail(c.error, 'Could not load parent confirmations.')
   const byId = Object.fromEntries((p.data || []).map((x) => [x.id, x]))
-  return (c.data || []).map((x) => ({ studentId: x.student_id, parentName: x.name, parentPhone: x.phone, parentEmail: x.email, studentName: byId[x.student_id]?.full_name || '', studentEmail: byId[x.student_id]?.email || '' }))
+  // rejected_at comes from step224; rows staff rejected leave the waiting list.
+  return (c.data || []).filter((x) => !x.rejected_at).map((x) => ({ studentId: x.student_id, parentName: x.name, parentPhone: x.phone, parentEmail: x.email, studentName: byId[x.student_id]?.full_name || '', studentEmail: byId[x.student_id]?.email || '' }))
 }
 
+// Admin or super admin: takes a request off the waiting list. The student's account stays limited and open links stop working.
+export async function rejectParent(studentId) {
+  const { error } = await supabase.rpc('admin_reject_parent', { p_student: studentId })
+  fail(error, 'Could not reject this request.')
+}
 // Admin or super admin, after speaking to the parent: opens the student's account without the link.
 export async function acceptParent(studentId) {
   const { error } = await supabase.rpc('admin_accept_parent', { p_student: studentId })

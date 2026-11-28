@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom'
 import { activateAccount, acceptParent, createParentLink, cancelInvite, deleteAccount, listArchive, listPlans, getRate, ownerSetRate, ownerGrantPlan, ownerEndPlan, getAccessBreakdown, getStudyInterest, getAdminStats, getAdminChart, getAdminInterest, inviteStaff, listInvites, listStaff, setStaffRole, staffCreateStudent, staffUpdateProfile } from '../lib/api'
 import { Badge, ConfirmDialog, Field, Spinner } from './ui'
 
-const ROLE_LABEL = { owner: 'Super admin', admin: 'Admin', support: 'Support' }
+export const ROLE_LABEL = { owner: 'Super admin', admin: 'Admin', support: 'Support' }
 
 export function accessLabel(u) {
   const now = Date.now()
@@ -400,7 +400,7 @@ function AddStudent({ onDone }) {
   )
 }
 
-function EditStudent({ u, onClose, onSaved }) {
+export function EditStudent({ u, onClose, onSaved }) {
   const [name, setName] = useState(u.fullName || '')
   const [phone, setPhone] = useState(u.phone || '')
   const [err, setErr] = useState('')
@@ -424,7 +424,7 @@ function EditStudent({ u, onClose, onSaved }) {
 }
 
 // Owner only. Gives a plan (adds time if they still have some, restarts it if it has expired) or ends it.
-function PlanPanel({ u, onClose, onDone }) {
+export function PlanPanel({ u, onClose, onDone }) {
   const [plans, setPlans] = useState([])
   const [plan, setPlan] = useState('1m')
   const [reason, setReason] = useState('')
@@ -535,7 +535,7 @@ export function SignupsSection({ users: allUsers, canDisable, onToggle, err, rel
           const { subbed, trial, label } = accessLabel(u)
           return (
             <li key={u.id} className="card space-y-1 text-sm">
-              <p className="font-semibold break-words">{u.fullName}{u.isMinor && ' (under 18)'} {u.staffRole && <Badge tone="green">{ROLE_LABEL[u.staffRole]}</Badge>}</p>
+              <p className="font-semibold break-words"><Link to={u.id} className="underline">{u.fullName || u.email}</Link>{u.isMinor && ' (under 18)'} {u.staffRole && <Badge tone="green">{ROLE_LABEL[u.staffRole]}</Badge>}</p>
               <p className="break-all">{u.email}</p>
               <p>{u.phone}</p>
               <p className="flex flex-wrap items-center gap-2">
@@ -564,7 +564,7 @@ export function SignupsSection({ users: allUsers, canDisable, onToggle, err, rel
               return (
                 <tr key={u.id} className="border-t border-neutral-200">
                   <td className="p-3 align-top">
-                    <p className="font-semibold break-words">{u.fullName}{u.isMinor && ' (under 18)'}</p>
+                    <p className="font-semibold break-words"><Link to={u.id} className="underline">{u.fullName || u.email}</Link>{u.isMinor && ' (under 18)'}</p>
                     {u.staffRole && <div className="mt-1"><Badge tone="green">{ROLE_LABEL[u.staffRole]}</Badge></div>}
                   </td>
                   <td className="p-3 align-top break-all">{u.email}</td>

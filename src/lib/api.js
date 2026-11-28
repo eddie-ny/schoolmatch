@@ -599,6 +599,35 @@ export async function ownerGrantPlan(userId, plan, reason) {
 export async function ownerEndPlan(userId, reason) {
   fail((await supabase.rpc('admin_end_plan', { p_user: userId, p_reason: reason || null })).error, 'Could not end the plan.')
 }
+// D10. Any staff: everything the person page shows (step219 admin_get_person). payments is null for support.
+export async function getPerson(userId) {
+  const { data, error } = await supabase.rpc('admin_get_person', { p_user: userId })
+  fail(error, 'Could not load this person.')
+  return data
+}
+// D10. Owner or admin: record a refund already made in the Paystack dashboard. Moves no money.
+// Returns 'recorded_plan_ended' or 'recorded_plan_kept'.
+export async function recordRefund(paymentId, amountMinor, reason, reference) {
+  const { data, error } = await supabase.rpc('admin_record_refund', { p_payment: paymentId, p_amount_minor: amountMinor, p_reason: reason, p_reference: reference || null })
+  fail(error, 'Could not record the refund.')
+  return data
+}
+// D10. Owner or admin: email the person that their recorded refund was made. Sends once per payment.
+export async function sendRefundEmail(paymentId) {
+  const { data, error } = await supabase.functions.invoke('staff-users/refund-email', { body: { paymentId } })
+  if (error) {
+    let msg = ''
+    try { msg = (await error.context.json()).error } catch { /* none */ }
+    throw new Error(msg || 'Could not send the refund email.')
+  }
+  return data // { ok: true, already?: true }
+}
+// Admin or owner: a short-lived link to open a person's uploaded file.
+export async function staffDocumentUrl(path) {
+  const { data, error } = await supabase.storage.from('documents').createSignedUrl(path, 60)
+  fail(error, 'Could not open this file.')
+  return data.signedUrl
+}
 export async function ownerSetRate(rate) {
   fail((await supabase.rpc('admin_set_rate', { p_rate: rate })).error, 'Could not save the rate.')
 }

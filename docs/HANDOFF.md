@@ -86,3 +86,10 @@ One unresolved issue in the last 14 days: SCHOOLMATCH-2, "Supabase: canceling st
 - Sentry: search_issues org wemk, region https://de.sentry.io, query is:unresolved
 - Supabase: project id zzuoqdeeegzmgtuvspgz; get_advisors for security and performance; query_logs for slow queries
 - Vercel: team id team_fnN7XyLZG7CEZFQmXHMK4tuu, project id prj_fzIX2FF2gC4YZUKEtMpz2c5tT44D; list_deployments, get_runtime_errors
+
+## 11. D10 staff person page and record refund (28 Nov 2026)
+- Spec: docs/D10-SPEC.md. SQL: supabase/step219_d10_staff_person_and_refund.sql (approved by the owner 28 Nov; the owner runs it in the SQL editor). Check it is applied before testing: `select to_regproc('public.admin_record_refund')` is not null.
+- Code: src/components/StaffPerson.jsx (route people/:id in src/pages/StaffArea.jsx, tabs kept in ?tab=). Names in People link to it. api.js: getPerson, recordRefund, staffDocumentUrl.
+- Record refund only records a refund already made in the Paystack dashboard. Owner or admin with 2-step. One refund per payment; full sets payment status 'refunded', part sets 'partially_refunded'. The plan ends (subscription status 'refunded', expires_at now) only if the refunded payment is the person's latest paid payment. Written to audit_log as refund_recorded.
+- Support see the page without payments, and History shows only their own actions (same as the audit_log policy). Admins can open uploaded files through a new storage policy.
+- Plan emails: plans ended by hand (status 'canceled') DO get the "plan ended" email at the next daily run, because plan-reminders only skips 'cancelled' (two l) and 'refunded'. The owner wants that (28 Nov), so do not "fix" it; the dead 'cancelled' check can go next time that function is deployed. Refunded plans get no plan emails. Refund email (owner approved 28 Nov): staff-users route refund-email, deployed as staff-users v10 on 28 Nov. The person page sends it right after Record refund; one email per payment, logged as refund_email_sent; "Send refund email" retries. Goes to the student's own email only (no parent copy). v10 also deployed the repo's gender field for staff-created students, which v9 had not.

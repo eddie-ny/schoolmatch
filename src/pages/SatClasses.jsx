@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Field, PageTitle } from '../components/ui'
 import { SAT_CLASSES } from '../data/satClasses'
+import { checkPhone } from '../lib/phone'
 
 // SAT classes and tutoring: what is offered, how to reach the team, and a short message form.
 // Messages go to Formspree like the complaint box (VITE_FORMSPREE_ID).
@@ -11,16 +12,20 @@ export default function SatClasses() {
   const c = SAT_CLASSES
   const [f, setF] = useState({ name: '', phone: '', email: '', want: 'Group classes', score: '', message: '', website: '' })
   const [state, setState] = useState('idle')
+  const [phoneErr, setPhoneErr] = useState('')
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value })
   const submit = async (e) => {
     e.preventDefault()
     if (f.website) return setState('sent')
+    const ph = checkPhone(f.phone)
+    if (ph.error) { setPhoneErr(ph.error); return }
+    setPhoneErr('')
     setState('sending')
     try {
       const res = await fetch(`https://formspree.io/f/${FORM_ID}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-        body: JSON.stringify({ name: f.name, phone: f.phone, email: f.email, wants: f.want, sat_score_or_goal: f.score, message: f.message, page: 'Jamba SAT classes' }),
+        body: JSON.stringify({ name: f.name, phone: ph.value, email: f.email, wants: f.want, sat_score_or_goal: f.score, message: f.message, page: 'Jamba SAT classes' }),
       })
       setState(res.ok ? 'sent' : 'error')
     } catch { setState('error') }
@@ -69,7 +74,8 @@ export default function SatClasses() {
           <form onSubmit={submit} className="space-y-4">
             <Field label="Your name"><input className="input" required value={f.name} onChange={set('name')} autoComplete="name" /></Field>
             <div className="grid sm:grid-cols-2 gap-4">
-              <Field label="Phone or WhatsApp"><input className="input" required value={f.phone} onChange={set('phone')} autoComplete="tel" /></Field>
+              <Field label="Phone or WhatsApp"><input className="input" type="tel" inputMode="tel" maxLength={18} placeholder="024 123 4567" required value={f.phone} onChange={set('phone')} autoComplete="tel" /></Field>
+              {phoneErr && <p role="alert" className="text-red-700 text-sm">{phoneErr}</p>}
               <Field label="Email (optional)"><input className="input" type="email" value={f.email} onChange={set('email')} autoComplete="email" /></Field>
             </div>
             <Field label="What do you need?">

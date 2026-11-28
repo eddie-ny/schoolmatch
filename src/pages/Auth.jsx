@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { isMinorFromDob, passwordProblem, PASSWORD_RULE } from '../lib/api'
 import { supabase } from '../lib/supabase'
 import { CONFIRM_BY_CODE, OTP_LENGTH } from '../lib/constants'
+import { checkPhone, PHONE_HINT } from '../lib/phone'
 
 // Read before Supabase clears the address: did the person just arrive from the email confirmation link?
 const ARRIVED_CONFIRMED = /type=signup|type=email/.test(window.location.hash)
@@ -238,9 +239,13 @@ export function Signup() {
     if (passwordProblem(f.password)) return setError(PASSWORD_RULE)
     if (!f.consent) return setError('Please accept the terms and the privacy notice to continue.')
     if (minor && (!f.parentName || !f.parentPhone || !f.parentEmail)) return setError('A parent or guardian name, phone and email are required for under 18s.')
+    const ph = checkPhone(f.phone)
+    if (ph.error) return setError(ph.error)
+    const pp = minor ? checkPhone(f.parentPhone) : { value: '' }
+    if (pp.error) return setError('Parent or guardian phone: ' + pp.error)
     setBusy(true)
     try {
-      const res = await signUp(f)
+      const res = await signUp({ ...f, phone: ph.value, parentPhone: pp.value })
       if (res.alreadyRegistered) {
         setExists(true)
       } else if (res.needsConfirm) {
@@ -260,7 +265,7 @@ export function Signup() {
       <PageTitle title="Create your account" sub="Your 24-hour free trial starts when you sign up. You can finish your profile later." />
       <form onSubmit={submit} className="card space-y-4">
         <Field label="Full name"><input className="input" required autoComplete="name" value={f.fullName} onChange={set('fullName')} /></Field>
-        <Field label="Phone"><input className="input" type="tel" required autoComplete="tel" value={f.phone} onChange={set('phone')} placeholder="024 000 0000" /></Field>
+        <Field label="Phone" hint={PHONE_HINT}><input className="input" type="tel" inputMode="tel" maxLength={18} required autoComplete="tel" value={f.phone} onChange={set('phone')} placeholder="024 123 4567" /></Field>
         <Field label="Email"><input className="input" type="email" required autoComplete="email" value={f.email} onChange={set('email')} /></Field>
         <Field label="Password" hint="At least 8 characters, with upper case, lower case and numbers."><PasswordInput required autoComplete="new-password" value={f.password} onChange={set('password')} /></Field>
         <Field label="Date of birth" hint="We ask so we can get a parent or guardian to confirm accounts for under 18s."><DobPicker value={f.dateOfBirth} onChange={(v) => { setF((cur) => ({ ...cur, dateOfBirth: v })); setError('') }} /></Field>
@@ -269,7 +274,7 @@ export function Signup() {
           <div className="rounded-xl border-2 border-brand-green p-4 space-y-4 bg-brand-green/10">
             <p className="text-sm font-semibold">You are under 18. A parent or guardian must confirm your account. Your account stays limited until they do.</p>
             <Field label="Parent or guardian name"><input className="input" value={f.parentName} onChange={set('parentName')} /></Field>
-            <Field label="Parent or guardian phone"><input className="input" type="tel" value={f.parentPhone} onChange={set('parentPhone')} /></Field>
+            <Field label="Parent or guardian phone" hint={PHONE_HINT}><input className="input" type="tel" inputMode="tel" maxLength={18} value={f.parentPhone} onChange={set('parentPhone')} placeholder="024 123 4567" /></Field>
             <Field label="Parent or guardian email"><input className="input" type="email" value={f.parentEmail} onChange={set('parentEmail')} /></Field>
           </div>
         )}

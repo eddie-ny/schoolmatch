@@ -5,6 +5,7 @@ import { FIELDS, SHS_PROGRAMS } from '../lib/constants'
 import { Badge, Field, PageTitle, RequireAuth, SectionLabel } from '../components/ui'
 import { saveAccount } from '../lib/api'
 import { timeLeft } from '../lib/access'
+import { checkPhone } from '../lib/phone'
 
 const ALLOWED = ['application/pdf', 'image/jpeg', 'image/png']
 const MAX_MB = 5
@@ -25,7 +26,11 @@ function ProfileInner() {
     if (!p.shsAttended.trim() || !p.shsProgram) return setError('SHS attended and the program you studied are required.')
     setBusy(true)
     try {
-      if (p.phone !== (user.phone || '')) await saveAccount(user.id, { fullName: user.fullName, phone: p.phone.trim() })
+      if (p.phone !== (user.phone || '')) {
+        const ph = checkPhone(p.phone)
+        if (ph.error) { setError(ph.error); return }
+        await saveAccount(user.id, { fullName: user.fullName, phone: ph.value })
+      }
       await saveProfile(p)
       setSaved('Changes saved.')
     } catch (err) {
@@ -90,7 +95,7 @@ function ProfileInner() {
           <input className="input bg-neutral-50 text-neutral-600" value={user.email} readOnly disabled />
         </Field>
         <Field label="Phone number">
-          <input className="input" type="tel" value={p.phone} onChange={(e) => setP({ ...p, phone: e.target.value })} />
+          <input className="input" type="tel" inputMode="tel" maxLength={18} placeholder="024 123 4567" value={p.phone} onChange={(e) => setP({ ...p, phone: e.target.value })} />
         </Field>
         <Field label="Date of birth" hint="Your date of birth cannot be changed once it is set. If it is wrong, contact support.">
           <input className="input bg-neutral-50 text-neutral-600" value={user.dateOfBirth || ''} readOnly disabled />

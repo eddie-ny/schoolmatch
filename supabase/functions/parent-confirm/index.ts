@@ -47,24 +47,24 @@ function parentEmail(parent: string, student: string, url: string, why: 'signup'
     `What Jamba keeps about ${student}: their name, contact details, date of birth, exam results and the schools they save. You can read how we use it in our Privacy notice (${SITE}/privacy).`,
     `If you are not ${student}'s parent or guardian, or you did not expect this email, do not press the link. Please tell us at info@inbox.jambaconsult.com or on +233 20 565 8716 so we can check.`,
   ]
-  const btn = `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:20px 0"><tr><td style="background:#FFB02E;border-radius:999px"><a href="${esc(url)}" style="display:inline-block;padding:11px 22px;font-weight:700;font-size:15px;line-height:20px;white-space:nowrap;color:#1F1F1F;text-decoration:none">Review and confirm</a></td></tr></table>`
+  const btn = `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:20px 0"><tr><td style="background:#FFB02E;border-radius:999px"><a href="${esc(url)}" style="display:inline-block;padding:14px 28px;font-weight:700;font-size:18px;line-height:22px;white-space:nowrap;color:#1F1F1F;text-decoration:none">Review and confirm</a></td></tr></table>`
   const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Please confirm your child's Jamba account</title></head>
 <body style="margin:0;padding:0;background:#FBFAF1;font-family:Inter,Segoe UI,Helvetica,Arial,sans-serif;color:#333333">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#FBFAF1"><tr><td align="center" style="padding:24px 12px">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#FFFFFF;border-radius:16px;overflow:hidden;border:1px solid #ECEADF">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:680px;background:#FFFFFF;border-radius:16px;overflow:hidden;border:1px solid #ECEADF">
 <tr><td style="height:6px;background:#FFB02E;font-size:0;line-height:0">&nbsp;</td></tr>
-<tr><td style="padding:24px 32px 8px;font-family:Poppins,Inter,Segoe UI,Helvetica,Arial,sans-serif;font-size:24px;font-weight:700"><span style="color:#FFB02E">Jam</span><span style="color:#8DB51A">ba</span></td></tr>
-<tr><td style="padding:8px 32px 28px;font-size:16px;line-height:1.6">
-<h1 style="margin:0 0 16px;font-size:24px;line-height:1.3;color:#1F1F1F">Please confirm ${esc(student)}'s Jamba account</h1>
+<tr><td style="padding:24px 32px 8px;font-family:Poppins,Inter,Segoe UI,Helvetica,Arial,sans-serif;font-size:30px;font-weight:700"><span style="color:#FFB02E">Jam</span><span style="color:#8DB51A">ba</span></td></tr>
+<tr><td style="padding:8px 36px 32px;font-size:18px;line-height:1.65">
+<h1 style="margin:0 0 18px;font-size:30px;line-height:1.3;color:#1F1F1F">Please confirm ${esc(student)}'s Jamba account</h1>
 <p style="margin:0 0 14px">${esc(hi)}</p>
 ${paras.slice(0, 3).map((t) => `<p style="margin:0 0 14px">${esc(t)}</p>`).join('\n')}
 ${btn}
-${paras.slice(3).map((t) => `<p style="margin:0 0 14px;font-size:14px">${esc(t)}</p>`).join('\n')}
+${paras.slice(3).map((t) => `<p style="margin:0 0 14px;font-size:16px">${esc(t)}</p>`).join('\n')}
 <p style="margin:0">Thank you,<br><b>The Jamba team</b></p>
 </td></tr>
-<tr><td style="background:#F1FAD3;padding:18px 32px;font-size:13px;line-height:1.6;color:#4A4A4A">Call or WhatsApp: +233 20 565 8716<br>Email: info@inbox.jambaconsult.com<br>Web: jambaconsult.com</td></tr>
+<tr><td style="background:#F1FAD3;padding:20px 36px;font-size:15px;line-height:1.6;color:#4A4A4A">Call or WhatsApp: +233 20 565 8716<br>Email: info@inbox.jambaconsult.com<br>Web: jambaconsult.com</td></tr>
 </table>
-<p style="max-width:560px;margin:14px auto 0;font-size:12px;line-height:1.5;color:#7A7A7A">You got this email because a student named you as their parent or guardian on jambaconsult.com.</p>
+<p style="max-width:680px;margin:14px auto 0;font-size:13px;line-height:1.5;color:#7A7A7A">You got this email because a student named you as their parent or guardian on jambaconsult.com.</p>
 </td></tr></table></body></html>`
   const text = [hi, '', ...paras.slice(0, 3).flatMap((t) => [t, '']), `Review and confirm: ${url}`, '', ...paras.slice(3).flatMap((t) => [t, '']), 'Thank you,', 'The Jamba team', '+233 20 565 8716 | info@inbox.jambaconsult.com'].join('\n')
   return { subject: `Please confirm ${student}'s Jamba account`, html, text }
@@ -157,7 +157,7 @@ Deno.serve(async (req) => {
       if (!user) return json({ error: 'Please sign in.' }, 401)
       if (user.app_metadata?.parent_email_sent_at) return json({ sent: false, reason: 'already sent' })
       if (!user.email_confirmed_at) return json({ sent: false, reason: 'email not confirmed' })
-      const r = await sendParentEmail(user.id, null, 'signup', `parent-auto-${user.id}`)
+      const r = await sendParentEmail(user.id, null, 'signup', `parent-auto-${user.id}-${crypto.randomUUID()}`)
       if ('error' in r) return json({ sent: false, reason: r.error })
       await admin.auth.admin.updateUserById(user.id, { app_metadata: { ...user.app_metadata, parent_email_sent_at: new Date().toISOString() } })
       return json({ sent: true })

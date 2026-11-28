@@ -4,6 +4,7 @@ import { SUPPORT_PATH } from '../lib/staffPaths'
 import { Link } from 'react-router-dom'
 import { acceptParent, createParentLink, emailParentLink, cancelInvite, deleteAccount, listArchive, listTrash, restoreAccount, trashAccount, listPlans, getRate, ownerSetRate, ownerGrantPlan, ownerEndPlan, getAccessBreakdown, getStudyInterest, getAdminStats, getAdminChart, getAdminInterest, inviteStaff, listInvites, listStaff, setStaffRole, staffCreateStudent, staffUpdateProfile } from '../lib/api'
 import { Badge, ConfirmDialog, Field, Spinner } from './ui'
+import { checkPhone } from '../lib/phone'
 
 export const ROLE_LABEL = { owner: 'Super admin', admin: 'Admin', support: 'Support' }
 
@@ -347,9 +348,13 @@ function AddStudent({ onDone }) {
   const submit = async (e) => {
     e.preventDefault()
     setErr('')
+    const ph = checkPhone(f.phone)
+    if (ph.error) return setErr(ph.error)
+    const pp = f.parentPhone.trim() ? checkPhone(f.parentPhone) : { value: '' }
+    if (pp.error) return setErr('Parent or guardian phone: ' + pp.error)
     setBusy(true)
     try {
-      setMade(await staffCreateStudent(f))
+      setMade(await staffCreateStudent({ ...f, phone: ph.value, parentPhone: pp.value }))
       setF(empty)
       onDone()
     } catch (x) { setErr(x.message) }
@@ -372,7 +377,7 @@ function AddStudent({ onDone }) {
         <form onSubmit={submit} className="space-y-3">
           <Field label="Full name"><input className="input" value={f.fullName} onChange={set('fullName')} required /></Field>
           <Field label="Email"><input className="input" type="email" value={f.email} onChange={set('email')} required /></Field>
-          <Field label="Phone"><input className="input" type="tel" value={f.phone} onChange={set('phone')} required /></Field>
+          <Field label="Phone"><input className="input" type="tel" inputMode="tel" maxLength={18} placeholder="024 123 4567" value={f.phone} onChange={set('phone')} required /></Field>
           <Field label="Date of birth"><input className="input" type="date" value={f.dateOfBirth} onChange={set('dateOfBirth')} required /></Field>
           <Field label="Gender">
             <select className="input" value={f.gender} onChange={set('gender')} required>
@@ -385,7 +390,7 @@ function AddStudent({ onDone }) {
             <>
               <p className="text-sm text-neutral-600">Under 18: a parent or guardian must confirm before this student gets full access.</p>
               <Field label="Parent or guardian name"><input className="input" value={f.parentName} onChange={set('parentName')} required /></Field>
-              <Field label="Parent or guardian phone"><input className="input" type="tel" value={f.parentPhone} onChange={set('parentPhone')} /></Field>
+              <Field label="Parent or guardian phone"><input className="input" type="tel" inputMode="tel" maxLength={18} placeholder="024 123 4567" value={f.parentPhone} onChange={set('parentPhone')} /></Field>
               <Field label="Parent or guardian email"><input className="input" type="email" value={f.parentEmail} onChange={set('parentEmail')} required /></Field>
             </>
           )}
@@ -407,13 +412,15 @@ export function EditStudent({ u, onClose, onSaved }) {
   const save = async (e) => {
     e.preventDefault()
     setErr('')
-    try { await staffUpdateProfile(u.id, name, phone); onSaved() } catch (x) { setErr(x.message) }
+    const ph = checkPhone(phone)
+    if (ph.error) return setErr(ph.error)
+    try { await staffUpdateProfile(u.id, name, ph.value); onSaved() } catch (x) { setErr(x.message) }
   }
   return (
     <form onSubmit={save} className="card space-y-3 max-w-xl" aria-label="Edit student">
       <h3 className="font-bold">Edit {u.email}</h3>
       <Field label="Full name"><input className="input" value={name} onChange={(e) => setName(e.target.value)} required /></Field>
-      <Field label="Phone"><input className="input" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} required /></Field>
+      <Field label="Phone"><input className="input" type="tel" inputMode="tel" maxLength={18} placeholder="024 123 4567" value={phone} onChange={(e) => setPhone(e.target.value)} required /></Field>
       {err && <p className="text-red-700 text-sm" role="alert">{err}</p>}
       <div className="flex gap-3">
         <button className="btn btn-orange">Save</button>

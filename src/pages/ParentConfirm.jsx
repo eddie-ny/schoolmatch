@@ -25,7 +25,7 @@ export default function ParentConfirm() {
     try { setDone(await confirmParentLink(token)) } catch (e) { setError(e.message) } finally { setBusy(false) }
   }
 
-  const problem = { invalid: 'This link is not valid.', used: 'This link was already used, or this account is already confirmed.', expired: 'This link has expired.' }
+  const problem = { invalid: 'This link is not valid.', used: 'This link was already used, or this account is already confirmed.', expired: 'This link has expired, or a newer link was sent after it. Each new email or link from Jamba cancels the older ones, so open the link in the most recent email from Jamba.' }
   const state = done || info?.state
 
   return (

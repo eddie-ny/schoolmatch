@@ -730,7 +730,7 @@ export async function deleteAccount(userId) {
   }
   return data
 }
-// Super admin: move an account to the trash (step220). It is blocked and hidden, and erased for good after 7 days.
+// Super admin: move an account to the trash (step223). It is blocked and hidden, and erased for good after 7 days.
 export async function trashAccount(userId) {
   const { error } = await supabase.rpc('admin_trash_account', { p_user: userId })
   fail(error, 'Could not delete this account.')

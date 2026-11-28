@@ -3,9 +3,9 @@ import NotFound from './NotFound'
 import { Link, NavLink, Route, Routes } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { clearCatalogCache } from '../hooks/useCatalog'
-import { listUsers, importCatalog, deleteDemoData, setAccountDisabled, listAuditLog, importPlans, listPendingParents } from '../lib/api'
+import { listUsers, importCatalog, deleteDemoData, listAuditLog, importPlans, listPendingParents } from '../lib/api'
 import { parseCsv, rowsToSchools, rowsToPrograms, rowsToScholarships } from '../lib/csv'
-import { ConfirmDialog, PageTitle, Spinner } from '../components/ui'
+import { PageTitle, Spinner } from '../components/ui'
 import { ActivityLog, ActivityPage, ArchivePage, NeedMfa, ParentsSection, SignupsSection, StatsPanel, TeamSection } from '../components/StaffParts'
 import { PersonPage } from '../components/StaffPerson'
 
@@ -94,21 +94,12 @@ function Overview({ base, isAdmin, users, pending, log, canSeeAll, canRate }) {
 export default function StaffArea({ base, isAdminArea }) {
   const { user, loading, mfa } = useAuth()
   const [users, setUsers] = useState([])
-  const [target, setTarget] = useState(null) // account waiting to be disabled or reactivated
-  const [err, setErr] = useState('')
   const [log, setLog] = useState([])
   const [pending, setPending] = useState([])
   const allowed = !!user && (isAdminArea ? user.role === 'admin' : ['support', 'admin'].includes(user.role))
   const ready = allowed && mfa.current === 'aal2'
   const load = () => Promise.all([listUsers().then(setUsers), listAuditLog(1000).then(setLog).catch(() => {}), listPendingParents().then(setPending).catch(() => {})])
   useEffect(() => { if (ready) load() }, [ready])
-  const toggle = async () => {
-    try {
-      await setAccountDisabled(target.id, !target.disabled)
-      setTarget(null)
-      await load()
-    } catch (e) { setTarget(null); setErr(e.message) }
-  }
 
   const label = isAdminArea ? 'Admin' : 'Support'
   if (loading) return <Spinner />
@@ -141,17 +132,9 @@ export default function StaffArea({ base, isAdminArea }) {
           </NavLink>
         ))}
       </nav>
-      <ConfirmDialog
-        open={!!target}
-        title={target?.disabled ? 'Reactivate this account?' : 'Disable this account?'}
-        text={target ? `${target.fullName} (${target.email}). ${target.disabled ? 'They will be able to sign in again.' : 'They will be signed out and blocked. Records are kept.'}` : ''}
-        confirmLabel={target?.disabled ? 'Reactivate' : 'Disable'}
-        onConfirm={toggle}
-        onCancel={() => setTarget(null)}
-      />
       <Routes>
         <Route index element={<Overview base={base} isAdmin={isAdminArea} users={users} pending={pending} log={log} canSeeAll={canSeeAll} canRate={owner && isAdminArea} />} />
-        <Route path="people" element={<SignupsSection users={users} canDisable={isAdminArea} onToggle={isAdminArea ? setTarget : () => {}} err={err} reload={load} canEditStaff={isAdminArea} canDelete={owner && isAdminArea} canPlan={owner && isAdminArea} />} />
+        <Route path="people" element={<SignupsSection users={users} reload={load} />} />
         <Route path="people/:id" element={<PersonPage users={users} reload={load} canDisable={isAdminArea} canEditStaff={isAdminArea} canDelete={owner && isAdminArea} canPlan={owner && isAdminArea} canRefund={isAdminArea} />} />
         <Route path="parents" element={<ParentsSection pending={pending} canAccept={isAdminArea} reload={load} />} />
         {owner && isAdminArea && <Route path="team" element={<TeamSection />} />}

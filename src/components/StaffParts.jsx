@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react'
 import { SUPPORT_PATH } from '../lib/staffPaths'
 import { Link } from 'react-router-dom'
-import { activateAccount, acceptParent, createParentLink, cancelInvite, deleteAccount, listArchive, listPlans, getRate, ownerSetRate, ownerGrantPlan, ownerEndPlan, getAccessBreakdown, getStudyInterest, getAdminStats, getAdminChart, getAdminInterest, inviteStaff, listInvites, listStaff, setStaffRole, staffCreateStudent, staffUpdateProfile } from '../lib/api'
+import { acceptParent, createParentLink, cancelInvite, deleteAccount, listArchive, listPlans, getRate, ownerSetRate, ownerGrantPlan, ownerEndPlan, getAccessBreakdown, getStudyInterest, getAdminStats, getAdminChart, getAdminInterest, inviteStaff, listInvites, listStaff, setStaffRole, staffCreateStudent, staffUpdateProfile } from '../lib/api'
 import { Badge, ConfirmDialog, Field, Spinner } from './ui'
 
 export const ROLE_LABEL = { owner: 'Super admin', admin: 'Admin', support: 'Support' }
@@ -467,69 +467,26 @@ export function PlanPanel({ u, onClose, onDone }) {
   )
 }
 
-export function SignupsSection({ users: allUsers, canDisable, onToggle, err, reload, canEditStaff, canDelete, canPlan }) {
-  const [editing, setEditing] = useState(null)
-  const [planFor, setPlanFor] = useState(null)
-  const [actTarget, setActTarget] = useState(null)
-  const [actErr, setActErr] = useState('')
-  const runActivate = async () => {
-    const t = actTarget
-    setActTarget(null)
-    setActErr('')
-    try { await activateAccount(t.id); reload && reload() } catch (e) { setActErr(e.message) }
-  }
-  // Someone who never confirmed their email cannot sign in, so they are not "Active". Staff can activate them.
-  const canActivate = (u) => !!reload && u.unconfirmed && !u.staffRole
+export function SignupsSection({ users: allUsers, reload }) {
+  // Someone who never confirmed their email cannot sign in, so they are not "Active".
   const accountBadge = (u) => (u.unconfirmed
     ? <Badge tone="orange">Unconfirmed</Badge>
     : <Badge tone={u.disabled ? 'orange' : 'green'}>{u.disabled ? 'Inactive' : 'Active'}</Badge>)
-  const [delTarget, setDelTarget] = useState(null)
-  const [delErr, setDelErr] = useState('')
-  const runDelete = async () => {
-    const t = delTarget
-    setDelTarget(null)
-    setDelErr('')
-    try { await deleteAccount(t.id); reload && reload() } catch (e) { setDelErr(e.message) }
-  }
   const [q, setQ] = useState('')
   const needle = q.trim().toLowerCase()
   const found = needle ? allUsers.filter((u) => `${u.fullName || ''} ${u.email || ''}`.toLowerCase().includes(needle)) : allUsers
   const [page, setPage] = useState(1)
   useEffect(() => { setPage(1) }, [needle])
   const users = found.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
-  const canEdit = (u) => !!reload && (!u.staffRole || canEditStaff)
-  const canToggle = (u) => canDisable && !u.staffRole
-  const canRemove = (u) => canDelete && u.staffRole !== 'owner'
-  const done = () => { setEditing(null); reload && reload() }
+  const done = () => { reload && reload() }
   return (
     <section className="space-y-3">
       <h2 className="text-xl font-bold">People ({found.length}{needle ? ` of ${allUsers.length}` : ''})</h2>
-      <p className="text-sm text-neutral-600">
-        {canDelete ? 'Disabling blocks sign-in and keeps the account. Deleting removes it for good from the site; a private copy is kept in the archive.' : canDisable ? 'Disabling blocks sign-in and keeps the account.' : 'You can see, add and edit students. Only admins can disable accounts.'}
-      </p>
-      {(err || delErr || actErr) && <p className="text-red-700 text-sm" role="alert">{err || delErr || actErr}</p>}
-      <ConfirmDialog
-        open={!!actTarget}
-        title="Activate this account?"
-        text={actTarget ? `${actTarget.fullName} (${actTarget.email}) has not confirmed their email. Activating confirms it for them so they can sign in with the password they chose. Only do this if you know the email address belongs to them.` : ''}
-        confirmLabel="Activate"
-        onConfirm={runActivate}
-        onCancel={() => setActTarget(null)}
-      />
-      <ConfirmDialog
-        open={!!delTarget}
-        title="Delete this account?"
-        text={delTarget ? `${delTarget.fullName} (${delTarget.email}) will be removed from the site and signed out. If they sign up again with the same details they start fresh with a new account. A private copy is kept in the archive.` : ''}
-        confirmLabel="Delete"
-        onConfirm={runDelete}
-        onCancel={() => setDelTarget(null)}
-      />
+      <p className="text-sm text-neutral-600">Click a name to open that person's page. Edit, plan, refund, disable and delete are there.</p>
       <div className="flex flex-wrap items-start gap-4">
         <input className="input flex-1 min-w-[16rem] max-w-xl" type="search" placeholder="Search students and staff by name or email" aria-label="Search people" value={q} onChange={(e) => setQ(e.target.value)} />
         {reload && <AddStudent onDone={done} />}
       </div>
-      {editing && <EditStudent u={editing} onClose={() => setEditing(null)} onSaved={done} />}
-      {planFor && <PlanPanel u={planFor} onClose={() => setPlanFor(null)} onDone={() => reload && reload()} />}
       <ul className="md:hidden space-y-3" aria-label="Sign-ups">
         {users.map((u) => {
           const { subbed, trial, label } = accessLabel(u)
@@ -543,11 +500,6 @@ export function SignupsSection({ users: allUsers, canDisable, onToggle, err, rel
                 {accountBadge(u)}
                 <span className="text-neutral-600">{u.profileComplete ? 'Profile complete' : 'Profile incomplete'}</span>
               </p>
-              {canEdit(u) && <button className="btn btn-outline w-full" onClick={() => setEditing(u)}>Edit details</button>}
-              {canPlan && !u.staffRole && <button className="btn btn-outline w-full" onClick={() => setPlanFor(u)}>Plan</button>}
-              {canActivate(u) && <button className="btn btn-outline w-full" onClick={() => setActTarget(u)}>Activate account</button>}
-              {canToggle(u) && !u.unconfirmed && <button className="btn btn-outline w-full" onClick={() => onToggle(u)}>{u.disabled ? 'Reactivate account' : 'Disable account'}</button>}
-              {canRemove(u) && <button className="btn btn-outline w-full !border-red-300 text-red-700" onClick={() => setDelTarget(u)}>Delete account</button>}
             </li>
           )
         })}
@@ -556,7 +508,7 @@ export function SignupsSection({ users: allUsers, canDisable, onToggle, err, rel
       <div className="hidden md:block overflow-x-auto card !p-0">
         <table className="w-full text-sm">
           <thead className="text-left bg-neutral-50">
-            <tr><th className="p-3 min-w-[12rem]">Name</th><th className="p-3 min-w-[14rem]">Email</th><th className="p-3 whitespace-nowrap">Phone</th><th className="p-3">Access</th><th className="p-3">Profile</th><th className="p-3">Account</th><th className="p-3">Actions</th></tr>
+            <tr><th className="p-3 min-w-[12rem]">Name</th><th className="p-3 min-w-[14rem]">Email</th><th className="p-3 whitespace-nowrap">Phone</th><th className="p-3">Access</th><th className="p-3">Profile</th><th className="p-3">Account</th></tr>
           </thead>
           <tbody>
             {users.map((u) => {
@@ -572,17 +524,10 @@ export function SignupsSection({ users: allUsers, canDisable, onToggle, err, rel
                   <td className="p-3 align-top"><Badge tone={subbed || trial ? 'green' : 'orange'}>{label}</Badge></td>
                   <td className="p-3 align-top">{u.profileComplete ? 'Complete' : 'Incomplete'}</td>
                   <td className="p-3 align-top">{accountBadge(u)}</td>
-                  <td className="p-3 align-top"><div className="grid grid-cols-2 gap-2 w-[15rem]">
-                    {canEdit(u) && <button className="btn btn-outline !min-h-11 !py-1" onClick={() => setEditing(u)}>Edit</button>}
-                    {canPlan && !u.staffRole && <button className="btn btn-outline !min-h-11 !py-1" onClick={() => setPlanFor(u)}>Plan</button>}
-                    {canActivate(u) && <button className="btn btn-outline !min-h-11 !py-1" onClick={() => setActTarget(u)}>Activate</button>}
-                    {canToggle(u) && !u.unconfirmed && <button className="btn btn-outline !min-h-11 !py-1" onClick={() => onToggle(u)}>{u.disabled ? 'Reactivate' : 'Disable'}</button>}
-                    {canRemove(u) && <button className="btn btn-outline !min-h-11 !py-1 !border-red-300 text-red-700" onClick={() => setDelTarget(u)}>Delete</button>}
-                  </div></td>
                 </tr>
               )
             })}
-            {users.length === 0 && <tr><td className="p-3 text-neutral-500" colSpan={7}>No one found.</td></tr>}
+            {users.length === 0 && <tr><td className="p-3 text-neutral-500" colSpan={6}>No one found.</td></tr>}
           </tbody>
         </table>
       </div>

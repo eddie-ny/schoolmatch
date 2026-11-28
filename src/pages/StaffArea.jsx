@@ -6,7 +6,7 @@ import { clearCatalogCache } from '../hooks/useCatalog'
 import { listUsers, importCatalog, deleteDemoData, listAuditLog, importPlans, listPendingParents } from '../lib/api'
 import { parseCsv, rowsToSchools, rowsToPrograms, rowsToScholarships } from '../lib/csv'
 import { PageTitle, Spinner } from '../components/ui'
-import { ActivityLog, ActivityPage, ArchivePage, NeedMfa, ParentsSection, SignupsSection, StatsPanel, TeamSection } from '../components/StaffParts'
+import { ActivityLog, ActivityPage, ArchivePage, TrashPage, NeedMfa, ParentsSection, SignupsSection, StatsPanel, TeamSection } from '../components/StaffParts'
 import { PersonPage } from '../components/StaffPerson'
 
 const SHEETS = [
@@ -114,6 +114,7 @@ export default function StaffArea({ base, isAdminArea }) {
     { to: `${base}/parents`, label: `Parents${pending.length ? ` (${pending.length})` : ''}` },
     ...(owner && isAdminArea ? [{ to: `${base}/team`, label: 'Team' }] : []),
     { to: `${base}/activity`, label: 'Activity' },
+    ...(owner && isAdminArea ? [{ to: `${base}/trash`, label: 'Trash' }] : []),
     ...(owner && isAdminArea ? [{ to: `${base}/archive`, label: 'Archive' }] : []),
     ...(isAdminArea ? [{ to: `${base}/data`, label: 'Data' }] : []),
   ]
@@ -138,6 +139,7 @@ export default function StaffArea({ base, isAdminArea }) {
         <Route path="people/:id" element={<PersonPage users={users} reload={load} canDisable={isAdminArea} canEditStaff={isAdminArea} canDelete={owner && isAdminArea} canPlan={owner && isAdminArea} canRefund={isAdminArea} />} />
         <Route path="parents" element={<ParentsSection pending={pending} canAccept={isAdminArea} reload={load} />} />
         {owner && isAdminArea && <Route path="team" element={<TeamSection />} />}
+        {owner && isAdminArea && <Route path="trash" element={<TrashPage reload={load} />} />}
         {owner && isAdminArea && <Route path="archive" element={<ArchivePage />} />}
         <Route path="activity" element={<ActivityPage log={log} users={users} canSeeAll={canSeeAll} />} />
         {isAdminArea && <Route path="data" element={<DataSection />} />}

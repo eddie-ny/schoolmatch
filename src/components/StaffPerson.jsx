@@ -1,7 +1,7 @@
 // D10. One person's own page in the staff area (people/:id). Data comes from admin_get_person (step219).
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { activateAccount, deleteAccount, getPerson, recordRefund, sendRefundEmail, setAccountDisabled, staffDocumentUrl } from '../lib/api'
+import { activateAccount, getPerson, recordRefund, sendRefundEmail, setAccountDisabled, staffDocumentUrl, trashAccount } from '../lib/api'
 import { Badge, ConfirmDialog, Field, Spinner } from './ui'
 import { EditStudent, PlanPanel, ROLE_LABEL, accessLabel } from './StaffParts'
 
@@ -98,7 +98,7 @@ export function PersonPage({ users, reload, canDisable, canEditStaff, canDelete,
   }
   const remove = async () => {
     setConfirm(''); setErr('')
-    try { await deleteAccount(id); reload && reload(); navigate('..', { relative: 'path' }) } catch (e) { setErr(e.message) }
+    try { await trashAccount(id); reload && reload(); navigate('..', { relative: 'path' }) } catch (e) { setErr(e.message) }
   }
   // Payments whose refund email went out (from History; admins see all of it).
   const emailed = new Set((data.history || []).filter((h) => h.action === 'refund_email_sent').map((h) => h.detail?.payment_id))
@@ -149,7 +149,7 @@ export function PersonPage({ users, reload, canDisable, canEditStaff, canDelete,
 
       <ConfirmDialog open={confirm === 'activate'} title="Activate this account?" text={`${p.full_name} (${p.email}) has not confirmed their email. Only do this if you know the email address belongs to them.`} confirmLabel="Activate" onConfirm={() => act(() => activateAccount(id), 'Account activated.')} onCancel={() => setConfirm('')} />
       <ConfirmDialog open={confirm === 'disable'} title={p.disabled_at ? 'Reactivate this account?' : 'Disable this account?'} text={p.disabled_at ? 'They will be able to sign in again.' : 'They will be signed out and blocked. Records are kept.'} confirmLabel={p.disabled_at ? 'Reactivate' : 'Disable'} onConfirm={() => act(() => setAccountDisabled(id, !p.disabled_at), p.disabled_at ? 'Account reactivated.' : 'Account disabled.')} onCancel={() => setConfirm('')} />
-      <ConfirmDialog open={confirm === 'delete'} title="Delete this account?" text={`${p.full_name} (${p.email}) will be removed from the site and signed out. A private copy is kept in the archive.`} confirmLabel="Delete" onConfirm={remove} onCancel={() => setConfirm('')} />
+      <ConfirmDialog open={confirm === 'delete'} title="Delete this account?" text={`${p.full_name} (${p.email}) will be signed out, blocked and moved to the Trash. You can restore them from the Trash for 7 days. After that they are erased for good and a private copy goes to the Archive.`} confirmLabel="Delete" onConfirm={remove} onCancel={() => setConfirm('')} />
       {refundFor && <RefundDialog pay={refundFor} onClose={() => setRefundFor(null)} onDone={(r) => { const id = refundFor.id; setRefundFor(null); emailRefund(id, r === 'recorded_plan_ended' ? 'Refund recorded. Their plan has ended. ' : 'Refund recorded. Their plan was kept because a newer payment paid for it. ') }} />}
 
       <nav aria-label="Person sections" className="flex gap-2 overflow-x-auto pb-1">

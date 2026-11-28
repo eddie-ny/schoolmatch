@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react'
 import { SUPPORT_PATH } from '../lib/staffPaths'
 import { Link } from 'react-router-dom'
-import { acceptParent, createParentLink, emailParentLink, cancelInvite, deleteAccount, listArchive, listPlans, getRate, ownerSetRate, ownerGrantPlan, ownerEndPlan, getAccessBreakdown, getStudyInterest, getAdminStats, getAdminChart, getAdminInterest, inviteStaff, listInvites, listStaff, setStaffRole, staffCreateStudent, staffUpdateProfile } from '../lib/api'
+import { acceptParent, createParentLink, emailParentLink, cancelInvite, deleteAccount, listArchive, listTrash, restoreAccount, trashAccount, listPlans, getRate, ownerSetRate, ownerGrantPlan, ownerEndPlan, getAccessBreakdown, getStudyInterest, getAdminStats, getAdminChart, getAdminInterest, inviteStaff, listInvites, listStaff, setStaffRole, staffCreateStudent, staffUpdateProfile } from '../lib/api'
 import { Badge, ConfirmDialog, Field, Spinner } from './ui'
 
 export const ROLE_LABEL = { owner: 'Super admin', admin: 'Admin', support: 'Support' }
@@ -803,6 +803,61 @@ export function ArchivePage() {
   )
 }
 
+// ---------- Trash: deleted in the last 7 days, can be restored (super admin only) ----------
+export function TrashPage({ reload }) {
+  const [rows, setRows] = useState(null)
+  const [msg, setMsg] = useState({ ok: '', err: '' })
+  const [target, setTarget] = useState(null) // { row, action: 'restore' | 'erase' }
+  const load = () => listTrash().then(setRows).catch((e) => { setMsg({ ok: '', err: e.message }); setRows([]) })
+  useEffect(() => { load() }, [])
+  if (!rows) return <Spinner />
+  const run = async () => {
+    const { row, action } = target
+    setTarget(null)
+    setMsg({ ok: '', err: '' })
+    try {
+      if (action === 'restore') { await restoreAccount(row.userId); setMsg({ ok: `${row.email} was restored.`, err: '' }) }
+      else { await deleteAccount(row.userId); setMsg({ ok: `${row.email} was erased. A private copy is in the Archive.`, err: '' }) }
+    } catch (e) { setMsg({ ok: '', err: e.message }) }
+    load()
+    reload && reload()
+  }
+  return (
+    <section className="space-y-3">
+      <h2 className="text-xl font-bold">Trash ({rows.length})</h2>
+      <p className="text-sm text-neutral-600">Accounts deleted in the last 7 days. They are signed out, blocked and hidden from People. Restore brings everything back. After 7 days they are erased for good and a private copy goes to the Archive. Only super admins can see this.</p>
+      {msg.err && <p className="text-red-700 text-sm" role="alert">{msg.err}</p>}
+      {msg.ok && <p className="text-sm font-semibold text-green-800" role="status">{msg.ok}</p>}
+      <ConfirmDialog
+        open={!!target}
+        title={target?.action === 'restore' ? 'Restore this account?' : 'Erase this account now?'}
+        text={target ? (target.action === 'restore'
+          ? `${target.row.email} will be able to sign in again, with all their data.`
+          : `${target.row.email} will be erased now instead of in 7 days. A private copy goes to the Archive. This cannot be undone.`) : ''}
+        confirmLabel={target?.action === 'restore' ? 'Restore' : 'Erase now'}
+        onConfirm={run}
+        onCancel={() => setTarget(null)}
+      />
+      <ul className="space-y-2">
+        {rows.map((r) => (
+          <li key={r.userId} className="card !p-4 text-sm flex flex-wrap items-center justify-between gap-3">
+            <div className="min-w-0">
+              <p className="font-semibold break-words">{r.fullName || '(no name)'} {r.staffRole && <Badge tone="green">{ROLE_LABEL[r.staffRole]}</Badge>}</p>
+              <p className="break-all text-neutral-600">{r.email} {r.phone ? `| ${r.phone}` : ''}</p>
+              <p className="text-neutral-600">Deleted {new Date(r.trashedAt).toLocaleString()}{r.trashedBy ? ` by ${r.trashedBy}` : ''}. Erased after {new Date(r.purgeAfter).toLocaleString()}.</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <button className="btn btn-outline !min-h-11 !py-1" onClick={() => setTarget({ row: r, action: 'restore' })}>Restore</button>
+              <button className="btn btn-outline !min-h-11 !py-1 !border-red-300 text-red-700" onClick={() => setTarget({ row: r, action: 'erase' })}>Erase now</button>
+            </div>
+          </li>
+        ))}
+        {rows.length === 0 && <li className="card text-sm text-neutral-500">The trash is empty.</li>}
+      </ul>
+    </section>
+  )
+}
+
 // ---------- Team (super admin only) ----------
 
 export function TeamSection() {
@@ -840,8 +895,8 @@ export function TeamSection() {
     const t = deleteTarget
     setDeleteTarget(null)
     try {
-      await deleteAccount(t.userId)
-      setMsg({ ok: `${t.email} was deleted. A private copy is in the Archive.`, err: '' })
+      await trashAccount(t.userId)
+      setMsg({ ok: `${t.email} was moved to the Trash. You can restore them there for 7 days.`, err: '' })
       load()
     } catch (err) { setMsg({ ok: '', err: err.message }) }
   }
@@ -863,7 +918,7 @@ export function TeamSection() {
       <ConfirmDialog
         open={!!deleteTarget}
         title="Delete this staff account?"
-        text={deleteTarget ? `${deleteTarget.email} will lose access and the account will be erased. This cannot be undone.` : ''}
+        text={deleteTarget ? `${deleteTarget.email} will lose access and move to the Trash. You can restore them for 7 days, then they are erased for good.` : ''}
         confirmLabel="Delete"
         onConfirm={del}
         onCancel={() => setDeleteTarget(null)}

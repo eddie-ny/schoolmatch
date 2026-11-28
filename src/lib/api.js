@@ -612,6 +612,16 @@ export async function recordRefund(paymentId, amountMinor, reason, reference) {
   fail(error, 'Could not record the refund.')
   return data
 }
+// D10. Owner or admin: email the person that their recorded refund was made. Sends once per payment.
+export async function sendRefundEmail(paymentId) {
+  const { data, error } = await supabase.functions.invoke('staff-users/refund-email', { body: { paymentId } })
+  if (error) {
+    let msg = ''
+    try { msg = (await error.context.json()).error } catch { /* none */ }
+    throw new Error(msg || 'Could not send the refund email.')
+  }
+  return data // { ok: true, already?: true }
+}
 // Admin or owner: a short-lived link to open a person's uploaded file.
 export async function staffDocumentUrl(path) {
   const { data, error } = await supabase.storage.from('documents').createSignedUrl(path, 60)

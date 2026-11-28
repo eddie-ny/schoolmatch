@@ -1,7 +1,7 @@
 // D10. One person's own page in the staff area (people/:id). Data comes from admin_get_person (step219).
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { activateAccount, deleteAccount, getPerson, recordRefund, setAccountDisabled, staffDocumentUrl } from '../lib/api'
+import { activateAccount, deleteAccount, getPerson, recordRefund, sendRefundEmail, setAccountDisabled, staffDocumentUrl } from '../lib/api'
 import { Badge, ConfirmDialog, Field, Spinner } from './ui'
 import { EditStudent, PlanPanel, ROLE_LABEL, accessLabel } from './StaffParts'
 
@@ -100,6 +100,13 @@ export function PersonPage({ users, reload, canDisable, canEditStaff, canDelete,
     setConfirm(''); setErr('')
     try { await deleteAccount(id); reload && reload(); navigate('..', { relative: 'path' }) } catch (e) { setErr(e.message) }
   }
+  // Payments whose refund email went out (from History; admins see all of it).
+  const emailed = new Set((data.history || []).filter((h) => h.action === 'refund_email_sent').map((h) => h.detail?.payment_id))
+  const emailRefund = async (paymentId, before = '') => {
+    setErr('')
+    try { await sendRefundEmail(paymentId); setMsg(`${before}Refund email sent.`) } catch (e) { setMsg(before); setErr(`Refund email not sent: ${e.message}`) }
+    refresh()
+  }
   const openDoc = async (path) => {
     try { window.open(await staffDocumentUrl(path), '_blank', 'noopener') } catch (e) { setErr(e.message) }
   }
@@ -143,7 +150,7 @@ export function PersonPage({ users, reload, canDisable, canEditStaff, canDelete,
       <ConfirmDialog open={confirm === 'activate'} title="Activate this account?" text={`${p.full_name} (${p.email}) has not confirmed their email. Only do this if you know the email address belongs to them.`} confirmLabel="Activate" onConfirm={() => act(() => activateAccount(id), 'Account activated.')} onCancel={() => setConfirm('')} />
       <ConfirmDialog open={confirm === 'disable'} title={p.disabled_at ? 'Reactivate this account?' : 'Disable this account?'} text={p.disabled_at ? 'They will be able to sign in again.' : 'They will be signed out and blocked. Records are kept.'} confirmLabel={p.disabled_at ? 'Reactivate' : 'Disable'} onConfirm={() => act(() => setAccountDisabled(id, !p.disabled_at), p.disabled_at ? 'Account reactivated.' : 'Account disabled.')} onCancel={() => setConfirm('')} />
       <ConfirmDialog open={confirm === 'delete'} title="Delete this account?" text={`${p.full_name} (${p.email}) will be removed from the site and signed out. A private copy is kept in the archive.`} confirmLabel="Delete" onConfirm={remove} onCancel={() => setConfirm('')} />
-      {refundFor && <RefundDialog pay={refundFor} onClose={() => setRefundFor(null)} onDone={(r) => { setRefundFor(null); setMsg(r === 'recorded_plan_ended' ? 'Refund recorded. Their plan has ended.' : 'Refund recorded. Their plan was kept because a newer payment paid for it.'); refresh() }} />}
+      {refundFor && <RefundDialog pay={refundFor} onClose={() => setRefundFor(null)} onDone={(r) => { const id = refundFor.id; setRefundFor(null); emailRefund(id, r === 'recorded_plan_ended' ? 'Refund recorded. Their plan has ended. ' : 'Refund recorded. Their plan was kept because a newer payment paid for it. ') }} />}
 
       <nav aria-label="Person sections" className="flex gap-2 overflow-x-auto pb-1">
         {TABS.map((t) => (
@@ -185,7 +192,10 @@ export function PersonPage({ users, reload, canDisable, canEditStaff, canDelete,
                           {PAY_STATUS[y.status] || y.status}
                           {y.refunded_at && <p className="text-xs text-neutral-600">{money(y.refund_amount_minor, y.currency)} on {day(y.refunded_at)}{y.refunded_by_name ? ` by ${y.refunded_by_name}` : ''}. {y.refund_reason}{y.refund_reference ? ` (ref ${y.refund_reference})` : ''}</p>}
                         </td>
-                        <td className="p-2">{canRefund && y.status === 'success' && <button className="btn btn-outline !min-h-11 !py-1 whitespace-nowrap" onClick={() => setRefundFor(y)}>Record refund</button>}</td>
+                        <td className="p-2">
+                          {canRefund && y.status === 'success' && <button className="btn btn-outline !min-h-11 !py-1 whitespace-nowrap" onClick={() => setRefundFor(y)}>Record refund</button>}
+                          {canRefund && y.refunded_at && (emailed.has(y.id) ? <span className="text-xs text-neutral-600 whitespace-nowrap">Email sent</span> : <button className="btn btn-outline !min-h-11 !py-1 whitespace-nowrap" onClick={() => emailRefund(y.id)}>Send refund email</button>)}
+                        </td>
                       </tr>
                     ))}
                     {data.payments.length === 0 && <tr><td className="p-2 text-neutral-500" colSpan={6}>No payments.</td></tr>}

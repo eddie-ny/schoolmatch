@@ -7,6 +7,7 @@ import { listUsers, importCatalog, deleteDemoData, setAccountDisabled, listAudit
 import { parseCsv, rowsToSchools, rowsToPrograms, rowsToScholarships } from '../lib/csv'
 import { ConfirmDialog, PageTitle, Spinner } from '../components/ui'
 import { ActivityLog, ActivityPage, ArchivePage, NeedMfa, ParentsSection, SignupsSection, StatsPanel, TeamSection } from '../components/StaffParts'
+import { PersonPage } from '../components/StaffPerson'
 
 const SHEETS = [
   { kind: 'schools', label: 'Schools sheet', cols: 'school_name, country, type, category, city, website, logo_url (optional, a picture address or a path like /logos/ug.png), verified' },
@@ -151,6 +152,7 @@ export default function StaffArea({ base, isAdminArea }) {
       <Routes>
         <Route index element={<Overview base={base} isAdmin={isAdminArea} users={users} pending={pending} log={log} canSeeAll={canSeeAll} canRate={owner && isAdminArea} />} />
         <Route path="people" element={<SignupsSection users={users} canDisable={isAdminArea} onToggle={isAdminArea ? setTarget : () => {}} err={err} reload={load} canEditStaff={isAdminArea} canDelete={owner && isAdminArea} canPlan={owner && isAdminArea} />} />
+        <Route path="people/:id" element={<PersonPage users={users} reload={load} canDisable={isAdminArea} canEditStaff={isAdminArea} canDelete={owner && isAdminArea} canPlan={owner && isAdminArea} canRefund={isAdminArea} />} />
         <Route path="parents" element={<ParentsSection pending={pending} canAccept={isAdminArea} reload={load} />} />
         {owner && isAdminArea && <Route path="team" element={<TeamSection />} />}
         {owner && isAdminArea && <Route path="archive" element={<ArchivePage />} />}
